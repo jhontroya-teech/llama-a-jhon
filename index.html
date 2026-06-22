@@ -62,7 +62,7 @@ canvas#sigCanvas{display:block;touch-action:none;cursor:crosshair;width:100%;hei
 <div id="toast" class="toast"></div>
 <iframe id="hidden-frame" name="hidden-frame" style="display:none;"></iframe>
 
-<!-- PANTALLA DE LOGIN SOBREPUESTA -->
+<!-- PANTALLA DE LOGIN REFORZADA CON ALERTAS VISIBLES -->
 <div id="login-screen" style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: #1a1a1a; z-index: 9999; display: flex; justify-content: center; align-items: center; flex-direction: column; font-family: sans-serif; color: white;">
     <div style="background: #ffffff; padding: 30px; border-radius: 14px; box-shadow: 0px 4px 16px rgba(0,0,0,0.3); text-align: center; width: 85%; max-width: 350px; color: #333;">
         <h2 style="margin-bottom: 5px; color: #1a1a1a; font-weight: 700;">Llama a Jhon</h2>
@@ -72,7 +72,9 @@ canvas#sigCanvas{display:block;touch-action:none;cursor:crosshair;width:100%;hei
         <input type="password" id="password" placeholder="Contraseña" style="width: 100%; padding: 12px; margin-bottom: 20px; border: 1px solid #ddd; border-radius: 10px; box-sizing: border-box; font-size: 15px;">
         
         <button onclick="validarAcceso()" style="width: 100%; padding: 13px; background-color: #1a1a1a; color: #fff; border: none; border-radius: 10px; font-weight: 600; font-size: 15px; cursor: pointer;">Ingresar</button>
-        <p id="error-message" style="color: #e53e3e; font-size: 13px; margin-top: 15px; display: none; font-weight: 500;">Usuario o contraseña incorrectos</p>
+        
+        <!-- CUADRO DE NOTIFICACIONES DE LOGIN -->
+        <div id="login-alert-box" style="margin-top: 15px; padding: 10px; border-radius: 8px; font-size: 14px; font-weight: 600; display: none;"></div>
     </div>
 </div>
 
@@ -169,7 +171,7 @@ canvas#sigCanvas{display:block;touch-action:none;cursor:crosshair;width:100%;hei
 </div>
 
 <script>
-// --- CONTROL DE ACCESO (LOGIN) FIJO Y SEGURO ---
+// --- FUNCIÓN DE LOGIN CORREGIDA CON RETROALIMENTACIÓN ---
 function validarAcceso() {
   var usuarioCorrecto = "jhon"; 
   var claveCorrecta = "Aires2026"; 
@@ -177,26 +179,36 @@ function validarAcceso() {
   var userIn = document.getElementById("username").value.trim().toLowerCase();
   var passIn = document.getElementById("password").value.trim();
   var loginScreen = document.getElementById("login-screen");
-  var errorMsg = document.getElementById("error-message");
+  var alertBox = document.getElementById("login-alert-box");
+
+  alertBox.style.display = "block";
 
   if (userIn === usuarioCorrecto && passIn === claveCorrecta) {
-    loginScreen.style.display = "none";
-    sessionStorage.setItem("lj_logged", "true"); 
-    console.log("Acceso concedido");
+    alertBox.style.backgroundColor = "#e6f9f0";
+    alertBox.style.color = "#1a7a4a";
+    alertBox.textContent = "¡Clave Correcta! Cargando panel...";
+    
+    setTimeout(function() {
+      loginScreen.style.display = "none";
+      sessionStorage.setItem("lj_logged", "true");
+    }, 500);
+
   } else {
-    errorMsg.style.display = "block";
+    alertBox.style.backgroundColor = "#ffebeb";
+    alertBox.style.color = "#e53e3e";
+    alertBox.textContent = "❌ Clave o usuario incorrecto";
     document.getElementById("password").value = "";
   }
 }
 
-// Comprobación de carga inmediata
+// Comprobación de sesión al cargar
 document.addEventListener("DOMContentLoaded", function() {
   if (sessionStorage.getItem("lj_logged") === "true") {
     var ls = document.getElementById("login-screen");
-    if(ls) ls.style.style.display = "none";
+    if(ls) ls.style.display = "none";
   }
 });
-// ---------------------------------------------
+// -----------------------------------------------------
 
 const SHEET_URL='https://script.google.com/macros/s/AKfycbxJfqsnpkjyw05EV8gUJG2dnpuiEpiLAh4SyI9K1lBa72hmly7TnswrO4Pf97q1auSHyQ/exec';
 let db=JSON.parse(localStorage.getItem('lj_db')||'{"clients":[],"visits":[]}');
@@ -394,8 +406,8 @@ function saveVisit(){
   }else{
     const v={id:'v_'+Date.now(),clientId:currentClientId,fecha,tipo,
       detalle:document.getElementById('v-detalle').value.trim(),
-      observacion:document.getElementById('v-observacion').value.trim(),
-      fotos=[...visitPhotos],firma,creado:new Date().toISOString()};
+      observacion=document.getElementById('v-observacion').value.trim(),
+      fotos:[...visitPhotos],firma,creado:new Date().toISOString()};
     db.visits.push(v);saveDb();
     syncToSheets({type:'visit',...v});
     showToast('Visita guardada ✓');goScreen('screen-client-detail');
