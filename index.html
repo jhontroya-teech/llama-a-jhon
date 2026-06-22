@@ -62,6 +62,19 @@ canvas#sigCanvas{display:block;touch-action:none;cursor:crosshair;width:100%;hei
 <div id="toast" class="toast"></div>
 <iframe id="hidden-frame" name="hidden-frame" style="display:none;"></iframe>
 
+<div id="login-screen" style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: #1a1a1a; z-index: 9999; display: flex; justify-content: center; align-items: center; flex-direction: column; font-family: sans-serif; color: white;">
+    <div style="background: #ffffff; padding: 30px; border-radius: 14px; box-shadow: 0px 4px 16px rgba(0,0,0,0.3); text-align: center; width: 85%; max-width: 350px; color: #333;">
+        <h2 style="margin-bottom: 5px; color: #1a1a1a; font-weight: 700;">Llama a Jhon</h2>
+        <p style="font-size: 13px; color: #888; margin-bottom: 25px;">Control de Clientes</p>
+        
+        <input type="text" id="username" placeholder="Usuario" style="width: 100%; padding: 12px; margin-bottom: 15px; border: 1px solid #ddd; border-radius: 10px; box-sizing: border-box; font-size: 15px;">
+        <input type="password" id="password" placeholder="Contraseña" style="width: 100%; padding: 12px; margin-bottom: 20px; border: 1px solid #ddd; border-radius: 10px; box-sizing: border-box; font-size: 15px;">
+        
+        <button onclick="validarAcceso()" style="width: 100%; padding: 13px; background-color: #1a1a1a; color: #fff; border: none; border-radius: 10px; font-weight: 600; font-size: 15px; cursor: pointer;">Ingresar</button>
+        <p id="error-message" style="color: #e53e3e; font-size: 13px; margin-top: 15px; display: none; font-weight: 500;">Usuario o contraseña incorrectos</p>
+    </div>
+</div>
+
 <div id="screen-home" class="screen active">
   <div class="header">
     <div class="app-logo"><i class="ti ti-tool"></i></div>
@@ -155,6 +168,34 @@ canvas#sigCanvas{display:block;touch-action:none;cursor:crosshair;width:100%;hei
 </div>
 
 <script>
+// --- CONTROL DE ACCESO (LOGIN) ---
+function validarAcceso() {
+  const usuarioCorrecto = "jhon"; 
+  const claveCorrecta = "Aires2026"; // Esta es tu contraseña, la puedes cambiar cuando gustes
+
+  const userIn = document.getElementById("username").value.trim();
+  const passIn = document.getElementById("password").value;
+  const loginScreen = document.getElementById("login-screen");
+  const errorMsg = document.getElementById("error-message");
+
+  if (userIn === usuarioCorrecto && passIn === claveCorrecta) {
+    loginScreen.style.display = "none";
+    sessionStorage.setItem("lj_logged", "true"); // Evita que pida la clave cada vez que refrescas en la misma sesión
+    console.log("Acceso concedido a Llama a Jhon");
+  } else {
+    errorMsg.style.display = "block";
+    document.getElementById("password").value = "";
+  }
+}
+
+// Verifica si ya se había logueado antes en esta pestaña
+document.addEventListener("DOMContentLoaded", () => {
+  if (sessionStorage.getItem("lj_logged") === "true") {
+    document.getElementById("login-screen").style.display = "none";
+  }
+});
+// ---------------------------------
+
 const SHEET_URL='https://script.google.com/macros/s/AKfycbxJfqsnpkjyw05EV8gUJG2dnpuiEpiLAh4SyI9K1lBa72hmly7TnswrO4Pf97q1auSHyQ/exec';
 let db=JSON.parse(localStorage.getItem('lj_db')||'{"clients":[],"visits":[]}');
 let currentClientId=null,currentVisitId=null,editingClientId=null,editingVisitId=null;
@@ -265,7 +306,7 @@ function saveClient(){
       telefono:document.getElementById('c-telefono').value.trim(),
       direccion:document.getElementById('c-direccion').value.trim(),
       tipo:document.getElementById('c-tipo').value,
-      marca:document.getElementById('c-marca').value.trim(),
+      marca=document.getElementById('c-marca').value.trim(),
       btu:document.getElementById('c-btu').value.trim(),
       creado:new Date().toISOString()};
     db.clients.push(c);currentClientId=c.id;
