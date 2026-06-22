@@ -1,0 +1,475 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>Llama a Jhon</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.19.0/dist/tabler-icons.min.css">
+<style>
+*{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:#f5f5f5;color:#1a1a1a;max-width:430px;margin:0 auto;min-height:100vh;}
+.screen{display:none;padding:1rem;padding-bottom:5rem;}
+.screen.active{display:block;}
+.header{display:flex;align-items:center;gap:10px;background:#fff;margin:-1rem -1rem 1.5rem;padding:1rem;position:sticky;top:0;z-index:10;border-bottom:1px solid #e5e5e5;}
+.header h1{font-size:18px;font-weight:600;color:#1a1a1a;flex:1;}
+.back-btn{background:none;border:none;cursor:pointer;color:#666;font-size:22px;padding:0;display:flex;align-items:center;}
+.section-title{font-size:12px;color:#888;font-weight:600;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:8px;margin-top:1.25rem;}
+.section-title:first-child{margin-top:0;}
+input,textarea,select{width:100%;padding:11px 14px;border:1px solid #ddd;border-radius:10px;font-size:15px;color:#1a1a1a;background:#fff;font-family:inherit;margin-bottom:10px;outline:none;-webkit-appearance:none;appearance:none;}
+input:focus,textarea:focus,select:focus{border-color:#1a1a1a;}
+textarea{min-height:85px;resize:vertical;}
+.btn-primary{width:100%;padding:13px;background:#1a1a1a;color:#fff;border:none;border-radius:10px;font-size:15px;font-weight:600;cursor:pointer;margin-top:8px;font-family:inherit;}
+.btn-secondary{width:100%;padding:13px;background:#fff;color:#1a1a1a;border:1px solid #ddd;border-radius:10px;font-size:15px;cursor:pointer;margin-top:8px;font-family:inherit;}
+.btn-danger{width:100%;padding:13px;background:#fff;color:#e53e3e;border:1px solid #e53e3e;border-radius:10px;font-size:15px;cursor:pointer;margin-top:8px;font-family:inherit;}
+.client-card{background:#fff;border:1px solid #e5e5e5;border-radius:14px;padding:14px 16px;margin-bottom:10px;cursor:pointer;}
+.client-name{font-size:16px;font-weight:600;color:#1a1a1a;}
+.client-meta{font-size:13px;color:#888;margin-top:3px;}
+.badge{display:inline-block;font-size:11px;font-weight:600;padding:3px 10px;border-radius:20px;background:#f0f0f0;color:#555;margin-top:6px;margin-right:4px;}
+.fab{position:fixed;bottom:1.5rem;right:1.5rem;width:56px;height:56px;border-radius:50%;background:#1a1a1a;color:#fff;border:none;font-size:30px;cursor:pointer;display:flex;align-items:center;justify-content:center;box-shadow:0 4px 16px rgba(0,0,0,0.25);z-index:20;}
+.canvas-wrap{border:1px solid #ddd;border-radius:10px;margin-bottom:8px;background:#fff;overflow:hidden;}
+canvas#sigCanvas{display:block;touch-action:none;cursor:crosshair;width:100%;height:160px;}
+.clear-sig{background:none;border:none;color:#888;font-size:13px;cursor:pointer;padding:4px 0;font-family:inherit;display:flex;align-items:center;gap:4px;}
+.empty-state{text-align:center;padding:3rem 1rem;color:#aaa;}
+.empty-state i{font-size:52px;display:block;margin-bottom:1rem;}
+.detail-row{display:flex;justify-content:space-between;align-items:flex-start;padding:10px 0;border-bottom:1px solid #f0f0f0;font-size:14px;}
+.detail-row:last-child{border-bottom:none;}
+.detail-label{color:#888;flex-shrink:0;margin-right:12px;}
+.detail-value{color:#1a1a1a;font-weight:500;text-align:right;word-break:break-word;}
+.photo-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px;}
+.photo-thumb{width:100%;height:100px;object-fit:cover;border-radius:10px;border:1px solid #eee;}
+.photo-add{width:100%;height:100px;border:1.5px dashed #ccc;border-radius:10px;display:flex;align-items:center;justify-content:center;cursor:pointer;color:#aaa;font-size:32px;background:#fafafa;}
+.sig-preview{max-width:100%;border-radius:10px;border:1px solid #eee;margin-top:8px;}
+.search-wrap{position:relative;margin-bottom:1rem;}
+.search-wrap input{padding-left:38px;margin-bottom:0;}
+.search-wrap i{position:absolute;left:11px;top:50%;transform:translateY(-50%);color:#aaa;font-size:18px;}
+.stats{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:1.5rem;}
+.stat-card{background:#fff;border-radius:14px;padding:14px;text-align:center;border:1px solid #e5e5e5;}
+.stat-num{font-size:28px;font-weight:700;color:#1a1a1a;}
+.stat-label{font-size:12px;color:#888;margin-top:2px;}
+.visit-card{background:#fff;border:1px solid #e5e5e5;border-radius:12px;padding:12px 14px;margin-bottom:8px;cursor:pointer;}
+.visit-tipo{font-size:15px;font-weight:600;color:#1a1a1a;margin-top:2px;}
+.visit-fecha{font-size:13px;color:#888;}
+.toast{position:fixed;bottom:5.5rem;left:50%;transform:translateX(-50%);background:#1a1a1a;color:#fff;padding:10px 22px;border-radius:22px;font-size:13px;font-weight:500;opacity:0;transition:opacity 0.3s;pointer-events:none;z-index:100;white-space:nowrap;}
+.toast.show{opacity:1;}
+.app-logo{width:36px;height:36px;background:#1a1a1a;border-radius:10px;display:flex;align-items:center;justify-content:center;color:#fff;font-size:20px;flex-shrink:0;}
+.info-card{background:#fff;border:1px solid #e5e5e5;border-radius:14px;padding:14px 16px;margin-bottom:1rem;}
+.sync-indicator { font-size: 11px; color: #888; display: flex; align-items: center; gap: 4px; font-weight: 500; justify-content: center; margin-bottom: 10px; }
+.sync-spin { animation: spin 1s linear infinite; }
+@keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+</style>
+</head>
+<body>
+<div id="toast" class="toast"></div>
+
+<!-- LOGIN ACCESO INTELIGENTE EXPRES -->
+<div id="login-screen" style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #1a1a1a; z-index: 9999; display: flex; justify-content: center; align-items: center; flex-direction: column;">
+    <div style="background: #ffffff; padding: 30px; border-radius: 14px; text-align: center; width: 85%; max-width: 350px;">
+        <h2 style="margin-bottom: 5px; color: #1a1a1a; font-weight: 700;">Llama a Jhon</h2>
+        <p style="font-size: 13px; color: #888; margin-bottom: 25px;">Control de Clientes</p>
+        
+        <input type="text" id="username" placeholder="Usuario (Dejar vacío)" style="width:100%; padding:12px; margin-bottom:15px; border:1px solid #ddd; border-radius:10px;">
+        <input type="password" id="password" placeholder="Contraseña (Dejar vacío)" style="width:100%; padding:12px; margin-bottom:20px; border:1px solid #ddd; border-radius:10px;">
+        
+        <button id="btn-entrar" style="width:100%; padding:13px; background:#1a1a1a; color:#fff; border:none; border-radius:10px; font-weight:600; font-size:15px; cursor:pointer;">Ingresar</button>
+        
+        <div id="login-alert-box" style="margin-top:15px; padding:10px; border-radius:8px; font-size:14px; font-weight:600; display:none;"></div>
+    </div>
+</div>
+
+<!-- INICIO -->
+<div id="screen-home" class="screen active">
+  <div class="header">
+    <div class="app-logo"><i class="ti ti-tool"></i></div>
+    <h1>Llama a Jhon</h1>
+    <i class="ti ti-refresh" id="manual-sync-btn" style="font-size:20px;color:#1a4a9a;cursor:pointer;" onclick="fetchDataFromSheets()"></i>
+  </div>
+  
+  <div id="sync-status" class="sync-indicator">
+    <i class="ti ti-cloud-check"></i> Conectando con la nube...
+  </div>
+
+  <div class="stats">
+    <div class="stat-card"><div class="stat-num" id="total-clients">0</div><div class="stat-label">Clientes</div></div>
+    <div class="stat-card"><div class="stat-num" id="total-visits">0</div><div class="stat-label">Visitas</div></div>
+  </div>
+  <div class="search-wrap">
+    <i class="ti ti-search"></i>
+    <input type="text" id="search-input" placeholder="Buscar cliente..." oninput="renderClients()">
+  </div>
+  <div id="client-list"></div>
+  <button class="fab" onclick="goNewClient()"><i class="ti ti-plus"></i></button>
+</div>
+
+<!-- NUEVO / EDITAR CLIENTE -->
+<div id="screen-new-client" class="screen">
+  <div class="header">
+    <button class="back-btn" onclick="goScreen('screen-home')"><i class="ti ti-arrow-left"></i></button>
+    <h1 id="new-client-title">Nuevo cliente</h1>
+  </div>
+  <div class="section-title">Datos personales</div>
+  <input type="text" id="c-nombre" placeholder="Nombre completo">
+  <input type="tel" id="c-telefono" placeholder="Teléfono">
+  <input type="text" id="c-direccion" placeholder="Dirección">
+  <div class="section-title">Equipo</div>
+  <select id="c-tipo">
+    <option value="">Tipo de aire acondicionado</option>
+    <option>Split</option><option>Central</option><option>Ventana</option>
+    <option>Mini split</option><option>Cassette</option><option>Otro</option>
+  </select>
+  <input type="text" id="c-marca" placeholder="Marca y modelo (opcional)">
+  <input type="text" id="c-btu" placeholder="BTU / Capacidad (opcional)">
+  <button class="btn-primary" onclick="saveClient()">Guardar cliente</button>
+  <button class="btn-secondary" onclick="goScreen('screen-home')">Cancelar</button>
+</div>
+
+<!-- DETALLE CLIENTE -->
+<div id="screen-client-detail" class="screen">
+  <div class="header">
+    <button class="back-btn" onclick="goScreen('screen-home')"><i class="ti ti-arrow-left"></i></button>
+    <h1 id="client-detail-name">Cliente</h1>
+  </div>
+  <div class="info-card" id="client-detail-info"></div>
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
+    <button class="btn-secondary" style="margin-top:0" onclick="editClient()"><i class="ti ti-edit"></i> Editar</button>
+    <button class="btn-primary" style="margin-top:0" onclick="goNewVisit()"><i class="ti ti-plus"></i> Visita</button>
+  </div>
+  <div class="section-title" style="margin-top:1.5rem">Historial de visitas</div>
+  <div id="visit-list"></div>
+</div>
+
+<!-- NUEVA / EDITAR VISITA -->
+<div id="screen-new-visit" class="screen">
+  <div class="header">
+    <button class="back-btn" onclick="goScreen('screen-client-detail')"><i class="ti ti-arrow-left"></i></button>
+    <h1 id="new-visit-title">Nueva visita</h1>
+  </div>
+  <div class="section-title">Información</div>
+  <input type="date" id="v-fecha">
+  <select id="v-tipo">
+    <option value="">Tipo de servicio</option>
+    <option>Instalación</option><option>Limpieza</option><option>Revisión técnica</option>
+    <option>Fuga de gas</option><option>Mantenimiento preventivo</option>
+    <option>Reparación</option><option>Otro</option>
+  </select>
+  <div class="section-title">Detalle del equipo</div>
+  <textarea id="v-detalle" placeholder="¿Qué tenía el aire? Estado del equipo..."></textarea>
+  <div class="section-title">Observación</div>
+  <textarea id="v-observacion" placeholder="¿Qué se resolvió? Trabajo realizado..."></textarea>
+  <div class="section-title">Fotos</div>
+  <div class="photo-grid" id="photo-grid"></div>
+  <input type="file" id="photo-input" accept="image/*" multiple style="display:none" onchange="addPhotos(this)">
+  <div class="section-title">Firma del cliente</div>
+  <p style="font-size:13px;color:#888;margin-bottom:8px;">El cliente firma con el dedo:</p>
+  <div class="canvas-wrap"><canvas id="sigCanvas"></canvas></div>
+  <button class="clear-sig" onclick="clearSig()"><i class="ti ti-trash"></i> Limpiar firma</button>
+  <button class="btn-primary" onclick="saveVisit()" style="margin-top:1rem">Guardar visita</button>
+  <button class="btn-secondary" onclick="goScreen('screen-client-detail')">Cancelar</button>
+</div>
+
+<!-- DETALLE VISITA -->
+<div id="screen-visit-detail" class="screen">
+  <div class="header">
+    <button class="back-btn" onclick="goScreen('screen-client-detail')"><i class="ti ti-arrow-left"></i></button>
+    <h1>Detalle de visita</h1>
+  </div>
+  <div id="visit-detail-content"></div>
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:1rem;">
+    <button class="btn-secondary" style="margin-top:0" onclick="editVisit()"><i class="ti ti-edit"></i> Editar</button>
+    <button class="btn-secondary" style="margin-top:0" onclick="exportVisitTxt()"><i class="ti ti-download"></i> Recibo .TXT</button>
+  </div>
+  <button class="btn-danger" onclick="deleteVisit()" style="margin-top:10px;"><i class="ti ti-trash"></i> Eliminar visita</button>
+</div>
+
+<script>
+const SHEET_URL = 'https://script.google.com/macros/s/AKfycbyUUziORBw7RLEhWpbLOsFtjWTybII3fs3ZzZ3JEPxoqUEWj3TQIW1-7UzBFiuo-c2NAg/exec';
+
+let db = JSON.parse(localStorage.getItem('lj_db') || '{"clients":[],"visits":[]}');
+let currentClientId=null, currentVisitId=null, editingClientId=null, editingVisitId=null;
+let visitPhotos=[], sigCtx, sigDrawing=false, sigHasContent=false;
+
+function saveDb(){
+  localStorage.setItem('lj_db', JSON.stringify(db));
+  updateStats();
+}
+
+function showToast(msg){
+  const t=document.getElementById('toast');
+  t.textContent=msg; t.classList.add('show');
+  setTimeout(()=>t.classList.remove('show'),2500);
+}
+
+function fetchDataFromSheets() {
+  const indicator = document.getElementById('sync-status');
+  const icon = document.getElementById('manual-sync-btn');
+  
+  if(indicator) indicator.innerHTML = `<i class="ti ti-refresh sync-spin"></i> Descargando datos desde Excel...`;
+  if(icon) icon.classList.add('sync-spin');
+
+  fetch(`${SHEET_URL}?action=readAll`)
+    .then(res => res.json())
+    .then(data => {
+      if (data && data.clients) {
+        db = data;
+        saveDb();
+        renderClients();
+        if(indicator) indicator.innerHTML = `<i class="ti ti-cloud-check" style="color:#1a7a4a"></i> Sincronizado con Excel hace un momento`;
+      }
+    })
+    .catch(err => {
+      if(indicator) indicator.innerHTML = `<i class="ti ti-cloud-off" style="color:#e53e3e"></i> Modo local (Sin internet)`;
+    })
+    .finally(() => {
+      if(icon) icon.classList.remove('sync-spin');
+    });
+}
+
+function syncToSheets(data){
+  const indicator = document.getElementById('sync-status');
+  if(indicator) indicator.innerHTML = `<i class="ti ti-cloud-upload"></i> Subiendo al Excel...`;
+
+  const params = new URLSearchParams();
+  Object.keys(data).forEach(k => {
+    if(k==='fotos' || k==='firma') return;
+    params.append(k, data[k] || '');
+  });
+  params.append('fotos_count', data.fotos ? data.fotos.length : 0);
+  params.append('tiene_firma', data.firma ? 'Si' : 'No');
+
+  fetch(`${SHEET_URL}?${params.toString()}`, { mode: 'no-cors' })
+    .then(() => {
+      if(indicator) indicator.innerHTML = `<i class="ti ti-cloud-check" style="color:#1a7a4a"></i> Guardado en la nube con éxito`;
+    })
+    .catch(() => {
+      if(indicator) indicator.innerHTML = `<i class="ti ti-alert-circle" style="color:#e6a23c"></i> Guardado local. Se subirá después.`;
+    });
+}
+
+document.addEventListener("DOMContentLoaded", function() {
+  if (sessionStorage.getItem("lj_logged") === "true") {
+    document.getElementById("login-screen").style.display = "none";
+    fetchDataFromSheets();
+  }
+
+  document.getElementById("btn-entrar").onclick = function() {
+    var u = document.getElementById("username").value.trim();
+    var p = document.getElementById("password").value.trim();
+    var box = document.getElementById("login-alert-box");
+    var screen = document.getElementById("login-screen");
+
+    box.style.display = "block";
+
+    if (u === "" && p === "") {
+      box.style.backgroundColor = "#e6f9f0"; box.style.color = "#1a7a4a";
+      box.textContent = "¡Bienvenido Jhon! Sincronizando...";
+      sessionStorage.setItem("lj_logged", "true");
+      setTimeout(function() { 
+        screen.style.display = "none"; 
+        fetchDataFromSheets();
+      }, 400);
+    } else {
+      box.style.backgroundColor = "#ffebeb"; box.style.color = "#e53e3e";
+      box.textContent = "❌ Error: Acceso restringido";
+      document.getElementById("username").value = "";
+      document.getElementById("password").value = "";
+    }
+  };
+});
+
+function goScreen(id){
+  document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  window.scrollTo(0,0);
+  if(id==='screen-home'){ updateStats(); renderClients(); }
+  if(id==='screen-client-detail') renderClientDetail();
+  if(id==='screen-new-visit') initSig();
+}
+
+function updateStats(){
+  document.getElementById('total-clients').textContent = db.clients.length;
+  document.getElementById('total-visits').textContent = db.visits.length;
+}
+
+function renderClients(){
+  const q = document.getElementById('search-input').value.toLowerCase();
+  const list = document.getElementById('client-list');
+  const filtered = db.clients.filter(c => c.nombre.toLowerCase().includes(q) || (c.direccion||'').toLowerCase().includes(q));
+  if(!filtered.length){ list.innerHTML=`<div class="empty-state"><i class="ti ti-users"></i><p>Sin resultados</p></div>`; return; }
+  list.innerHTML = filtered.map(c => {
+    const visits = db.visits.filter(v => v.clientId === c.id);
+    return `<div class="client-card" onclick="openClient('${c.id}')">
+      <div class="client-name">${c.nombre}</div>
+      <div class="client-meta"><i class="ti ti-map-pin"></i> ${c.direccion || 'Sin dirección'}</div>
+      <span class="badge" style="background:#e6f0ff;color:#1a4a9a;">${c.tipo || 'Sin tipo'}</span>
+      <span class="badge" style="background:#f0f0f0;color:#555;">${visits.length} visitas</span>
+    </div>`;
+  }).join('');
+}
+
+function openClient(id){ currentClientId = id; goScreen('screen-client-detail'); }
+
+function renderClientDetail(){
+  const c = db.clients.find(x => x.id === currentClientId); if(!c) return;
+  document.getElementById('client-detail-name').textContent = c.nombre;
+  document.getElementById('client-detail-info').innerHTML = `
+    <div class="detail-row"><span class="detail-label">Teléfono</span><span class="detail-value">${c.telefono||'—'}</span></div>
+    <div class="detail-row"><span class="detail-label">Dirección</span><span class="detail-value">${c.direccion||'—'}</span></div>
+    <div class="detail-row"><span class="detail-label">Tipo</span><span class="detail-value">${c.tipo||'—'}</span></div>
+    <div class="detail-row"><span class="detail-label">Marca</span><span class="detail-value">${c.marca||'—'}</span></div>
+    <div class="detail-row"><span class="detail-label">BTU</span><span class="detail-value">${c.btu||'—'}</span></div>`;
+  
+  const visits = db.visits.filter(v => v.clientId === currentClientId);
+  const vlist = document.getElementById('visit-list');
+  if(!visits.length){ vlist.innerHTML=`<div class="empty-state"><p>Sin visitas registradas</p></div>`; return; }
+  vlist.innerHTML = visits.map(v => `<div class="visit-card" onclick="openVisit('${v.id}')"><div class="visit-tipo">${v.tipo}</div><div class="visit-fecha">${v.fecha}</div></div>`).join('');
+}
+
+function goNewClient(){
+  editingClientId = null;
+  document.getElementById('new-client-title').textContent = "Nuevo cliente";
+  ['c-nombre','c-telefono','c-direccion','c-marca','c-btu'].forEach(id => document.getElementById(id).value = '');
+  document.getElementById('c-tipo').value = '';
+  goScreen('screen-new-client');
+}
+
+function editClient(){
+  const c = db.clients.find(x => x.id === currentClientId); if(!c) return;
+  editingClientId = c.id;
+  document.getElementById('new-client-title').textContent = "Editar cliente";
+  document.getElementById('c-nombre').value = c.nombre;
+  document.getElementById('c-telefono').value = c.telefono || '';
+  document.getElementById('c-direccion').value = c.direccion || '';
+  document.getElementById('c-tipo').value = c.tipo || '';
+  document.getElementById('c-marca').value = c.marca || '';
+  document.getElementById('c-btu').value = c.btu || '';
+  goScreen('screen-new-client');
+}
+
+function saveClient(){
+  const nombre = document.getElementById('c-nombre').value.trim(); if(!nombre) return;
+  const data = {
+    nombre,
+    telefono: document.getElementById('c-telefono').value.trim(),
+    direccion: document.getElementById('c-direccion').value.trim(),
+    tipo: document.getElementById('c-tipo').value,
+    marca: document.getElementById('c-marca').value.trim(),
+    btu: document.getElementById('c-btu').value.trim()
+  };
+  
+  if(editingClientId){
+    const idx = db.clients.findIndex(x => x.id === editingClientId);
+    db.clients[idx] = {...db.clients[idx], ...data};
+    showToast("Cliente actualizado localmente");
+  } else {
+    const newId = 'c_' + Date.now();
+    db.clients.push({id: newId, ...data});
+    currentClientId = newId;
+    showToast("Cliente creado localmente");
+  }
+  saveDb();
+  syncToSheets({type:'client', id:currentClientId, ...data});
+  goScreen('screen-client-detail');
+}
+
+function goNewVisit(){
+  editingVisitId = null;
+  document.getElementById('new-visit-title').textContent = "Nueva visita";
+  document.getElementById('v-fecha').value = new Date().toISOString().split('T')[0];
+  document.getElementById('v-tipo').value = ''; document.getElementById('v-detalle').value = ''; document.getElementById('v-observacion').value = '';
+  visitPhotos = []; renderPhotoGrid(); goScreen('screen-new-visit');
+}
+
+function editVisit(){
+  const v = db.visits.find(x => x.id === currentVisitId); if(!v) return;
+  editingVisitId = v.id;
+  document.getElementById('new-visit-title').textContent = "Editar visita";
+  document.getElementById('v-fecha').value = v.fecha;
+  document.getElementById('v-tipo').value = v.tipo;
+  document.getElementById('v-detalle').value = v.detalle;
+  document.getElementById('v-observacion').value = v.observacion;
+  visitPhotos = [...(v.fotos || [])]; renderPhotoGrid(); goScreen('screen-new-visit');
+}
+
+function initSig(){
+  const canvas = document.getElementById('sigCanvas');
+  canvas.width = canvas.offsetWidth || 380; canvas.height = 160;
+  sigCtx = canvas.getContext('2d'); sigCtx.strokeStyle = '#1a1a1a'; sigCtx.lineWidth = 2.5;
+  sigHasContent = false;
+  canvas.ontouchstart = canvas.onmousedown = e => { sigDrawing = true; sigCtx.beginPath(); sigHasContent = true; };
+  canvas.ontouchmove = canvas.onmousemove = e => {
+    if(!sigDrawing) return; e.preventDefault(); const r = canvas.getBoundingClientRect();
+    const clX = (e.touches ? e.touches[0].clientX : e.clientX) - r.left;
+    const clY = (e.touches ? e.touches[0].clientY : e.clientY) - r.top;
+    sigCtx.lineTo(clX, clY); sigCtx.stroke();
+  };
+  canvas.ontouchend = canvas.onmouseup = () => sigDrawing = false;
+}
+
+function clearSig(){ if(sigCtx){ sigCtx.clearRect(0,0,380,160); sigHasContent = false; } }
+function addPhotos(input){ Array.from(input.files).forEach(f => { const r = new FileReader(); r.onload = e => { visitPhotos.push(e.target.result); renderPhotoGrid(); }; r.readAsDataURL(f); }); }
+function renderPhotoGrid(){ document.getElementById('photo-grid').innerHTML = visitPhotos.map(p => `<img src="${p}" class="photo-thumb">`).join('') + `<div class="photo-add" onclick="document.getElementById('photo-input').click()">+</div>`; }
+
+function saveVisit(){
+  const data = {
+    clientId: currentClientId,
+    fecha: document.getElementById('v-fecha').value,
+    tipo: document.getElementById('v-tipo').value,
+    detalle: document.getElementById('v-detalle').value,
+    observacion: document.getElementById('v-observacion').value,
+    fotos: [...visitPhotos],
+    firma: sigHasContent ? document.getElementById('sigCanvas').toDataURL() : null
+  };
+  if(editingVisitId){
+    const idx = db.visits.findIndex(x => x.id === editingVisitId);
+    db.visits[idx] = {...db.visits[idx], ...data};
+    showToast("Visita actualizada localmente");
+  } else {
+    const newId = 'v_' + Date.now();
+    db.visits.push({id: newId, ...data});
+    currentVisitId = newId;
+    showToast("Visita guardada localmente");
+  }
+  saveDb();
+  syncToSheets({type:'visit', id:currentVisitId, ...data});
+  goScreen('screen-client-detail');
+}
+
+function openVisit(id){
+  currentVisitId = id; const v = db.visits.find(x => x.id === id); if(!v) return;
+  let fHtml = (v.fotos || []).map(p => `<img src="${p}" style="width:100%;border-radius:10px;margin-bottom:8px;">`).join('');
+  let sHtml = v.firma ? `<div class="section-title">Firma del cliente</div><img src="${v.firma}" class="sig-preview">` : '';
+  document.getElementById('visit-detail-content').innerHTML = `
+    <div class="info-card">
+      <div class="detail-row"><span class="detail-label">Servicio</span><span class="detail-value" style="font-weight:700;">${v.tipo}</span></div>
+      <div class="detail-row"><span class="detail-label">Fecha</span><span class="detail-value">${v.fecha}</span></div>
+      <div class="section-title" style="margin-top:12px;">Diagnóstico / Estado</div>
+      <p style="font-size:14px;background:#f9f9f9;padding:8px;border-radius:6px;white-space:pre-wrap;">${v.detalle||'Sin detalles'}</p>
+      <div class="section-title" style="margin-top:12px;">Trabajo realizado</div>
+      <p style="font-size:14px;background:#f9f9f9;padding:8px;border-radius:6px;white-space:pre-wrap;">${v.observacion||'Sin observaciones'}</p>
+      ${fHtml ? '<div class="section-title">Evidencias fotográficas</div>' + fHtml : ''}
+      ${sHtml}
+    </div>`;
+  goScreen('screen-visit-detail');
+}
+
+function deleteVisit(){
+  if(confirm("¿Seguro que quieres eliminar esta visita?")){
+    db.visits = db.visits.filter(x => x.id !== currentVisitId);
+    saveDb(); showToast("Visita eliminada");
+    goScreen('screen-client-detail');
+  }
+}
+
+function exportVisitTxt(){
+  const c = db.clients.find(x => x.id === currentClientId);
+  const v = db.visits.find(x => x.id === currentVisitId);
+  if(!c||!v) return;
+  const txt = `=========================\n      LLAMA A JHON\n=========================\nCliente: ${c.nombre}\nTeléfono: ${c.telefono||'—'}\nDirección: ${c.direccion||'—'}\n-------------------------\nFecha de visita: ${v.fecha}\nTipo de trabajo: ${v.tipo}\n-------------------------\nDIAGNÓSTICO:\n${v.detalle||'—'}\n\nTRABAJO REALIZADO:\n${v.observacion||'—'}\n=========================`;
+  const blob = new Blob([txt], {type: 'text/plain;charset=utf-8'});
+  const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = `Recibo_${c.nombre.replace(/\s+/g,'_')}_${v.fecha}.txt`;
+  document.body.appendChild(a); a.click(); document.body.removeChild(a);
+}
+
+updateStats(); renderClients();
+</script>
+</body>
+</html>
