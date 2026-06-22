@@ -163,20 +163,16 @@ let visitPhotos=[],sigCtx,sigDrawing=false,sigHasContent=false,sigW=380,sigH=160
 function saveDb(){localStorage.setItem('lj_db',JSON.stringify(db));}
 function showToast(msg){const t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),2500);}
 
-// Enviar datos a Google Sheets usando fetch con no-cors + imagen de pixel como fallback
 function syncToSheets(data){
   try {
     const params=new URLSearchParams();
     Object.keys(data).forEach(k=>{
-      if(k==='firma'||k==='fotos') return; // no enviar base64 pesados
+      if(k==='firma'||k==='fotos') return;
       params.append(k, data[k]||'');
     });
     params.append('fotos_count', data.fotos?data.fotos.length:0);
     params.append('tiene_firma', data.firma?'Si':'No');
     const url=SHEET_URL+'?'+params.toString();
-    const img=new Image();
-    img.src=url;
-    // También intentar fetch
     fetch(url,{mode:'no-cors'}).catch(()=>{});
   } catch(e){}
 }
