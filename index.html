@@ -6,72 +6,86 @@
 <title>Llama a Jhon</title>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.19.0/dist/tabler-icons.min.css">
 <style>
-body{font-family:sans-serif;background:#f5f5f5;max-width:430px;margin:0 auto;padding:1rem;}
-.header-box{background:#fff;padding:1rem;border-radius:16px;margin-bottom:1rem;box-shadow:0 2px 8px rgba(0,0,0,0.05);}
-.header-top{display:flex;justify-content:space-between;align-items:center;margin-bottom:1rem;}
-.stats-container{display:flex;gap:10px;margin-bottom:1rem;}
-.stat-card{flex:1;background:#f8f9fa;padding:15px;border-radius:12px;text-align:center;}
-.stat-number{font-size:24px;font-weight:700;}
-.stat-label{font-size:12px;color:#666;}
-.client-card{background:#fff;border-radius:14px;padding:16px;margin-bottom:12px;box-shadow:0 2px 5px rgba(0,0,0,0.05);}
-.fab{position:fixed;bottom:2rem;right:2rem;background:#1a1a1a;color:#fff;width:60px;height:60px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:30px;box-shadow:0 4px 10px rgba(0,0,0,0.3);}
+    body { font-family: sans-serif; background: #f5f5f5; max-width: 430px; margin: 0 auto; padding: 1rem; }
+    .card { background: #fff; padding: 1rem; border-radius: 15px; margin-bottom: 1rem; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
+    .btn-main { background: #1a1a1a; color: white; padding: 15px; border-radius: 10px; text-align: center; display: block; margin-top: 10px; text-decoration: none; }
+    .img-preview { width: 100%; border-radius: 10px; margin-top: 10px; }
+    .hidden { display: none; }
 </style>
 </head>
 <body>
 
-<div class="header-box">
-  <div class="header-top">
-    <h1 style="font-size:18px;"><i class="ti ti-tool"></i> Llama a Jhon</h1>
-    <i class="ti ti-refresh" onclick="fetchDataFromSheets()"></i>
-  </div>
-  <div class="stats-container">
-    <div class="stat-card"><div class="stat-number" id="count-clients">0</div><div class="stat-label">Clientes</div></div>
-    <div class="stat-card"><div class="stat-number" id="count-services">0</div><div class="stat-label">Servicios</div></div>
-  </div>
+<!-- PANTALLA PRINCIPAL -->
+<div id="main-screen">
+    <div class="card">
+        <h2><i class="ti ti-tool"></i> Llama a Jhon</h2>
+        <div style="display:flex; gap:10px;">
+            <div class="card">12 Clientes</div>
+            <div class="card">10 Servicios</div>
+        </div>
+    </div>
+    <div id="client-list"></div>
 </div>
 
-<div id="client-list"></div>
-<div class="fab" onclick="addClientPrompt()">+</div>
+<!-- PANTALLA DE DETALLE (La que sale en tus fotos) -->
+<div id="detail-screen" class="hidden">
+    <button onclick="goBack()" style="background:none; border:none; font-size:20px;"><i class="ti ti-arrow-left"></i></button>
+    <div id="client-detail-content"></div>
+</div>
 
 <script>
 const SHEET_URL = 'https://script.google.com/macros/s/AKfycbxnEO3E0duFo0kaZgeJwg-zLLPXqiiOLGiHLhsPqQxCgBqeWU0pMNYri27yduNbfe3npA/exec';
 let db = {clients:[], visits:[]};
 
-function fetchDataFromSheets() {
-  fetch(SHEET_URL).then(res => res.json()).then(data => {
-    db = data;
-    render();
-  });
+function fetchData() {
+    fetch(SHEET_URL).then(res => res.json()).then(data => { db = data; renderClients(); });
 }
 
-function render() {
-  document.getElementById('count-clients').textContent = db.clients.length;
-  document.getElementById('count-services').textContent = db.visits.length;
-  
-  const list = document.getElementById('client-list');
-  list.innerHTML = db.clients.map(c => {
-    const vCount = db.visits.filter(v => v.ClienteID == c.ID).length;
-    return `
-    <div class="client-card">
-      <div style="font-weight:700; font-size:16px;">${c.Nombre}</div>
-      <div style="font-size:13px; color:#666; margin-top:5px;">
-        <i class="ti ti-phone"></i> ${c.Teléfono || '—'}<br>
-        <i class="ti ti-map-pin"></i> ${c.Dirección || '—'}
-      </div>
-      <div style="margin-top:8px; font-weight:bold; color:#4a90e2; font-size:13px;">${c.Tipo} | ${vCount} servicios</div>
-    </div>`;
-  }).join('');
+function renderClients() {
+    document.getElementById('client-list').innerHTML = db.clients.map(c => `
+        <div class="card" onclick="showDetail('${c.ID}')">
+            <b>${c.Nombre}</b><br>Split | ${db.visits.filter(v => v.ClienteID == c.ID).length} servicios
+        </div>
+    `).join('');
 }
 
-function addClientPrompt() {
-  const nombre = prompt("Nombre del nuevo cliente:");
-  if(nombre) {
-    const nuevo = {type:'client', ID: 'c_' + Date.now(), Nombre: nombre};
-    fetch(SHEET_URL, {method: 'POST', body: JSON.stringify(nuevo)}).then(() => alert("Agregado. ¡Refresca la app!"));
-  }
+function showDetail(id) {
+    const c = db.clients.find(x => x.ID == id);
+    const reports = db.visits.filter(v => v.ClienteID == id);
+    document.getElementById('main-screen').classList.add('hidden');
+    document.getElementById('detail-screen').classList.remove('hidden');
+    
+    let html = `<h3>${c.Nombre}</h3>
+                <div class="card">Celular: ${c.Teléfono || '---'}<br>Dir: ${c.Dirección || '---'}</div>
+                <button class="btn-main">+ Registrar Nuevo Trabajo</button>
+                <h4>HISTORIAL DE REPORTES</h4>`;
+    
+    reports.forEach(r => {
+        html += `<div class="card" onclick="showReport('${r.ID}')">
+                    <b>${r.Tipo}</b><br>${r.Fecha}
+                 </div>`;
+    });
+    document.getElementById('client-detail-content').innerHTML = html;
 }
 
-fetchDataFromSheets();
+function showReport(reportId) {
+    const r = db.visits.find(x => x.ID == reportId);
+    let html = `<h3>Detalle de visita</h3>
+                <div class="card">
+                    <b>${r.Tipo}</b><br>Fecha: ${r.Fecha}<br><br>
+                    DIAGNÓSTICO:<br>${r.Observación}<br><br>
+                    <img src="${r.FotoURL}" class="img-preview">
+                </div>
+                <a href="https://wa.me/?text=Reporte: ${r.Tipo} - ${r.Observación}" class="btn-main">Compartir Reporte</a>`;
+    document.getElementById('client-detail-content').innerHTML = html;
+}
+
+function goBack() {
+    document.getElementById('main-screen').classList.remove('hidden');
+    document.getElementById('detail-screen').classList.add('hidden');
+}
+
+fetchData();
 </script>
 </body>
 </html>
