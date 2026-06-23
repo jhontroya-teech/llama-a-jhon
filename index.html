@@ -6,37 +6,40 @@
 <title>Llama a Jhon</title>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.19.0/dist/tabler-icons.min.css">
 <style>
-*{box-sizing:border-box;}
 body{font-family:sans-serif;background:#f5f5f5;max-width:430px;margin:0 auto;padding:1rem;}
-.main-box{background:#fff;padding:1.2rem;border-radius:20px;box-shadow:0 4px 12px rgba(0,0,0,0.08);margin-bottom:1.5rem;}
-.header-top{display:flex;justify-content:space-between;align-items:center;margin-bottom:1.2rem;}
-.title-area{display:flex;align-items:center;gap:10px;font-size:18px;font-weight:700;}
+.header-box{background:#fff;padding:1.2rem;border-radius:20px;box-shadow:0 4px 10px rgba(0,0,0,0.05);margin-bottom:1rem;}
+.search-box{margin-bottom:1rem;position:relative;}
+.search-box input{width:100%;padding:12px 15px 12px 40px;border-radius:12px;border:1px solid #ddd;font-size:16px;}
+.search-box i{position:absolute;left:15px;top:13px;color:#aaa;}
 .stats-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:10px;}
-.stat-card{background:#f8f9fa;padding:15px;border-radius:15px;text-align:center;border:1px solid #eee;}
-.stat-number{font-size:26px;font-weight:800;color:#1a1a1a;}
-.stat-label{font-size:12px;color:#777;text-transform:uppercase;font-weight:600;}
-.client-card{background:#fff;border-radius:16px;padding:16px;margin-bottom:12px;box-shadow:0 2px 8px rgba(0,0,0,0.06);cursor:pointer;}
-.fab{position:fixed;bottom:2rem;right:2rem;background:#1a1a1a;color:#fff;width:60px;height:60px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:30px;box-shadow:0 6px 15px rgba(0,0,0,0.3);z-index:100;}
+.stat-card{background:#f8f9fa;padding:10px;border-radius:12px;text-align:center;}
+.client-card{background:#fff;padding:16px;border-radius:14px;margin-bottom:10px;box-shadow:0 2px 5px rgba(0,0,0,0.05);}
+.fab{position:fixed;bottom:2rem;right:2rem;background:#1a1a1a;color:#fff;width:60px;height:60px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:25px;}
 </style>
 </head>
 <body>
 
-<div class="main-box">
-  <div class="header-top">
-    <div class="title-area"><i class="ti ti-tool"></i> Llama a Jhon</div>
-    <i class="ti ti-refresh" onclick="fetchDataFromSheets()" style="font-size:20px; cursor:pointer;"></i>
+<div class="header-box">
+  <div style="display:flex; justify-content:space-between; align-items:center;">
+    <h2 style="font-size:18px;"><i class="ti ti-tool"></i> Llama a Jhon</h2>
+    <i class="ti ti-refresh" onclick="fetchDataFromSheets()" style="cursor:pointer;"></i>
   </div>
   <div class="stats-grid">
-    <div class="stat-card"><div class="stat-number" id="count-clients">0</div><div class="stat-label">Clientes</div></div>
-    <div class="stat-card"><div class="stat-number" id="count-services">0</div><div class="stat-label">Servicios</div></div>
+    <div class="stat-card"><div id="count-clients" style="font-weight:bold;">0</div><small>Clientes</small></div>
+    <div class="stat-card"><div id="count-services" style="font-weight:bold;">0</div><small>Servicios</small></div>
   </div>
+</div>
+
+<div class="search-box">
+  <i class="ti ti-search"></i>
+  <input type="text" id="search-input" placeholder="Buscar por nombre o detalle..." oninput="render()">
 </div>
 
 <div id="client-list"></div>
 <div class="fab" onclick="addClientPrompt()">+</div>
 
 <script>
-const SHEET_URL = 'https://script.google.com/macros/s/AKfycbwDOF7kyHlPUVB0VVKqOsZRJ9duEbEnd8bfDeRZ9A_dauG8b4BOvjtxHIc-F0m0mOer8A/exec';
+const SHEET_URL = 'https://script.google.com/macros/s/AKfycbxnEO3E0duFo0kaZgeJwg-zLLPXqiiOLGiHLhsPqQxCgBqeWU0pMNYri27yduNbfe3npA/exec';
 let db = {clients:[], visits:[]};
 
 function fetchDataFromSheets() {
@@ -44,37 +47,33 @@ function fetchDataFromSheets() {
 }
 
 function render() {
+  const q = document.getElementById('search-input').value.toLowerCase();
   document.getElementById('count-clients').textContent = db.clients.length;
   document.getElementById('count-services').textContent = db.visits.length;
+  
   const list = document.getElementById('client-list');
-  list.innerHTML = db.clients.map(c => {
-    const vCount = db.visits.filter(v => v.ClienteID == c.ID).length;
-    return `
+  list.innerHTML = db.clients.filter(c => {
+    const v = db.visits.filter(vis => vis.ClienteID == c.ID && vis.Observación.toLowerCase().includes(q));
+    return c.Nombre.toLowerCase().includes(q) || v.length > 0;
+  }).map(c => `
     <div class="client-card" onclick="viewClientReports('${c.ID}')">
-      <div style="font-weight:700; font-size:16px;">${c.Nombre}</div>
-      <div style="font-size:13px; color:#666; margin:5px 0;">
-        <i class="ti ti-phone"></i> ${c.Teléfono || '---'} · <i class="ti ti-map-pin"></i> ${c.Dirección || '---'}
-      </div>
-      <div style="font-weight:bold; color:#1a4a9a; font-size:13px;">${c.Tipo} | ${vCount} servicios</div>
-    </div>`;
-  }).join('');
+      <div style="font-weight:700;">${c.Nombre}</div>
+      <div style="font-size:13px; color:#666;">${c.Tipo} | ${db.visits.filter(v => v.ClienteID == c.ID).length} servicios</div>
+    </div>`).join('');
 }
 
 function viewClientReports(id) {
   const reports = db.visits.filter(v => v.ClienteID == id);
-  if(reports.length === 0) { alert("Sin servicios registrados para este cliente."); return; }
-  
-  let msg = "HISTORIAL:\n\n" + reports.map(r => `📅 ${r.Fecha}: ${r.Tipo}\n📝 ${r.Observación}\n📸 Foto: ${r.FotoURL || 'No disponible'}`).join('\n\n---\n\n');
-  alert(msg);
+  let msg = "HISTORIAL Y REPORTES:\n\n" + reports.map(r => 
+    `📅 ${r.Fecha}: ${r.Tipo}\n📝 ${r.Observación}\n📸 Foto: ${r.FotoURL || 'Sin foto'}`).join('\n\n---\n\n');
+  alert(msg || "No hay servicios.");
 }
 
 function addClientPrompt() {
   const nombre = prompt("Nombre del nuevo cliente:");
   if(nombre) {
     const nuevo = {type:'client', ID: 'c_' + Date.now(), Nombre: nombre, Teléfono: '', Dirección: '', Tipo: 'Split', Marca: 'N/A', BTU: '0'};
-    fetch(SHEET_URL, {method: 'POST', body: JSON.stringify(nuevo)}).then(() => {
-      alert("¡Cliente agregado! Presiona el botón de refrescar.");
-    });
+    fetch(SHEET_URL, {method: 'POST', body: JSON.stringify(nuevo)}).then(() => { alert("Agregado. Refresca."); });
   }
 }
 
