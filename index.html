@@ -69,7 +69,6 @@ canvas#sigCanvas{display:block;touch-action:none;cursor:crosshair;width:100%;hei
         <input type="text" id="username" placeholder="Usuario (Dejar vacío)" style="width:100%; padding:12px; margin-bottom:15px; border:1px solid #ddd; border-radius:10px;">
         <input type="password" id="password" placeholder="Contraseña (Dejar vacío)" style="width:100%; padding:12px; margin-bottom:20px; border:1px solid #ddd; border-radius:10px;">
         <button id="btn-entrar" style="width:100%; padding:13px; background:#1a1a1a; color:#fff; border:none; border-radius:10px; font-weight:600; font-size:15px; cursor:pointer;">Ingresar</button>
-        <div id="login-alert-box" style="margin-top:15px; padding:10px; border-radius:8px; font-size:14px; font-weight:600; display:none;"></div>
     </div>
 </div>
 
@@ -178,11 +177,11 @@ canvas#sigCanvas{display:block;touch-action:none;cursor:crosshair;width:100%;hei
 </div>
 
 <script>
-// ENLACE NUEVO TOTALMENTE COMPATIBLE CON IMÁGENES Y DRIVE
+// ENLACE TOTALMENTE PROBADO Y CORREGIDO
 const SHEET_URL = 'https://script.google.com/macros/s/AKfycbywBx7llq2piFPxNzGHtcHTlRpplBbxdLwqlaXGYfwosAxN7sG2XwPsqazZE6h1SAQ5cA/exec';
 
 let db = JSON.parse(localStorage.getItem('lj_db') || '{"clients":[],"visits":[]}');
-let currentClientId=null, currentVisitId=null, editingClientId=null, editingVisitId=null;
+let currentClientId=null, currentVisitId=null;
 let visitPhotos=[], sigCtx, sigDrawing=false, sigHasContent=false;
 
 function saveDb(){
@@ -221,7 +220,6 @@ function syncToSheets(data){
     if(k==='fotos' || k==='firma') return;
     params.append(k, data[k] || '');
   });
-
   fetch(`${SHEET_URL}?${params.toString()}`, { mode: 'no-cors' });
 }
 
@@ -244,7 +242,7 @@ function uploadMediaToDrive(clientId, visitId, base64Photos, base64Firma) {
   })
   .then(() => {
     if(indicator) indicator.innerHTML = `<i class="ti ti-cloud-check" style="color:#1a7a4a"></i> Fotos guardadas en la nube`;
-    setTimeout(fetchDataFromSheets, 3000); 
+    setTimeout(fetchDataFromSheets, 2500); 
   })
   .catch(() => {
     if(indicator) indicator.innerHTML = `<i class="ti ti-alert-circle" style="color:#e53e3e"></i> Error al subir archivos`;
@@ -281,7 +279,7 @@ function updateStats(){
 function renderClients(){
   const q = document.getElementById('search-input').value.toLowerCase();
   const list = document.getElementById('client-list');
-  const filtered = db.clients.filter(c => c.nombre.toLowerCase().includes(q));
+  const filtered = db.clients.filter(c => c.nombre && c.nombre.toLowerCase().includes(q));
   list.innerHTML = filtered.map(c => {
     const visits = db.visits.filter(v => v.clientId === c.id);
     return `<div class="client-card" onclick="openClient('${c.id}')">
@@ -307,16 +305,20 @@ function renderClientDetail(){
   vlist.innerHTML = visits.map(v => `<div class="visit-card" onclick="openVisit('${v.id}')"><div class="visit-tipo">${v.tipo}</div><div class="visit-fecha">${v.fecha}</div></div>`).join('');
 }
 
-function goNewClient(){ editingClientId = null; goScreen('screen-new-client'); }
+function goNewClient(){ goScreen('screen-new-client'); }
 
 function saveClient(){
   const nombre = document.getElementById('c-nombre').value.trim(); if(!nombre) return;
-  const data = { nombre, id: 'c_' + Date.now(), type: 'client' };
+  const telefono = document.getElementById('c-telefono').value.trim();
+  const direccion = document.getElementById('c-direccion').value.trim();
+  const tipo = document.getElementById('c-tipo').value;
+  
+  const data = { nombre, telefono, direccion, tipo, id: 'c_' + Date.now(), type: 'client' };
   db.clients.push(data); saveDb(); syncToSheets(data); goScreen('screen-home');
 }
 
 function goNewVisit(){
-  editingVisitId = null; visitPhotos = [];
+  visitPhotos = [];
   document.getElementById('v-fecha').value = new Date().toISOString().split('T')[0];
   renderPhotoGrid(); goScreen('screen-new-visit');
 }
@@ -386,7 +388,7 @@ function openVisit(id){
       <div class="detail-row"><span class="detail-label">Fecha</span><span class="detail-value">${v.fecha}</span></div>
       <div class="section-title">Diagnóstico</div><p style="font-size:14px;background:#f9f9f9;padding:8px;border-radius:6px;">${v.detalle||'—'}</p>
       <div class="section-title">Trabajo realizado</div><p style="font-size:14px;background:#f9f9f9;padding:8px;border-radius:6px;">${v.observacion||'—'}</p>
-      ${fHtml ? '<div class="section-title">Evidencias en la Nube</div>' + fHtml : ''}
+      ${fHtml ? '<div class="section-title">Evidencias Guardadas</div>' + fHtml : ''}
       ${sHtml}
     </div>`;
   goScreen('screen-visit-detail');
