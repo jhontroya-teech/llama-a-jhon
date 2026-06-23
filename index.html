@@ -50,22 +50,10 @@ canvas#sigCanvas{display:block;touch-action:none;width:100%;height:160px;}
 .sync-indicator { font-size: 11px; color: #888; display: flex; align-items: center; gap: 4px; justify-content: center; margin-bottom: 10px; }
 .sync-spin { animation: spin 1s linear infinite; }
 @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
-.public-report { background: #fff; border-radius: 14px; padding: 20px; border: 1px solid #e5e5e5; margin-top: 10px; }
-.public-title { font-size: 20px; font-weight: 700; text-align: center; color: #1a1a1a; }
-.public-subtitle { font-size: 13px; text-align: center; color: #777; margin-bottom: 20px; border-bottom: 2px dashed #eee; padding-bottom: 15px; }
 </style>
 </head>
 <body>
 <div id="toast" class="toast"></div>
-
-<!-- REPORTE PÚBLICO -->
-<div id="screen-public-report" class="screen">
-  <div class="public-report">
-    <div class="public-title">Llama a Jhon</div>
-    <div class="public-subtitle">Reporte Técnico Digital</div>
-    <div id="public-report-content"></div>
-  </div>
-</div>
 
 <!-- LOGIN -->
 <div id="login-screen" style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #1a1a1a; z-index: 9999; display: flex; justify-content: center; align-items: center; flex-direction: column;">
@@ -154,14 +142,14 @@ canvas#sigCanvas{display:block;touch-action:none;width:100%;height:160px;}
   <button class="btn-primary" onclick="saveVisit()" style="margin-top:1rem">Guardar Reporte</button>
 </div>
 
-<!-- VER VISITA -->
+<!-- VER VISITA (ESTA ES LA PANTALLA QUE SE LE MOSTRARÁ AL CLIENTE EXACTAMENTE) -->
 <div id="screen-visit-detail" class="screen">
-  <div class="header">
+  <div class="header" id="visit-detail-header">
     <button class="back-btn" onclick="goScreen('screen-client-detail')"><i class="ti ti-arrow-left"></i></button>
-    <h1>Reporte Guardado</h1>
+    <h1>Detalle de visita</h1>
   </div>
   <div id="visit-detail-content"></div>
-  <button class="btn-share" onclick="shareCurrentVisitReport()"><i class="ti ti-brand-whatsapp"></i> Compartir por WhatsApp</button>
+  <button id="btn-whatsapp-share" class="btn-share" onclick="shareCurrentVisitReport()"><i class="ti ti-brand-whatsapp"></i> Compartir por WhatsApp</button>
 </div>
 
 <script>
@@ -188,7 +176,7 @@ function getVal(obj, keys) {
   return '';
 }
 
-function fetchDataFromSheets() {
+function fetchDataFromSheets(callback) {
   const ind = document.getElementById('sync-status');
   if(ind) ind.innerHTML = `<i class="ti ti-refresh sync-spin"></i> Sincronizando con Excel...`;
   
@@ -198,10 +186,12 @@ function fetchDataFromSheets() {
       if (data && data.clients) {
         db = data; saveDb(); renderClients();
         if(ind) ind.innerHTML = `<i class="ti ti-cloud-check" style="color:#1a7a4a"></i> Base de datos al día`;
+        if(callback) callback();
       }
     })
     .catch(() => {
       if(ind) ind.innerHTML = `<i class="ti ti-cloud-off" style="color:#e53e3e"></i> Modo local (Sin internet)`;
+      if(callback) callback();
     });
 }
 
@@ -216,16 +206,22 @@ function uploadMediaToDrive(clientId, visitId, base64Photos, base64Firma) {
     method: 'POST',
     mode: 'no-cors',
     body: JSON.stringify({ type: 'visit_media', clientId, visitId, fotos: base64Photos, firma: base64Firma })
-  }).then(() => setTimeout(fetchDataFromSheets, 2000));
+  }).then(() => setTimeout(() => fetchDataFromSheets(), 2000));
 }
 
 document.addEventListener("DOMContentLoaded", function() {
   const urlParams = new URLSearchParams(window.location.search);
   const publicVisitId = urlParams.get('reporte');
+  
   if (publicVisitId) {
+    // Si viene desde un enlace compartido de WhatsApp, ocultamos login y botones de administración
     document.getElementById("login-screen").style.display = "none";
-    showPublicReport(publicVisitId); return;
+    document.getElementById("visit-detail-header").style.display = "none"; // Ocultar botón atrás
+    document.getElementById("btn-whatsapp-share").style.display = "none"; // Ocultar botón compartir
+    showPublicReportDirect(publicVisitId); 
+    return;
   }
+  
   if (sessionStorage.getItem("lj_logged") === "true") {
     document.getElementById("login-screen").style.display = "none"; fetchDataFromSheets();
   }
@@ -250,7 +246,7 @@ function renderClients(){
     let tel = getVal(c, ['telefono', 'Teléfono']) || '—';
     let dir = getVal(c, ['direccion', 'Dirección']) || '—';
     let tipo = getVal(c, ['tipo', 'Tipo']) || 'Split';
-    const vCount = db.visits.filter(v => getVal(v, ['clientId', 'Cliente ID']) === id).length;
+    const vCount = db.visits.filter(v => getVal(v, ['clientId', 'Cliente ID', 'clientId']) === id).length;
     
     return `<div class="client-card" onclick="openClient('${id}')">
       <div class="client-name">${name}</div>
@@ -275,7 +271,7 @@ function renderClientDetail(){
     <div class="detail-row"><span class="detail-label">Capacidad:</span><span class="detail-value">${getVal(c, ['btu', 'BTU'])}</span></div>
   `;
   
-  const vts = db.visits.filter(v => getVal(v, ['clientId', 'Cliente ID']) === currentClientId);
+  const vts = db.visits.filter(v => getVal(v, ['clientId', 'Cliente ID', 'clientId']) === currentClientId);
   document.getElementById('visit-list').innerHTML = vts.map(v => {
     let vId = getVal(v, ['id', 'ID']);
     let vTipo = getVal(v, ['tipo', 'Tipo']) || 'Servicio';
@@ -353,7 +349,7 @@ function renderPhotoGrid(){ document.getElementById('photo-grid').innerHTML = vi
 function saveVisit(){
   const id = 'v_' + Date.now();
   const d = {
-    type: 'visit', id: id, clientId: currentClientId,
+    type: 'visit', id: id, clientId: currentClientId, 'Cliente ID': currentClientId,
     fecha: document.getElementById('v-fecha').value,
     tipo: document.getElementById('v-tipo').value,
     detalle: document.getElementById('v-detalle').value,
@@ -372,36 +368,45 @@ function openVisit(id){
     <div class="info-card">
       <div class="detail-row"><span class="detail-label">Servicio:</span><span class="detail-value">${getVal(v, ['tipo', 'Tipo'])}</span></div>
       <div class="detail-row"><span class="detail-label">Fecha:</span><span class="detail-value">${(getVal(v, ['fecha', 'Fecha'])||'').split('T')[0]}</span></div>
-      <div class="section-title">Detalle / Diagnóstico</div><p style="font-size:14px;background:#f9f9f9;padding:8px;border-radius:6px;margin-bottom:10px;">${getVal(v, ['detalle', 'Detalle'])||'—'}</p>
+      <div class="section-title">Diagnóstico</div><p style="font-size:14px;background:#f9f9f9;padding:8px;border-radius:6px;margin-bottom:10px;">${getVal(v, ['detalle', 'Detalle'])||'—'}</p>
       <div class="section-title">Trabajo Realizado</div><p style="font-size:14px;background:#f9f9f9;padding:8px;border-radius:6px;margin-bottom:10px;">${getVal(v, ['observacion', 'Observación'])||'—'}</p>
-      ${fHtml ? '<div class="section-title">Evidencias</div>' + fHtml : ''}
-      ${v.firma ? '<div class="section-title">Firma</div><img src="'+v.firma+'" class="sig-preview">' : ''}
+      ${fHtml ? '<div class="section-title">Evidencias Guardadas</div>' + fHtml : ''}
+      ${v.firma ? '<div class="section-title">Firma de Conformidad</div><img src="'+v.firma+'" class="sig-preview">' : ''}
     </div>`;
   goScreen('screen-visit-detail');
 }
 
-function showPublicReport(visitId) {
-  const v = db.visits.find(x => getVal(x, ['id', 'ID']) === visitId);
-  if (!v) {
-    document.getElementById('public-report-content').innerHTML = `<p style="text-align:center;color:#666;padding:20px;">Sincronizando reporte técnico en la nube...</p>`;
-    fetch(`${SHEET_URL}?action=readAll`).then(r => r.json()).then(data => { db = data; showPublicReport(visitId); });
-    goScreen('screen-public-report'); return;
-  }
-  const c = db.clients.find(x => getVal(x, ['id', 'ID']) === getVal(v, ['clientId', 'Cliente ID'])) || {};
-  let fHtml = (v.fotos || []).map(p => `<img src="${p}" style="width:100%;border-radius:10px;margin-bottom:8px;">`).join('');
+function showPublicReportDirect(visitId) {
+  goScreen('screen-visit-detail');
+  const contentDiv = document.getElementById('visit-detail-content');
+  contentDiv.innerHTML = `<p style="text-align:center;color:#666;padding:20px;"><i class="ti ti-refresh sync-spin"></i> Descargando reporte digital desde la nube...</p>`;
   
-  document.getElementById('public-report-content').innerHTML = `
-    <div class="detail-row"><span class="detail-label">Cliente</span><span class="detail-value">${getVal(c, ['nombre', 'Nombre']) || 'Cliente General'}</span></div>
-    <div class="detail-row"><span class="detail-label">Dirección</span><span class="detail-value">${getVal(c, ['direccion', 'Dirección']) || '—'}</span></div>
-    <div class="detail-row"><span class="detail-label">Equipo</span><span class="detail-value">${getVal(c, ['tipo', 'Tipo'])} ${getVal(c, ['marca', 'Marca'])}</span></div>
-    <div class="detail-row"><span class="detail-label">Capacidad</span><span class="detail-value">${getVal(c, ['btu', 'BTU'])} BTU</span></div>
-    <div class="detail-row"><span class="detail-label">Fecha</span><span class="detail-value">${(getVal(v, ['fecha', 'Fecha'])||'').split('T')[0]}</span></div>
-    <div class="section-title">Diagnóstico Técnico</div><p style="font-size:14px;background:#f9f9f9;padding:10px;border-radius:8px;margin-bottom:10px;">${getVal(v, ['detalle', 'Detalle'])}</p>
-    <div class="section-title">Trabajo Efectuado</div><p style="font-size:14px;background:#f9f9f9;padding:10px;border-radius:8px;margin-bottom:10px;">${getVal(v, ['observacion', 'Observación'])}</p>
-    ${fHtml ? '<div class="section-title">Evidencias Fotográficas</div>' + fHtml : ''}
-    ${v.firma ? '<div class="section-title">Conformidad del Cliente</div><img src="'+v.firma+'" class="sig-preview">' : ''}
-  `;
-  goScreen('screen-public-report');
+  fetchDataFromSheets(() => {
+    const v = db.visits.find(x => getVal(x, ['id', 'ID']) === visitId);
+    if (!v) {
+      contentDiv.innerHTML = `<p style="text-align:center;color:#e53e3e;padding:20px;">El reporte se está procesando en la base de datos de Google Sheets. Por favor, recarga en unos segundos.</p>`;
+      return;
+    }
+    let fHtml = (v.fotos || []).map(p => `<img src="${p}" style="width:100%;border-radius:10px;margin-bottom:8px;">`).join('');
+    
+    contentDiv.innerHTML = `
+      <div class="info-card">
+        <h2 style="text-align:center; font-size:18px; margin-bottom:4px;">Llama a Jhon</h2>
+        <p style="text-align:center; font-size:12px; color:#666; margin-bottom:15px; border-bottom:1px dashed #ddd; padding-bottom:10px;">Reporte Técnico Digital</p>
+        
+        <div class="detail-row"><span class="detail-label">Servicio:</span><span class="detail-value">${getVal(v, ['tipo', 'Tipo'])}</span></div>
+        <div class="detail-row"><span class="detail-label">Fecha:</span><span class="detail-value">${(getVal(v, ['fecha', 'Fecha'])||'').split('T')[0]}</span></div>
+        
+        <div class="section-title">Diagnóstico</div>
+        <p style="font-size:14px;background:#f9f9f9;padding:8px;border-radius:6px;margin-bottom:10px;">${getVal(v, ['detalle', 'Detalle'])||'—'}</p>
+        
+        <div class="section-title">Trabajo Realizado</div>
+        <p style="font-size:14px;background:#f9f9f9;padding:8px;border-radius:6px;margin-bottom:10px;">${getVal(v, ['observacion', 'Observación'])||'—'}</p>
+        
+        ${fHtml ? '<div class="section-title">Evidencias Guardadas</div>' + fHtml : ''}
+        ${v.firma ? '<div class="section-title">Firma de Conformidad</div><img src="'+v.firma+'" class="sig-preview">' : ''}
+      </div>`;
+  });
 }
 
 function shareCurrentVisitReport() {
