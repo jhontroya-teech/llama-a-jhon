@@ -7,43 +7,39 @@
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.19.0/dist/tabler-icons.min.css">
 <style>
 *{box-sizing:border-box;margin:0;padding:0;}
-body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:#f5f5f5;color:#1a1a1a;max-width:430px;margin:0 auto;min-height:100vh;}
-.screen{display:none;padding:1rem;padding-bottom:5rem;}
-.screen.active{display:block;}
-.header{display:flex;align-items:center;gap:10px;background:#fff;margin:-1rem -1rem 1.5rem;padding:1rem;position:sticky;top:0;z-index:10;border-bottom:1px solid #e5e5e5;}
-.header h1{font-size:18px;font-weight:600;color:#1a1a1a;flex:1;}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:#f5f5f5;color:#1a1a1a;max-width:430px;margin:0 auto;padding:1rem;}
+.header{display:flex;align-items:center;justify-content:space-between;margin-bottom:1.5rem;background:#fff;padding:1rem;border-radius:12px;box-shadow:0 2px 5px rgba(0,0,0,0.05);}
 .search-wrap{position:relative;margin-bottom:1rem;}
-.search-wrap input{width:100%;padding:11px 14px 11px 38px;border:1px solid #ddd;border-radius:10px;font-size:15px;outline:none;}
-.search-wrap i{position:absolute;left:11px;top:50%;transform:translateY(-50%);color:#aaa;font-size:18px;}
-.client-card{background:#fff;border:1px solid #e5e5e5;border-radius:14px;padding:14px 16px;margin-bottom:10px;cursor:pointer;}
-.client-name{font-size:16px;font-weight:600;color:#1a1a1a;}
-.client-meta{font-size:13px;color:#888;margin-top:3px;}
-.fab{position:fixed;bottom:1.5rem;right:1.5rem;width:56px;height:56px;border-radius:50%;background:#1a1a1a;color:#fff;border:none;font-size:30px;cursor:pointer;box-shadow:0 4px 16px rgba(0,0,0,0.25);z-index:20;}
-.sync-indicator { font-size: 11px; color: #888; text-align: center; margin-bottom: 10px; }
+.search-wrap input{width:100%;padding:12px 14px 12px 40px;border:1px solid #ddd;border-radius:12px;font-size:16px;}
+.search-wrap i{position:absolute;left:14px;top:50%;transform:translateY(-50%);color:#aaa;font-size:20px;}
+.client-card{background:#fff;border-radius:14px;padding:16px;margin-bottom:12px;box-shadow:0 2px 8px rgba(0,0,0,0.08);}
+.client-name{font-size:18px;font-weight:700;margin-bottom:8px;}
+.client-meta{font-size:14px;color:#555;line-height:1.6;}
+.sync-indicator{text-align:center;font-size:12px;color:#888;margin-bottom:10px;}
 </style>
 </head>
 <body>
 
-<div id="screen-home" class="screen active">
-  <div class="header">
-    <h1>Llama a Jhon</h1>
-    <i class="ti ti-refresh" style="font-size:20px;color:#1a4a9a;cursor:pointer;" onclick="fetchDataFromSheets()"></i>
-  </div>
-  <div id="sync-status" class="sync-indicator">Esperando conexión...</div>
-  <div class="search-wrap">
-    <i class="ti ti-search"></i>
-    <input type="text" id="search-input" placeholder="Buscar cliente..." oninput="renderClients()">
-  </div>
-  <div id="client-list"></div>
-  <button class="fab" onclick="window.location.href='#'"><i class="ti ti-plus"></i></button>
+<div class="header">
+  <h1 style="font-size:20px;">Llama a Jhon</h1>
+  <i class="ti ti-refresh" style="font-size:22px;color:#1a4a9a;cursor:pointer;" onclick="fetchDataFromSheets()"></i>
 </div>
+
+<div id="sync-status" class="sync-indicator">Sincronizando...</div>
+
+<div class="search-wrap">
+  <i class="ti ti-search"></i>
+  <input type="text" id="search-input" placeholder="Buscar por nombre..." oninput="renderClients()">
+</div>
+
+<div id="client-list"></div>
 
 <script>
 const SHEET_URL = 'https://script.google.com/macros/s/AKfycbwDOF7kyHlPUVB0VVKqOsZRJ9duEbEnd8bfDeRZ9A_dauG8b4BOvjtxHIc-F0m0mOer8A/exec';
 let db = {clients:[], visits:[]};
 
 function fetchDataFromSheets() {
-  document.getElementById('sync-status').textContent = "Sincronizando...";
+  document.getElementById('sync-status').textContent = "Cargando datos...";
   fetch(SHEET_URL)
     .then(res => res.json())
     .then(data => {
@@ -57,14 +53,23 @@ function fetchDataFromSheets() {
 function renderClients() {
   const q = document.getElementById('search-input').value.toLowerCase();
   const list = document.getElementById('client-list');
+  
+  if (!db.clients || db.clients.length === 0) {
+    list.innerHTML = "<p style='text-align:center; margin-top:20px;'>No hay datos en la hoja 'clientes'.</p>";
+    return;
+  }
+
   list.innerHTML = db.clients.filter(c => (c.Nombre || '').toLowerCase().includes(q)).map(c => `
     <div class="client-card">
       <div class="client-name">${c.Nombre || 'Sin nombre'}</div>
-      <div class="client-meta"><i class="ti ti-phone"></i> ${c.Teléfono || 'Sin número'}</div>
+      <div class="client-meta">
+        <div><i class="ti ti-phone"></i> <b>Tel:</b> ${c.Teléfono || '---'}</div>
+        <div><i class="ti ti-map-pin"></i> <b>Dir:</b> ${c.Dirección || '---'}</div>
+        <div><i class="ti ti-snowflake"></i> <b>Equipo:</b> ${c.Tipo || '---'} | ${c.Marca || '---'} | ${c.BTU || '---'} BTU</div>
+      </div>
     </div>`).join('');
 }
 
-// Cargar al iniciar
 fetchDataFromSheets();
 </script>
 </body>
