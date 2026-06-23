@@ -115,7 +115,7 @@ canvas#sigCanvas{display:block;touch-action:none;width:100%;height:160px;}
   </div>
   <div class="info-card" id="client-detail-info"></div>
   <button class="btn-primary" onclick="goNewVisit()"><i class="ti ti-plus"></i> Registrar Nuevo Trabajo</button>
-  <div class="section-title" style="margin-top:1.5rem">Historial de Reportes (Haz clic para ver detalles)</div>
+  <div class="section-title" style="margin-top:1.5rem">Historial de Reportes</div>
   <div id="visit-list"></div>
 </div>
 
@@ -130,7 +130,7 @@ canvas#sigCanvas{display:block;touch-action:none;width:100%;height:160px;}
     <option value="">Tipo de servicio</option>
     <option>Limpieza</option><option>Revisión técnica</option><option>Instalación</option><option>Fuga de gas</option>
   </select>
-  <textarea id="v-detalle" placeholder="Detalle (ej: esta sucio y gotea)"></textarea>
+  <textarea id="v-detalle" placeholder="Diagnóstico (ej: está sucio y gotea)"></textarea>
   <textarea id="v-observacion" placeholder="Observación (ej: se hizo limpieza profunda)"></textarea>
   
   <div class="section-title">Evidencias Fotográficas</div>
@@ -156,165 +156,44 @@ canvas#sigCanvas{display:block;touch-action:none;width:100%;height:160px;}
 </div>
 
 <script>
-const SHEET_URL = 'https://script.google.com/macros/s/AKfycbz93xEp7ZF-gKOD_NaRHEpq7b0R8uOpbViE-3TQLkkIwSmanuhYCetpjePVFXQGCMRs/exec';
+const SHEET_URL = 'https://script.google.com/macros/s/AKfycbzcZ8Y_jbUTY5goLeF_lAYgJo8SmNNE4MM8nRi0qcXu4SuRlJEe2U20j9CSUWLeo04YbQ/exec';
 
 let db = JSON.parse(localStorage.getItem('lj_db') || '{"clients":[],"visits":[]}');
 let currentClientId=null, currentVisitId=null, visitPhotos=[], sigCtx, sigDrawing=false, sigHasContent=false;
 
-// BUSCADOR INTELIGENTE ULTRA-REFORZADO (Ignora tildes, espacios y mayúsculas/minúsculas)
 function getVal(obj, keys) {
   if (!obj) return '';
-  
-  // 1. Intento directo con la lista de claves sugeridas
-  for (let k of keys) {
-    if (obj[k] !== undefined && obj[k] !== null) return obj[k];
-  }
-  
-  // 2. Rastreo total: Busca coincidencias sin importar cómo esté guardado en Sheets
   const objKeys = Object.keys(obj);
   const cleanStr = (s) => String(s).toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").trim();
-  
   for (let targetKey of keys) {
     let cleanTarget = cleanStr(targetKey);
-    for (let actualKey of objKeys) {
-      if (cleanStr(actualKey) === cleanTarget) {
-        return obj[actualKey];
-      }
-    }
+    for (let actualKey of objKeys) { if (cleanStr(actualKey) === cleanTarget) return obj[actualKey]; }
   }
   return '';
 }
 
-function saveDb(){
-  localStorage.setItem('lj_db', JSON.stringify(db));
-  document.getElementById('total-clients').textContent = db.clients ? db.clients.length : 0;
-  document.getElementById('total-visits').textContent = db.visits ? db.visits.length : 0;
-}
+function saveDb(){ localStorage.setItem('lj_db', JSON.stringify(db)); }
 
-function showToast(msg){
-  const t=document.getElementById('toast'); t.textContent=msg; t.classList.add('show');
-  setTimeout(()=>t.classList.remove('show'),2500);
-}
-
-function fetchDataFromSheets(callback) {
-  const ind = document.getElementById('sync-status');
-  if(ind) ind.innerHTML = `<i class="ti ti-refresh sync-spin"></i> Sincronizando con Excel...`;
-  
-  fetch(`${SHEET_URL}?action=readAll`)
+function fetchDataFromSheets() {
+  fetch(`${SHEET_URL}`)
     .then(res => res.json())
     .then(data => {
-      if (data && data.clients) {
-        db = data; saveDb(); renderClients();
-        if(ind) ind.innerHTML = `<i class="ti ti-cloud-check" style="color:#1a7a4a"></i> Base de datos al día`;
-        if(callback) callback();
-      }
+      db = data; saveDb(); renderClients();
+      document.getElementById('sync-status').innerHTML = `<i class="ti ti-cloud-check" style="color:#1a7a4a"></i> Base de datos al día`;
+      document.getElementById('total-clients').textContent = db.clients.length;
+      document.getElementById('total-visits').textContent = db.visits.length;
     })
-    .catch(() => {
-      if(ind) ind.innerHTML = `<i class="ti ti-cloud-off" style="color:#e53e3e"></i> Modo local (Sin internet)`;
-      if(callback) callback();
-    });
+    .catch(() => { document.getElementById('sync-status').innerHTML = `Modo local (Sin conexión)`; });
 }
 
-function syncToSheets(data){
-  const params = new URLSearchParams();
-  Object.keys(data).forEach(k => { if(k!=='fotos' && k!=='firma') params.append(k, data[k] || ''); });
-  fetch(`${SHEET_URL}?${params.toString()}`, { mode: 'no-cors' });
+function saveClient(){
+  const d = { type: 'client', ID: 'c_' + Date.now(), Nombre: document.getElementById('c-nombre').value, Teléfono: document.getElementById('c-telefono').value, Dirección: document.getElementById('c-direccion').value, Tipo: document.getElementById('c-tipo').value, Marca: document.getElementById('c-marca').value, BTU: document.getElementById('c-btu').value };
+  fetch(SHEET_URL, { method: 'POST', mode: 'no-cors', body: JSON.stringify(d) }).then(() => { fetchDataFromSheets(); goScreen('screen-home'); });
 }
 
-function uploadMediaToDrive(clientId, visitId, base64Photos, base64Firma) {
-  fetch(SHEET_URL, {
-    method: 'POST',
-    mode: 'no-cors',
-    body: JSON.stringify({ type: 'visit_media', clientId, visitId, fotos: base64Photos, firma: base64Firma })
-  }).then(() => setTimeout(() => fetchDataFromSheets(), 2000));
-}
-
-document.addEventListener("DOMContentLoaded", function() {
-  const urlParams = new URLSearchParams(window.location.search);
-  const publicVisitId = urlParams.get('reporte');
-  
-  if (publicVisitId) {
-    document.getElementById("login-screen").style.display = "none";
-    document.getElementById("visit-detail-header").style.display = "none";
-    document.getElementById("btn-whatsapp-share").style.display = "none";
-    showPublicReportDirect(publicVisitId); 
-    return;
-  }
-  
-  if (sessionStorage.getItem("lj_logged") === "true") {
-    document.getElementById("login-screen").style.display = "none"; fetchDataFromSheets();
-  }
-  document.getElementById("btn-entrar").onclick = function() {
-    sessionStorage.setItem("lj_logged", "true");
-    document.getElementById("login-screen").style.display = "none"; fetchDataFromSheets();
-  };
-});
-
-function renderClients(){
-  const q = document.getElementById('search-input').value.toLowerCase();
-  const list = document.getElementById('client-list');
-  
-  if (!db.clients) return;
-  
-  const filtered = db.clients.filter(c => {
-    let name = (getVal(c, ['Nombre', 'nombre']) || '').toString().toLowerCase();
-    return name.includes(q);
-  });
-  
-  list.innerHTML = filtered.map(c => {
-    let id = getVal(c, ['ID', 'id', 'Id']);
-    let name = getVal(c, ['Nombre', 'nombre']) || 'Sin Nombre';
-    let tel = getVal(c, ['Teléfono', 'telefono', 'Telefono']) || '—';
-    let dir = getVal(c, ['Dirección', 'direccion', 'Direccion']) || '—';
-    let tipo = getVal(c, ['Tipo', 'tipo']) || 'Split';
-    
-    const vCount = (db.visits || []).filter(v => {
-      let vClientId = getVal(v, ['Cliente ID', 'clientId', 'clientid']);
-      return String(vClientId).trim() === String(id).trim();
-    }).length;
-    
-    return `<div class="client-card" onclick="openClient('${id}')">
-      <div class="client-name">${name}</div>
-      <div class="client-meta"><i class="ti ti-phone"></i> ${tel}</div>
-      <div class="client-meta"><i class="ti ti-map-pin"></i> ${dir}</div>
-      <span class="badge" style="background:#e6f0ff;color:#1a4a9a;">${tipo}</span>
-      <span class="badge" style="background:#f0f0f0;color:#555;">${vCount} servicios</span>
-    </div>`;
-  }).join('');
-}
-
-function openClient(id){ currentClientId = id; goScreen('screen-client-detail'); }
-
-function renderClientDetail(){
-  const c = db.clients.find(x => String(getVal(x, ['ID', 'id'])).trim() === String(currentClientId).trim()); 
-  if(!c) return;
-  
-  document.getElementById('client-detail-name').textContent = getVal(c, ['Nombre', 'nombre']);
-  document.getElementById('client-detail-info').innerHTML = `
-    <div class="detail-row"><span class="detail-label">Celular:</span><span class="detail-value">${getVal(c, ['Teléfono', 'telefono', 'Telefono']) || '—'}</span></div>
-    <div class="detail-row"><span class="detail-label">Dirección:</span><span class="detail-value">${getVal(c, ['Dirección', 'direccion', 'Direccion']) || '—'}</span></div>
-    <div class="detail-row"><span class="detail-label">Marca:</span><span class="detail-value">${getVal(c, ['Marca', 'marca']) || '—'}</span></div>
-    <div class="detail-row"><span class="detail-label">Capacidad:</span><span class="detail-value">${getVal(c, ['BTU', 'btu', 'capacidad']) || '—'}</span></div>
-  `;
-  
-  const vts = (db.visits || []).filter(v => String(getVal(v, ['Cliente ID', 'clientId', 'clientid'])).trim() === String(currentClientId).trim());
-  
-  if(vts.length === 0) {
-    document.getElementById('visit-list').innerHTML = `<p style="font-size:14px;color:#888;text-align:center;padding:15px;">No hay reportes registrados aún.</p>`;
-  } else {
-    document.getElementById('visit-list').innerHTML = vts.map(v => {
-      let vId = getVal(v, ['ID', 'id']);
-      let vTipo = getVal(v, ['Tipo', 'tipo']) || 'Servicio';
-      let vFecha = (getVal(v, ['Fecha', 'fecha']) || '').split('T')[0];
-      return `<div class="visit-card" onclick="openVisit('${vId}')" style="display:flex; justify-content:space-between; align-items:center;">
-        <div>
-          <div class="visit-tipo"><i class="ti ti-file-text" style="color:#1a4a9a; margin-right:5px;"></i> ${vTipo}</div>
-          <div class="visit-fecha">${vFecha}</div>
-        </div>
-        <i class="ti ti-chevron-right" style="color:#aaa;"></i>
-      </div>`;
-    }).join('');
-  }
+function saveVisit(){
+  const d = { type: 'visit', ID: 'v_' + Date.now(), ClienteID: currentClientId, Fecha: document.getElementById('v-fecha').value, Tipo: document.getElementById('v-tipo').value, Detalle: document.getElementById('v-detalle').value, Observación: document.getElementById('v-observacion').value };
+  fetch(SHEET_URL, { method: 'POST', mode: 'no-cors', body: JSON.stringify(d) }).then(() => { fetchDataFromSheets(); goScreen('screen-client-detail'); });
 }
 
 function goScreen(id){
@@ -325,136 +204,38 @@ function goScreen(id){
   if(id==='screen-new-visit') initSig();
 }
 
+function renderClients(){
+  const q = document.getElementById('search-input').value.toLowerCase();
+  const list = document.getElementById('client-list');
+  list.innerHTML = db.clients.filter(c => getVal(c, ['Nombre', 'nombre']).toLowerCase().includes(q)).map(c => `
+    <div class="client-card" onclick="openClient('${getVal(c, ['ID', 'id'])}')">
+      <div class="client-name">${getVal(c, ['Nombre', 'nombre'])}</div>
+      <div class="client-meta"><i class="ti ti-phone"></i> ${getVal(c, ['Teléfono', 'telefono'])}</div>
+    </div>`).join('');
+}
+
+function openClient(id){ currentClientId = id; goScreen('screen-client-detail'); }
+
+function renderClientDetail(){
+  const c = db.clients.find(x => getVal(x, ['ID', 'id']) === currentClientId);
+  document.getElementById('client-detail-name').textContent = getVal(c, ['Nombre', 'nombre']);
+  document.getElementById('client-detail-info').innerHTML = `<div class="detail-row"><span class="detail-label">Celular:</span><span class="detail-value">${getVal(c, ['Teléfono', 'telefono'])}</span></div>`;
+  document.getElementById('visit-list').innerHTML = db.visits.filter(v => getVal(v, ['ClienteID', 'clienteid']) === currentClientId).map(v => `
+    <div class="visit-card" onclick="alert('Reporte: ${getVal(v, ['Detalle', 'detalle'])}')">
+      <div class="visit-tipo">${getVal(v, ['Tipo', 'tipo'])}</div>
+      <div class="visit-fecha">${getVal(v, ['Fecha', 'fecha'])}</div>
+    </div>`).join('');
+}
+
+function initSig(){ const canvas = document.getElementById('sigCanvas'); canvas.width = canvas.parentElement.clientWidth; canvas.height = 160; sigCtx = canvas.getContext('2d'); sigCtx.strokeStyle = '#1a1a1a'; sigCtx.lineWidth = 2.5; }
+function clearSig(){ sigCtx.clearRect(0,0,500,200); }
 function goNewClient(){ goScreen('screen-new-client'); }
+function goNewVisit(){ goScreen('screen-new-visit'); document.getElementById('v-fecha').value = new Date().toISOString().split('T')[0]; }
 
-function saveClient(){
-  const nom = document.getElementById('c-nombre').value.trim(); if(!nom) return;
-  const id = 'c_' + Date.now();
-  const d = {
-    type: 'client', id: id, ID: id,
-    nombre: nom, Nombre: nom,
-    telefono: document.getElementById('c-telefono').value.trim(), Teléfono: document.getElementById('c-telefono').value.trim(),
-    direccion: document.getElementById('c-direccion').value.trim(), Dirección: document.getElementById('c-direccion').value.trim(),
-    tipo: document.getElementById('c-tipo').value, Tipo: document.getElementById('c-tipo').value,
-    marca: document.getElementById('c-marca').value.trim(), Marca: document.getElementById('c-marca').value.trim(),
-    btu: document.getElementById('c-btu').value.trim(), BTU: document.getElementById('c-btu').value.trim()
-  };
-  db.clients.push(d); saveDb(); syncToSheets(d); goScreen('screen-home');
-}
-
-function goNewVisit(){
-  visitPhotos = []; document.getElementById('v-fecha').value = new Date().toISOString().split('T')[0];
-  renderPhotoGrid(); goScreen('screen-new-visit');
-}
-
-function initSig(){
-  const canvas = document.getElementById('sigCanvas'); canvas.width = canvas.parentElement.clientWidth; canvas.height = 160;
-  sigCtx = canvas.getContext('2d'); sigCtx.strokeStyle = '#1a1a1a'; sigCtx.lineWidth = 2.5; sigHasContent = false;
-  canvas.ontouchstart = canvas.onmousedown = () => { sigDrawing = true; sigCtx.beginPath(); sigHasContent = true; };
-  canvas.ontouchmove = canvas.onmousemove = e => {
-    if(!sigDrawing) return; const r = canvas.getBoundingClientRect();
-    const clX = (e.touches ? e.touches[0].clientX : e.clientX) - r.left;
-    const clY = (e.touches ? e.touches[0].clientY : e.clientY) - r.top;
-    sigCtx.lineTo(clX, clY); sigCtx.stroke();
-  };
-  canvas.ontouchend = canvas.onmouseup = () => sigDrawing = false;
-}
-
-function clearSig(){ if(sigCtx){ sigCtx.clearRect(0,0,500,200); sigHasContent = false; } }
-
-function addPhotos(input){
-  Array.from(input.files).forEach(f => {
-    const r = new FileReader();
-    r.onload = e => {
-      const img = new Image(); img.src = e.target.result;
-      img.onload = () => {
-        const canvas = document.createElement('canvas'); const max = 600; let w = img.width, h = img.height;
-        if(w > h) { if(w > max){ h *= max/w; w = max; } } else { if(h > max){ w *= max/h; h = max; } }
-        canvas.width = w; canvas.height = h; canvas.getContext('2d').drawImage(img, 0,0, w, h);
-        visitPhotos.push(canvas.toDataURL('image/jpeg', 0.6)); renderPhotoGrid();
-      };
-    };
-    r.readAsDataURL(f);
-  });
-}
-
-function renderPhotoGrid(){ document.getElementById('photo-grid').innerHTML = visitPhotos.map(p => `<img src="${p}" class="photo-thumb">`).join('') + `<div class="photo-add" onclick="document.getElementById('photo-input').click()">+</div>`; }
-
-function saveVisit(){
-  const id = 'v_' + Date.now();
-  const d = {
-    type: 'visit', id: id, ID: id, clientId: currentClientId, 'Cliente ID': currentClientId,
-    fecha: document.getElementById('v-fecha').value, Fecha: document.getElementById('v-fecha').value,
-    tipo: document.getElementById('v-tipo').value, Tipo: document.getElementById('v-tipo').value,
-    detalle: document.getElementById('v-detalle').value, Detalle: document.getElementById('v-detalle').value,
-    observacion: document.getElementById('v-observacion').value, Observación: document.getElementById('v-observacion').value,
-    fotos: [...visitPhotos], firma: sigHasContent ? document.getElementById('sigCanvas').toDataURL() : null
-  };
-  db.visits.push(d); saveDb(); syncToSheets(d);
-  uploadMediaToDrive(currentClientId, id, d.fotos, d.firma);
-  goScreen('screen-client-detail');
-}
-
-function openVisit(id){
-  currentVisitId = id; const v = db.visits.find(x => String(getVal(x, ['ID', 'id'])) === String(id)); if(!v) return;
-  let fHtml = (v.fotos || []).map(p => `<img src="${p}" style="width:100%;border-radius:10px;margin-bottom:8px;display:block;">`).join('');
-  document.getElementById('visit-detail-content').innerHTML = `
-    <div class="info-card">
-      <div class="detail-row"><span class="detail-label">Servicio:</span><span class="detail-value">${getVal(v, ['Tipo', 'tipo'])}</span></div>
-      <div class="detail-row"><span class="detail-label">Fecha:</span><span class="detail-value">${(getVal(v, ['Fecha', 'fecha'])||'').split('T')[0]}</span></div>
-      <div class="section-title">Diagnóstico</div>
-      <div class="report-text-box">${getVal(v, ['Detalle', 'detalle'])||'—'}</div>
-      <div class="section-title">Trabajo Realizado</div>
-      <div class="report-text-box">${getVal(v, ['Observación', 'observacion'])||'—'}</div>
-      ${fHtml ? '<div class="section-title">Evidencias Guardadas</div>' + fHtml : ''}
-      ${v.firma ? '<div class="section-title">Firma de Conformidad</div><img src="'+v.firma+'" class="sig-preview">' : ''}
-    </div>`;
-  goScreen('screen-visit-detail');
-}
-
-function showPublicReportDirect(visitId) {
-  goScreen('screen-visit-detail');
-  const contentDiv = document.getElementById('visit-detail-content');
-  contentDiv.innerHTML = `<p style="text-align:center;color:#666;padding:20px;"><i class="ti ti-refresh sync-spin"></i> Descargando reporte digital desde la nube...</p>`;
-  
-  fetchDataFromSheets(() => {
-    const v = db.visits.find(x => String(getVal(x, ['ID', 'id'])) === String(visitId));
-    if (!v) {
-      contentDiv.innerHTML = `<p style="text-align:center;color:#e53e3e;padding:20px;">El reporte se está procesando en la base de datos de Google Sheets. Por favor, recarga en unos segundos.</p>`;
-      return;
-    }
-    let fHtml = (v.fotos || []).map(p => `<img src="${p}" style="width:100%;border-radius:10px;margin-bottom:8px;display:block;">`).join('');
-    
-    contentDiv.innerHTML = `
-      <div class="info-card">
-        <h2 style="text-align:center; font-size:18px; margin-bottom:4px; color:#1a1a1a;">Llama a Jhon</h2>
-        <p style="text-align:center; font-size:12px; color:#666; margin-bottom:15px; border-bottom:1px dashed #ddd; padding-bottom:10px;">Reporte Técnico Digital</p>
-        
-        <div class="detail-row"><span class="detail-label">Servicio:</span><span class="detail-value">${getVal(v, ['Tipo', 'tipo'])}</span></div>
-        <div class="detail-row"><span class="detail-label">Fecha:</span><span class="detail-value">${(getVal(v, ['Fecha', 'fecha'])||'').split('T')[0]}</span></div>
-        
-        <div class="section-title">Diagnóstico</div>
-        <div class="report-text-box">${getVal(v, ['Detalle', 'detalle'])||'—'}</div>
-        
-        <div class="section-title">Trabajo Realizado</div>
-        <div class="report-text-box">${getVal(v, ['Observación', 'observacion'])||'—'}</div>
-        
-        ${fHtml ? '<div class="section-title">Evidencias Guardadas</div>' + fHtml : ''}
-        ${v.firma ? '<div class="section-title">Firma de Conformidad</div><img src="'+v.firma+'" class="sig-preview">' : ''}
-      </div>`;
-  });
-}
-
-function shareCurrentVisitReport() {
-  if (!currentVisitId) return;
-  const baseUrl = window.location.href.split('?')[0];
-  const shareUrl = `${baseUrl}?reporte=${currentVisitId}`;
-  if (navigator.share) {
-    navigator.share({ title: 'Reporte Técnico Llama a Jhon', text: 'Hola, le comparto el reporte técnico digital de su equipo de aire acondicionado:', url: shareUrl }).catch(()=>{});
-  } else {
-    navigator.clipboard.writeText(shareUrl); showToast("📋 ¡Enlace copiado para enviarlo por WhatsApp!");
-  }
-}
+document.addEventListener("DOMContentLoaded", function() {
+  if (sessionStorage.getItem("lj_logged") === "true") { document.getElementById("login-screen").style.display = "none"; fetchDataFromSheets(); }
+  document.getElementById("btn-entrar").onclick = () => { sessionStorage.setItem("lj_logged", "true"); document.getElementById("login-screen").style.display = "none"; fetchDataFromSheets(); };
+});
 </script>
 </body>
 </html>
