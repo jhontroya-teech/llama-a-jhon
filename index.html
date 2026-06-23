@@ -13,7 +13,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
 .header{display:flex;align-items:center;gap:10px;background:#fff;margin:-1rem -1rem 1.5rem;padding:1rem;position:sticky;top:0;z-index:10;border-bottom:1px solid #e5e5e5;}
 .header h1{font-size:18px;font-weight:600;color:#1a1a1a;flex:1;}
 .back-btn{background:none;border:none;cursor:pointer;color:#666;font-size:22px;padding:0;display:flex;align-items:center;}
-.section-title{font-size:12px;color:#888;font-weight:600;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:8px;margin-top:1.25rem;}
+.section-title{font-size:12px;color:#1a1a1a;font-weight:700;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:8px;margin-top:1.25rem;}
 input,textarea,select{width:100%;padding:11px 14px;border:1px solid #ddd;border-radius:10px;font-size:15px;color:#1a1a1a;background:#fff;font-family:inherit;margin-bottom:10px;outline:none;}
 .btn-primary{width:100%;padding:13px;background:#1a1a1a;color:#fff;border:none;border-radius:10px;font-size:15px;font-weight:600;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px;}
 .btn-secondary{width:100%;padding:13px;background:#fff;color:#1a1a1a;border:1px solid #ddd;border-radius:10px;font-size:15px;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px;margin-top:8px;}
@@ -29,7 +29,7 @@ canvas#sigCanvas{display:block;touch-action:none;width:100%;height:160px;}
 .photo-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px;}
 .photo-thumb{width:100%;height:100px;object-fit:cover;border-radius:10px;border:1px solid #eee;}
 .photo-add{width:100%;height:100px;border:1.5px dashed #ccc;border-radius:10px;display:flex;align-items:center;justify-content:center;cursor:pointer;color:#aaa;font-size:32px;background:#fafafa;}
-.sig-preview{max-width:100%;border-radius:10px;border:1px solid #eee;margin-top:8px;}
+.sig-preview{max-width:100%;border-radius:10px;border:1px solid #eee;margin-top:8px;background:#fff;}
 .search-wrap{position:relative;margin-bottom:1rem;}
 .search-wrap input{padding-left:38px;margin-bottom:0;}
 .search-wrap i{position:absolute;left:11px;top:50%;transform:translateY(-50%);color:#aaa;font-size:18px;}
@@ -44,9 +44,10 @@ canvas#sigCanvas{display:block;touch-action:none;width:100%;height:160px;}
 .toast.show{opacity:1;}
 .app-logo{width:36px;height:36px;background:#1a1a1a;border-radius:10px;display:flex;align-items:center;justify-content:center;color:#fff;font-size:20px;}
 .info-card{background:#fff;border:1px solid #e5e5e5;border-radius:14px;padding:14px 16px;margin-bottom:1rem;}
-.detail-row{display:flex;justify-content:space-between;margin-bottom:8px;font-size:14px;border-bottom:1px dashed #eee;padding-bottom:6px;}
-.detail-label{color:#888;font-weight:500;}
+.detail-row{display:flex;justify-content:space-between;margin-bottom:8px;font-size:15px;border-bottom:1px dashed #eee;padding-bottom:6px;}
+.detail-label{color:#555;font-weight:500;}
 .detail-value{color:#1a1a1a;font-weight:600;text-align:right;}
+.report-text-box{font-size:15px;color:#1a1a1a;background:#f9f9f9;padding:10px 12px;border-radius:8px;margin-bottom:12px;border:1px solid #f0f0f0;line-height:1.4;}
 .sync-indicator { font-size: 11px; color: #888; display: flex; align-items: center; gap: 4px; justify-content: center; margin-bottom: 10px; }
 .sync-spin { animation: spin 1s linear infinite; }
 @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
@@ -110,10 +111,11 @@ canvas#sigCanvas{display:block;touch-action:none;width:100%;height:160px;}
   <div class="header">
     <button class="back-btn" onclick="goScreen('screen-home')"><i class="ti ti-arrow-left"></i></button>
     <h1 id="client-detail-name">Cliente</h1>
+    <i class="ti ti-home" style="font-size:22px; color:#666; cursor:pointer;" onclick="goScreen('screen-home')"></i>
   </div>
   <div class="info-card" id="client-detail-info"></div>
   <button class="btn-primary" onclick="goNewVisit()"><i class="ti ti-plus"></i> Registrar Nuevo Trabajo</button>
-  <div class="section-title" style="margin-top:1.5rem">Historial de Reportes</div>
+  <div class="section-title" style="margin-top:1.5rem">Historial de Reportes (Haz clic para ver detalles)</div>
   <div id="visit-list"></div>
 </div>
 
@@ -147,6 +149,7 @@ canvas#sigCanvas{display:block;touch-action:none;width:100%;height:160px;}
   <div class="header" id="visit-detail-header">
     <button class="back-btn" onclick="goScreen('screen-client-detail')"><i class="ti ti-arrow-left"></i></button>
     <h1>Detalle de visita</h1>
+    <i class="ti ti-home" style="font-size:22px; color:#666; cursor:pointer;" onclick="goScreen('screen-home')"></i>
   </div>
   <div id="visit-detail-content"></div>
   <button id="btn-whatsapp-share" class="btn-share" onclick="shareCurrentVisitReport()"><i class="ti ti-brand-whatsapp"></i> Compartir por WhatsApp</button>
@@ -158,7 +161,6 @@ const SHEET_URL = 'https://script.google.com/macros/s/AKfycbz93xEp7ZF-gKOD_NaRHE
 let db = JSON.parse(localStorage.getItem('lj_db') || '{"clients":[],"visits":[]}');
 let currentClientId=null, currentVisitId=null, visitPhotos=[], sigCtx, sigDrawing=false, sigHasContent=false;
 
-// Buscador directo y sólido que respeta las mayúsculas reales de tu Excel
 function getVal(obj, keys) {
   if (!obj) return '';
   for (let k of keys) {
@@ -239,20 +241,20 @@ function renderClients(){
   if (!db.clients) return;
   
   const filtered = db.clients.filter(c => {
-    let n = getVal(c, ['Nombre', 'id', 'ID']).toString().toLowerCase();
-    return n.includes(q);
+    let name = (getVal(c, ['Nombre', 'nombre']) || '').toString().toLowerCase();
+    return name.includes(q);
   });
   
   list.innerHTML = filtered.map(c => {
-    let id = getVal(c, ['ID', 'id']);
-    let name = getVal(c, ['Nombre', 'nombre']) || 'Sin Nombre';
-    let tel = getVal(c, ['Teléfono', 'telefono']) || '—';
-    let dir = getVal(c, ['Dirección', 'direccion']) || '—';
-    let tipo = getVal(c, ['Tipo', 'tipo']) || 'Split';
+    let id = getVal(c, ['ID', 'id', 'Id']);
+    let name = getVal(c, ['Nombre', 'nombre', 'NOMBRE']) || 'Sin Nombre';
+    let tel = getVal(c, ['Teléfono', 'telefono', 'Telefono', 'TELÉFONO']) || '—';
+    let dir = getVal(c, ['Dirección', 'direccion', 'Direccion', 'DIRECCIÓN']) || '—';
+    let tipo = getVal(c, ['Tipo', 'tipo', 'TIPO']) || 'Split';
     
     const vCount = (db.visits || []).filter(v => {
-      let vClientId = getVal(v, ['Cliente ID', 'clientId']);
-      return String(vClientId) === String(id);
+      let vClientId = getVal(v, ['Cliente ID', 'clientId', 'clientid', 'Cliente id']);
+      return String(vClientId).trim() === String(id).trim();
     }).length;
     
     return `<div class="client-card" onclick="openClient('${id}')">
@@ -268,28 +270,32 @@ function renderClients(){
 function openClient(id){ currentClientId = id; goScreen('screen-client-detail'); }
 
 function renderClientDetail(){
-  const c = db.clients.find(x => String(getVal(x, ['ID', 'id'])) === String(currentClientId)); if(!c) return;
+  const c = db.clients.find(x => String(getVal(x, ['ID', 'id', 'Id'])).trim() === String(currentClientId).trim()); 
+  if(!c) return;
   
   document.getElementById('client-detail-name').textContent = getVal(c, ['Nombre', 'nombre']);
   document.getElementById('client-detail-info').innerHTML = `
-    <div class="detail-row"><span class="detail-label">Celular:</span><span class="detail-value">${getVal(c, ['Teléfono', 'telefono']) || '—'}</span></div>
-    <div class="detail-row"><span class="detail-label">Dirección:</span><span class="detail-value">${getVal(c, ['Dirección', 'direccion']) || '—'}</span></div>
+    <div class="detail-row"><span class="detail-label">Celular:</span><span class="detail-value">${getVal(c, ['Teléfono', 'telefono', 'Telefono']) || '—'}</span></div>
+    <div class="detail-row"><span class="detail-label">Dirección:</span><span class="detail-value">${getVal(c, ['Dirección', 'direccion', 'Direccion']) || '—'}</span></div>
     <div class="detail-row"><span class="detail-label">Marca:</span><span class="detail-value">${getVal(c, ['Marca', 'marca']) || '—'}</span></div>
     <div class="detail-row"><span class="detail-label">Capacidad:</span><span class="detail-value">${getVal(c, ['BTU', 'btu']) || '—'}</span></div>
   `;
   
-  const vts = (db.visits || []).filter(v => String(getVal(v, ['Cliente ID', 'clientId'])) === String(currentClientId));
+  const vts = (db.visits || []).filter(v => String(getVal(v, ['Cliente ID', 'clientId', 'clientid'])).trim() === String(currentClientId).trim());
   
   if(vts.length === 0) {
     document.getElementById('visit-list').innerHTML = `<p style="font-size:14px;color:#888;text-align:center;padding:15px;">No hay reportes registrados aún.</p>`;
   } else {
     document.getElementById('visit-list').innerHTML = vts.map(v => {
-      let vId = getVal(v, ['ID', 'id']);
+      let vId = getVal(v, ['ID', 'id', 'Id']);
       let vTipo = getVal(v, ['Tipo', 'tipo']) || 'Servicio';
       let vFecha = (getVal(v, ['Fecha', 'fecha']) || '').split('T')[0];
-      return `<div class="visit-card" onclick="openVisit('${vId}')">
-        <div class="visit-tipo">${vTipo}</div>
-        <div class="visit-fecha">${vFecha}</div>
+      return `<div class="visit-card" onclick="openVisit('${vId}')" style="display:flex; justify-content:space-between; align-items:center;">
+        <div>
+          <div class="visit-tipo"><i class="ti ti-file-text" style="color:#1a4a9a; margin-right:5px;"></i> ${vTipo}</div>
+          <div class="visit-fecha">${vFecha}</div>
+        </div>
+        <i class="ti ti-chevron-right" style="color:#aaa;"></i>
       </div>`;
     }).join('');
   }
@@ -375,13 +381,15 @@ function saveVisit(){
 
 function openVisit(id){
   currentVisitId = id; const v = db.visits.find(x => String(getVal(x, ['ID', 'id'])) === String(id)); if(!v) return;
-  let fHtml = (v.fotos || []).map(p => `<img src="${p}" style="width:100%;border-radius:10px;margin-bottom:8px;">`).join('');
+  let fHtml = (v.fotos || []).map(p => `<img src="${p}" style="width:100%;border-radius:10px;margin-bottom:8px;display:block;">`).join('');
   document.getElementById('visit-detail-content').innerHTML = `
     <div class="info-card">
       <div class="detail-row"><span class="detail-label">Servicio:</span><span class="detail-value">${getVal(v, ['Tipo', 'tipo'])}</span></div>
       <div class="detail-row"><span class="detail-label">Fecha:</span><span class="detail-value">${(getVal(v, ['Fecha', 'fecha'])||'').split('T')[0]}</span></div>
-      <div class="section-title">Diagnóstico</div><p style="font-size:14px;background:#f9f9f9;padding:8px;border-radius:6px;margin-bottom:10px;">${getVal(v, ['Detalle', 'detalle'])||'—'}</p>
-      <div class="section-title">Trabajo Realizado</div><p style="font-size:14px;background:#f9f9f9;padding:8px;border-radius:6px;margin-bottom:10px;">${getVal(v, ['Observación', 'observacion'])||'—'}</p>
+      <div class="section-title">Diagnóstico</div>
+      <div class="report-text-box">${getVal(v, ['Detalle', 'detalle'])||'—'}</div>
+      <div class="section-title">Trabajo Realizado</div>
+      <div class="report-text-box">${getVal(v, ['Observación', 'observacion'])||'—'}</div>
       ${fHtml ? '<div class="section-title">Evidencias Guardadas</div>' + fHtml : ''}
       ${v.firma ? '<div class="section-title">Firma de Conformidad</div><img src="'+v.firma+'" class="sig-preview">' : ''}
     </div>`;
@@ -399,21 +407,21 @@ function showPublicReportDirect(visitId) {
       contentDiv.innerHTML = `<p style="text-align:center;color:#e53e3e;padding:20px;">El reporte se está procesando en la base de datos de Google Sheets. Por favor, recarga en unos segundos.</p>`;
       return;
     }
-    let fHtml = (v.fotos || []).map(p => `<img src="${p}" style="width:100%;border-radius:10px;margin-bottom:8px;">`).join('');
+    let fHtml = (v.fotos || []).map(p => `<img src="${p}" style="width:100%;border-radius:10px;margin-bottom:8px;display:block;">`).join('');
     
     contentDiv.innerHTML = `
       <div class="info-card">
-        <h2 style="text-align:center; font-size:18px; margin-bottom:4px;">Llama a Jhon</h2>
+        <h2 style="text-align:center; font-size:18px; margin-bottom:4px; color:#1a1a1a;">Llama a Jhon</h2>
         <p style="text-align:center; font-size:12px; color:#666; margin-bottom:15px; border-bottom:1px dashed #ddd; padding-bottom:10px;">Reporte Técnico Digital</p>
         
         <div class="detail-row"><span class="detail-label">Servicio:</span><span class="detail-value">${getVal(v, ['Tipo', 'tipo'])}</span></div>
         <div class="detail-row"><span class="detail-label">Fecha:</span><span class="detail-value">${(getVal(v, ['Fecha', 'fecha'])||'').split('T')[0]}</span></div>
         
         <div class="section-title">Diagnóstico</div>
-        <p style="font-size:14px;background:#f9f9f9;padding:8px;border-radius:6px;margin-bottom:10px;">${getVal(v, ['Detalle', 'detalle'])||'—'}</p>
+        <div class="report-text-box">${getVal(v, ['Detalle', 'detalle'])||'—'}</div>
         
         <div class="section-title">Trabajo Realizado</div>
-        <p style="font-size:14px;background:#f9f9f9;padding:8px;border-radius:6px;margin-bottom:10px;">${getVal(v, ['Observación', 'observacion'])||'—'}</p>
+        <div class="report-text-box">${getVal(v, ['Observación', 'observacion'])||'—'}</div>
         
         ${fHtml ? '<div class="section-title">Evidencias Guardadas</div>' + fHtml : ''}
         ${v.firma ? '<div class="section-title">Firma de Conformidad</div><img src="'+v.firma+'" class="sig-preview">' : ''}
