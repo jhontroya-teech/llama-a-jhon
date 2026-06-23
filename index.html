@@ -18,9 +18,10 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
 input,textarea,select{width:100%;padding:11px 14px;border:1px solid #ddd;border-radius:10px;font-size:15px;color:#1a1a1a;background:#fff;font-family:inherit;margin-bottom:10px;outline:none;-webkit-appearance:none;appearance:none;}
 input:focus,textarea:focus,select:focus{border-color:#1a1a1a;}
 textarea{min-height:85px;resize:vertical;}
-.btn-primary{width:100%;padding:13px;background:#1a1a1a;color:#fff;border:none;border-radius:10px;font-size:15px;font-weight:600;cursor:pointer;margin-top:8px;font-family:inherit;}
-.btn-secondary{width:100%;padding:13px;background:#fff;color:#1a1a1a;border:1px solid #ddd;border-radius:10px;font-size:15px;cursor:pointer;margin-top:8px;font-family:inherit;}
-.btn-danger{width:100%;padding:13px;background:#fff;color:#e53e3e;border:1px solid #e53e3e;border-radius:10px;font-size:15px;cursor:pointer;margin-top:8px;font-family:inherit;}
+.btn-primary{width:100%;padding:13px;background:#1a1a1a;color:#fff;border:none;border-radius:10px;font-size:15px;font-weight:600;cursor:pointer;margin-top:8px;font-family:inherit;display:flex;align-items:center;justify-content:center;gap:6px;}
+.btn-secondary{width:100%;padding:13px;background:#fff;color:#1a1a1a;border:1px solid #ddd;border-radius:10px;font-size:15px;cursor:pointer;margin-top:8px;font-family:inherit;display:flex;align-items:center;justify-content:center;gap:6px;}
+.btn-share{width:100%;padding:13px;background:#25D366;color:#fff;border:none;border-radius:10px;font-size:15px;font-weight:600;cursor:pointer;margin-top:8px;font-family:inherit;display:flex;align-items:center;justify-content:center;gap:6px;}
+.btn-danger{width:100%;padding:13px;background:#fff;color:#e53e3e;border:1px solid #e53e3e;border-radius:10px;font-size:15px;cursor:pointer;margin-top:8px;font-family:inherit;display:flex;align-items:center;justify-content:center;gap:6px;}
 .client-card{background:#fff;border:1px solid #e5e5e5;border-radius:14px;padding:14px 16px;margin-bottom:10px;cursor:pointer;}
 .client-name{font-size:16px;font-weight:600;color:#1a1a1a;}
 .client-meta{font-size:13px;color:#888;margin-top:3px;}
@@ -29,14 +30,8 @@ textarea{min-height:85px;resize:vertical;}
 .canvas-wrap{border:1px solid #ddd;border-radius:10px;margin-bottom:8px;background:#fff;overflow:hidden;}
 canvas#sigCanvas{display:block;touch-action:none;cursor:crosshair;width:100%;height:160px;}
 .clear-sig{background:none;border:none;color:#888;font-size:13px;cursor:pointer;padding:4px 0;font-family:inherit;display:flex;align-items:center;gap:4px;}
-.empty-state{text-align:center;padding:3rem 1rem;color:#aaa;}
-.empty-state i{font-size:52px;display:block;margin-bottom:1rem;}
-.detail-row{display:flex;justify-content:space-between;align-items:flex-start;padding:10px 0;border-bottom:1px solid #f0f0f0;font-size:14px;}
-.detail-row:last-child{border-bottom:none;}
-.detail-label{color:#888;flex-shrink:0;margin-right:12px;}
-.detail-value{color:#1a1a1a;font-weight:500;text-align:right;word-break:break-word;}
 .photo-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px;}
-.photo-thumb{width:100%;height:100px;object-fit:cover;border-radius:10px;border:1px solid #eee;}
+.photo-thumb{width:100%;height:100px;object-fit:cover;border-radius:10px;border:1px solid #eee;cursor:pointer;}
 .photo-add{width:100%;height:100px;border:1.5px dashed #ccc;border-radius:10px;display:flex;align-items:center;justify-content:center;cursor:pointer;color:#aaa;font-size:32px;background:#fafafa;}
 .sig-preview{max-width:100%;border-radius:10px;border:1px solid #eee;margin-top:8px;}
 .search-wrap{position:relative;margin-bottom:1rem;}
@@ -56,10 +51,24 @@ canvas#sigCanvas{display:block;touch-action:none;cursor:crosshair;width:100%;hei
 .sync-indicator { font-size: 11px; color: #888; display: flex; align-items: center; gap: 4px; font-weight: 500; justify-content: center; margin-bottom: 10px; }
 .sync-spin { animation: spin 1s linear infinite; }
 @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+
+/* Estilos para Pantalla de Reporte Público de Clientes */
+.public-report { background: #fff; border-radius: 14px; padding: 20px; border: 1px solid #e5e5e5; margin-top: 10px; }
+.public-title { font-size: 20px; font-weight: 700; text-align: center; margin-bottom: 4px; color: #1a1a1a; }
+.public-subtitle { font-size: 13px; text-align: center; color: #777; margin-bottom: 20px; border-bottom: 2px dashed #eee; padding-bottom: 15px; }
 </style>
 </head>
 <body>
 <div id="toast" class="toast"></div>
+
+<!-- MODO VISUALIZACIÓN DE REPORTE PÚBLICO PARA EL CLIENTE -->
+<div id="screen-public-report" class="screen">
+  <div class="public-report">
+    <div class="public-title">Llama a Jhon</div>
+    <div class="public-subtitle">Reporte Técnico de Servicio Técnico</div>
+    <div id="public-report-content"></div>
+  </div>
+</div>
 
 <!-- LOGIN ACCESO INTELIGENTE EXPRES -->
 <div id="login-screen" style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #1a1a1a; z-index: 9999; display: flex; justify-content: center; align-items: center; flex-direction: column;">
@@ -115,7 +124,7 @@ canvas#sigCanvas{display:block;touch-action:none;cursor:crosshair;width:100%;hei
   <input type="text" id="c-marca" placeholder="Marca y modelo (opcional)">
   <input type="text" id="c-btu" placeholder="BTU / Capacidad (opcional)">
   <button class="btn-primary" onclick="saveClient()">Guardar cliente</button>
-  <button class="btn-secondary" onclick="goScreen('screen-home')">Cancelar</button>
+  <button class="btn-secondary" onclick="goScreen('screen-home')"><i class="ti ti-home"></i> Volver a Inicio</button>
 </div>
 
 <!-- DETALLE CLIENTE -->
@@ -126,8 +135,8 @@ canvas#sigCanvas{display:block;touch-action:none;cursor:crosshair;width:100%;hei
   </div>
   <div class="info-card" id="client-detail-info"></div>
   <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
-    <button class="btn-secondary" style="margin-top:0" onclick="editClient()"><i class="ti ti-edit"></i> Editar</button>
-    <button class="btn-primary" style="margin-top:0" onclick="goNewVisit()"><i class="ti ti-plus"></i> Visita</button>
+    <button class="btn-secondary" style="margin-top:0" onclick="goScreen('screen-home')"><i class="ti ti-home"></i> Inicio</button>
+    <button class="btn-primary" style="margin-top:0" onclick="goNewVisit()"><i class="ti ti-plus"></i> Nueva Visita</button>
   </div>
   <div class="section-title" style="margin-top:1.5rem">Historial de visitas</div>
   <div id="visit-list"></div>
@@ -151,7 +160,7 @@ canvas#sigCanvas{display:block;touch-action:none;cursor:crosshair;width:100%;hei
   <textarea id="v-detalle" placeholder="¿Qué tenía el aire? Estado del equipo..."></textarea>
   <div class="section-title">Observación</div>
   <textarea id="v-observacion" placeholder="¿Qué se resolvió? Trabajo realizado..."></textarea>
-  <div class="section-title">Fotos (Se subirán a Drive)</div>
+  <div class="section-title">Fotos (Evidencias)</div>
   <div class="photo-grid" id="photo-grid"></div>
   <input type="file" id="photo-input" accept="image/*" multiple style="display:none" onchange="addPhotos(this)">
   <div class="section-title">Firma del cliente</div>
@@ -169,15 +178,13 @@ canvas#sigCanvas{display:block;touch-action:none;cursor:crosshair;width:100%;hei
     <h1>Detalle de visita</h1>
   </div>
   <div id="visit-detail-content"></div>
-  <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:1rem;">
-    <button class="btn-secondary" style="margin-top:0" onclick="editVisit()"><i class="ti ti-edit"></i> Editar</button>
-    <button class="btn-secondary" style="margin-top:0" onclick="exportVisitTxt()"><i class="ti ti-download"></i> Recibo .TXT</button>
-  </div>
-  <button class="btn-danger" onclick="deleteVisit()" style="margin-top:10px;"><i class="ti ti-trash"></i> Eliminar visita</button>
+  
+  <!-- ACCIONES DE REPORTE Y NAVEGACIÓN -->
+  <button class="btn-share" onclick="shareCurrentVisitReport()"><i class="ti ti-brand-whatsapp"></i> Compartir Reporte a Cliente</button>
+  <button class="btn-secondary" onclick="goScreen('screen-home')"><i class="ti ti-home"></i> Volver a Inicio</button>
 </div>
 
 <script>
-// ENLACE TOTALMENTE PROBADO Y CORREGIDO
 const SHEET_URL = 'https://script.google.com/macros/s/AKfycbywBx7llq2piFPxNzGHtcHTlRpplBbxdLwqlaXGYfwosAxN7sG2XwPsqazZE6h1SAQ5cA/exec';
 
 let db = JSON.parse(localStorage.getItem('lj_db') || '{"clients":[],"visits":[]}');
@@ -249,7 +256,18 @@ function uploadMediaToDrive(clientId, visitId, base64Photos, base64Firma) {
   });
 }
 
+// DETECTOR DE LINK PÚBLICO PARA CLIENTES
 document.addEventListener("DOMContentLoaded", function() {
+  const urlParams = new URLSearchParams(window.location.search);
+  const publicVisitId = urlParams.get('reporte');
+  
+  if (publicVisitId) {
+    // Apagar Login y cargar exclusivamente modo recibo público
+    document.getElementById("login-screen").style.display = "none";
+    showPublicReport(publicVisitId);
+    return;
+  }
+
   if (sessionStorage.getItem("lj_logged") === "true") {
     document.getElementById("login-screen").style.display = "none";
     fetchDataFromSheets();
@@ -262,6 +280,48 @@ document.addEventListener("DOMContentLoaded", function() {
     }
   };
 });
+
+function showPublicReport(visitId) {
+  const v = db.visits.find(x => x.id === visitId);
+  if (!v) {
+    document.getElementById('public-report-content').innerHTML = `<p style="text-align:center;color:red;">El reporte solicitado no se encuentra guardado en este dispositivo.</p>`;
+    goScreen('screen-public-report');
+    return;
+  }
+  const c = db.clients.find(x => x.id === v.clientId) || { nombre: 'Cliente General', direccion: '—' };
+  
+  let fHtml = (v.fotos || []).map(p => `<img src="${p}" style="width:100%;border-radius:10px;margin-bottom:8px;box-shadow:0 2px 6px rgba(0,0,0,0.1);" onclick="window.open(this.src)">`).join('');
+  let sHtml = v.firma ? `<div class="section-title">Conformidad del Cliente</div><img src="${v.firma}" class="sig-preview">` : '';
+  
+  document.getElementById('public-report-content').innerHTML = `
+    <div class="detail-row"><span class="detail-label">Cliente</span><span class="detail-value">${c.nombre}</span></div>
+    <div class="detail-row"><span class="detail-label">Servicio</span><span class="detail-value">${v.tipo}</span></div>
+    <div class="detail-row"><span class="detail-label">Fecha</span><span class="detail-value">${v.fecha}</span></div>
+    <div class="section-title">Diagnóstico del Equipo</div><p style="font-size:14px;background:#f9f9f9;padding:10px;border-radius:8px;color:#333;line-height:1.4;">${v.detalle||'—'}</p>
+    <div class="section-title">Trabajo Realizado</div><p style="font-size:14px;background:#f9f9f9;padding:10px;border-radius:8px;color:#333;line-height:1.4;">${v.observacion||'—'}</p>
+    ${fHtml ? '<div class="section-title">Evidencias Fotográficas (Toque para ampliar)</div>' + fHtml : ''}
+    ${sHtml}
+  `;
+  goScreen('screen-public-report');
+}
+
+function shareCurrentVisitReport() {
+  if (!currentVisitId) return;
+  // Construye la URL pública limpia que solo abrirá esta visita
+  const baseUrl = window.location.href.split('?')[0];
+  const shareUrl = `${baseUrl}?reporte=${currentVisitId}`;
+  
+  if (navigator.share) {
+    navigator.share({
+      title: 'Reporte Técnico Llama a Jhon',
+      text: 'Hola, adjunto el reporte técnico digital de la visita realizada a su equipo de aire acondicionado:',
+      url: shareUrl
+    }).catch(()=>{});
+  } else {
+    navigator.clipboard.writeText(shareUrl);
+    showToast("📋 ¡Enlace copiado al portapapeles!");
+  }
+}
 
 function goScreen(id){
   document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
@@ -380,7 +440,7 @@ function saveVisit(){
 
 function openVisit(id){
   currentVisitId = id; const v = db.visits.find(x => x.id === id); if(!v) return;
-  let fHtml = (v.fotos || []).map(p => `<img src="${p}" style="width:100%;border-radius:10px;margin-bottom:8px;">`).join('');
+  let fHtml = (v.fotos || []).map(p => `<img src="${p}" style="width:100%;border-radius:10px;margin-bottom:8px;cursor:pointer;" onclick="window.open(this.src)">`).join('');
   let sHtml = v.firma ? `<div class="section-title">Firma del cliente</div><img src="${v.firma}" class="sig-preview">` : '';
   document.getElementById('visit-detail-content').innerHTML = `
     <div class="info-card">
@@ -388,7 +448,7 @@ function openVisit(id){
       <div class="detail-row"><span class="detail-label">Fecha</span><span class="detail-value">${v.fecha}</span></div>
       <div class="section-title">Diagnóstico</div><p style="font-size:14px;background:#f9f9f9;padding:8px;border-radius:6px;">${v.detalle||'—'}</p>
       <div class="section-title">Trabajo realizado</div><p style="font-size:14px;background:#f9f9f9;padding:8px;border-radius:6px;">${v.observacion||'—'}</p>
-      ${fHtml ? '<div class="section-title">Evidencias Guardadas</div>' + fHtml : ''}
+      ${fHtml ? '<div class="section-title">Evidencias Locales (Toque para ampliar)</div>' + fHtml : ''}
       ${sHtml}
     </div>`;
   goScreen('screen-visit-detail');
