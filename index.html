@@ -178,8 +178,8 @@ canvas#sigCanvas{display:block;touch-action:none;cursor:crosshair;width:100%;hei
 </div>
 
 <script>
-// URL de Google Apps Script optimizada para Drive y Fotos sincronizadas
-const SHEET_URL = 'https://script.google.com/macros/s/AKfycbzFc5jeilKqdDTY-WsUKsRaXgjLvd19bVdFYDZVlu7ZhGjcWl8mv6KFmFMZ_XCXq_Ox4A/exec';
+// URL de Google Apps Script actualizada con tu enlace definitivo
+const SHEET_URL = 'https://script.google.com/macros/s/AKfycbzQv9ovMOk5ncutUFF2Y70gy0SzDXmNSzDMhwtOJ5sa9LcIxcO0C3iN67dMJq_FPybJmQ/exec';
 
 let db = JSON.parse(localStorage.getItem('lj_db') || '{"clients":[],"visits":[]}');
 let currentClientId=null, currentVisitId=null, editingClientId=null, editingVisitId=null;
@@ -244,7 +244,7 @@ function uploadMediaToDrive(clientId, visitId, base64Photos, base64Firma) {
   })
   .then(() => {
     if(indicator) indicator.innerHTML = `<i class="ti ti-cloud-check" style="color:#1a7a4a"></i> Fotos guardadas en la nube`;
-    setTimeout(fetchDataFromSheets, 3000); // Forzar recarga para jalar los nuevos enlaces generados
+    setTimeout(fetchDataFromSheets, 3000); 
   })
   .catch(() => {
     if(indicator) indicator.innerHTML = `<i class="ti ti-alert-circle" style="color:#e53e3e"></i> Error al subir archivos`;
