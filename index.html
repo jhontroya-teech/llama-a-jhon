@@ -52,7 +52,7 @@ canvas#sigCanvas{display:block;touch-action:none;cursor:crosshair;width:100%;hei
 .sync-spin { animation: spin 1s linear infinite; }
 @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
 
-/* Estilos para Pantalla de Reporte Público de Clientes */
+/* Estilos de la Hoja Técnica para el Cliente */
 .public-report { background: #fff; border-radius: 14px; padding: 20px; border: 1px solid #e5e5e5; margin-top: 10px; }
 .public-title { font-size: 20px; font-weight: 700; text-align: center; margin-bottom: 4px; color: #1a1a1a; }
 .public-subtitle { font-size: 13px; text-align: center; color: #777; margin-bottom: 20px; border-bottom: 2px dashed #eee; padding-bottom: 15px; }
@@ -61,7 +61,7 @@ canvas#sigCanvas{display:block;touch-action:none;cursor:crosshair;width:100%;hei
 <body>
 <div id="toast" class="toast"></div>
 
-<!-- MODO VISUALIZACIÓN DE REPORTE PÚBLICO PARA EL CLIENTE -->
+<!-- PANTALLA EXCLUSIVA DE RECIBO DIGITAL PÚBLICO -->
 <div id="screen-public-report" class="screen">
   <div class="public-report">
     <div class="public-title">Llama a Jhon</div>
@@ -70,7 +70,7 @@ canvas#sigCanvas{display:block;touch-action:none;cursor:crosshair;width:100%;hei
   </div>
 </div>
 
-<!-- LOGIN ACCESO INTELIGENTE EXPRES -->
+<!-- ACCESO PRIVADO (SISTEMA INTERNO) -->
 <div id="login-screen" style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #1a1a1a; z-index: 9999; display: flex; justify-content: center; align-items: center; flex-direction: column;">
     <div style="background: #ffffff; padding: 30px; border-radius: 14px; text-align: center; width: 85%; max-width: 350px;">
         <h2 style="margin-bottom: 5px; color: #1a1a1a; font-weight: 700;">Llama a Jhon</h2>
@@ -81,7 +81,7 @@ canvas#sigCanvas{display:block;touch-action:none;cursor:crosshair;width:100%;hei
     </div>
 </div>
 
-<!-- INICIO -->
+<!-- PANEL PRINCIPAL (INICIO) -->
 <div id="screen-home" class="screen active">
   <div class="header">
     <div class="app-logo"><i class="ti ti-tool"></i></div>
@@ -105,7 +105,7 @@ canvas#sigCanvas{display:block;touch-action:none;cursor:crosshair;width:100%;hei
   <button class="fab" onclick="goNewClient()"><i class="ti ti-plus"></i></button>
 </div>
 
-<!-- NUEVO / EDITAR CLIENTE -->
+<!-- AGREGAR NUEVO CLIENTE -->
 <div id="screen-new-client" class="screen">
   <div class="header">
     <button class="back-btn" onclick="goScreen('screen-home')"><i class="ti ti-arrow-left"></i></button>
@@ -127,7 +127,7 @@ canvas#sigCanvas{display:block;touch-action:none;cursor:crosshair;width:100%;hei
   <button class="btn-secondary" onclick="goScreen('screen-home')"><i class="ti ti-home"></i> Volver a Inicio</button>
 </div>
 
-<!-- DETALLE CLIENTE -->
+<!-- DETALLES DE UN CLIENTE -->
 <div id="screen-client-detail" class="screen">
   <div class="header">
     <button class="back-btn" onclick="goScreen('screen-home')"><i class="ti ti-arrow-left"></i></button>
@@ -142,7 +142,7 @@ canvas#sigCanvas{display:block;touch-action:none;cursor:crosshair;width:100%;hei
   <div id="visit-list"></div>
 </div>
 
-<!-- NUEVA / EDITAR VISITA -->
+<!-- CREAR NUEVA VISITA REPORTE -->
 <div id="screen-new-visit" class="screen">
   <div class="header">
     <button class="back-btn" onclick="goScreen('screen-client-detail')"><i class="ti ti-arrow-left"></i></button>
@@ -171,7 +171,7 @@ canvas#sigCanvas{display:block;touch-action:none;cursor:crosshair;width:100%;hei
   <button class="btn-secondary" onclick="goScreen('screen-client-detail')">Cancelar</button>
 </div>
 
-<!-- DETALLE VISITA -->
+<!-- CONSULTA DE DETALLE DE VISITA -->
 <div id="screen-visit-detail" class="screen">
   <div class="header">
     <button class="back-btn" onclick="goScreen('screen-client-detail')"><i class="ti ti-arrow-left"></i></button>
@@ -179,13 +179,13 @@ canvas#sigCanvas{display:block;touch-action:none;cursor:crosshair;width:100%;hei
   </div>
   <div id="visit-detail-content"></div>
   
-  <!-- ACCIONES DE REPORTE Y NAVEGACIÓN -->
   <button class="btn-share" onclick="shareCurrentVisitReport()"><i class="ti ti-brand-whatsapp"></i> Compartir Reporte a Cliente</button>
   <button class="btn-secondary" onclick="goScreen('screen-home')"><i class="ti ti-home"></i> Volver a Inicio</button>
 </div>
 
 <script>
-const SHEET_URL = 'https://script.google.com/macros/s/AKfycbywBx7llq2piFPxNzGHtcHTlRpplBbxdLwqlaXGYfwosAxN7sG2XwPsqazZE6h1SAQ5cA/exec';
+// ENLACE CORREGIDO Y ACTUALIZADO
+const SHEET_URL = 'https://script.google.com/macros/s/AKfycbz93xEp7ZF-gKOD_NaRHEpq7b0R8uOpbViE-3TQLkkIwSmanuhYCetpjePVFXQGCMRs/exec';
 
 let db = JSON.parse(localStorage.getItem('lj_db') || '{"clients":[],"visits":[]}');
 let currentClientId=null, currentVisitId=null;
@@ -256,13 +256,12 @@ function uploadMediaToDrive(clientId, visitId, base64Photos, base64Firma) {
   });
 }
 
-// DETECTOR DE LINK PÚBLICO PARA CLIENTES
+// CONTROLADOR DE ACCESO O COMPARTIDO PÚBLICO
 document.addEventListener("DOMContentLoaded", function() {
   const urlParams = new URLSearchParams(window.location.search);
   const publicVisitId = urlParams.get('reporte');
   
   if (publicVisitId) {
-    // Apagar Login y cargar exclusivamente modo recibo público
     document.getElementById("login-screen").style.display = "none";
     showPublicReport(publicVisitId);
     return;
@@ -284,7 +283,7 @@ document.addEventListener("DOMContentLoaded", function() {
 function showPublicReport(visitId) {
   const v = db.visits.find(x => x.id === visitId);
   if (!v) {
-    document.getElementById('public-report-content').innerHTML = `<p style="text-align:center;color:red;">El reporte solicitado no se encuentra guardado en este dispositivo.</p>`;
+    document.getElementById('public-report-content').innerHTML = `<p style="text-align:center;color:red;font-weight:600;">El reporte solicitado se encuentra en proceso de carga o sincronización.</p>`;
     goScreen('screen-public-report');
     return;
   }
@@ -299,7 +298,7 @@ function showPublicReport(visitId) {
     <div class="detail-row"><span class="detail-label">Fecha</span><span class="detail-value">${v.fecha}</span></div>
     <div class="section-title">Diagnóstico del Equipo</div><p style="font-size:14px;background:#f9f9f9;padding:10px;border-radius:8px;color:#333;line-height:1.4;">${v.detalle||'—'}</p>
     <div class="section-title">Trabajo Realizado</div><p style="font-size:14px;background:#f9f9f9;padding:10px;border-radius:8px;color:#333;line-height:1.4;">${v.observacion||'—'}</p>
-    ${fHtml ? '<div class="section-title">Evidencias Fotográficas (Toque para ampliar)</div>' + fHtml : ''}
+    ${fHtml ? '<div class="section-title">Evidencias Fotográficas (Toque para ver)</div>' + fHtml : ''}
     ${sHtml}
   `;
   goScreen('screen-public-report');
@@ -307,7 +306,6 @@ function showPublicReport(visitId) {
 
 function shareCurrentVisitReport() {
   if (!currentVisitId) return;
-  // Construye la URL pública limpia que solo abrirá esta visita
   const baseUrl = window.location.href.split('?')[0];
   const shareUrl = `${baseUrl}?reporte=${currentVisitId}`;
   
@@ -319,7 +317,7 @@ function shareCurrentVisitReport() {
     }).catch(()=>{});
   } else {
     navigator.clipboard.writeText(shareUrl);
-    showToast("📋 ¡Enlace copiado al portapapeles!");
+    showToast("📋 ¡Enlace de reporte copiado!");
   }
 }
 
@@ -448,7 +446,7 @@ function openVisit(id){
       <div class="detail-row"><span class="detail-label">Fecha</span><span class="detail-value">${v.fecha}</span></div>
       <div class="section-title">Diagnóstico</div><p style="font-size:14px;background:#f9f9f9;padding:8px;border-radius:6px;">${v.detalle||'—'}</p>
       <div class="section-title">Trabajo realizado</div><p style="font-size:14px;background:#f9f9f9;padding:8px;border-radius:6px;">${v.observacion||'—'}</p>
-      ${fHtml ? '<div class="section-title">Evidencias Locales (Toque para ampliar)</div>' + fHtml : ''}
+      ${fHtml ? '<div class="section-title">Evidencias Guardadas</div>' + fHtml : ''}
       ${sHtml}
     </div>`;
   goScreen('screen-visit-detail');
