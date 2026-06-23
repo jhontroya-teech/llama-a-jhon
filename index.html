@@ -7,25 +7,25 @@
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.19.0/dist/tabler-icons.min.css">
 <style>
 body{font-family:sans-serif;background:#f5f5f5;max-width:430px;margin:0 auto;padding:1rem;}
-.header-box{background:#fff;padding:1rem;border-radius:16px;margin-bottom:1rem;box-shadow:0 2px 8px rgba(0,0,0,0.05);}
-.header-top{display:flex;justify-content:space-between;align-items:center;margin-bottom:1rem;}
-.stats-container{display:flex;gap:10px;margin-bottom:1rem;}
-.stat-card{flex:1;background:#f8f9fa;padding:15px;border-radius:12px;text-align:center;}
-.stat-number{font-size:24px;font-weight:700;}
-.stat-label{font-size:12px;color:#666;}
-.client-card{background:#fff;border-radius:14px;padding:16px;margin-bottom:12px;box-shadow:0 2px 5px rgba(0,0,0,0.05);}
-.fab{position:fixed;bottom:2rem;right:2rem;background:#1a1a1a;color:#fff;width:60px;height:60px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:30px;box-shadow:0 4px 10px rgba(0,0,0,0.3);}
+.main-box{background:#fff;padding:1.2rem;border-radius:20px;box-shadow:0 4px 12px rgba(0,0,0,0.08);margin-bottom:1.5rem;}
+.header-top{display:flex;justify-content:space-between;align-items:center;margin-bottom:1.2rem;}
+.title-area{display:flex;align-items:center;gap:10px;font-size:18px;font-weight:700;}
+.stats-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:10px;}
+.stat-card{background:#f8f9fa;padding:15px;border-radius:15px;text-align:center;border:1px solid #eee;}
+.stat-number{font-size:26px;font-weight:800;color:#1a1a1a;}
+.stat-label{font-size:12px;color:#777;text-transform:uppercase;font-weight:600;}
+.client-card{background:#fff;border-radius:16px;padding:16px;margin-bottom:12px;box-shadow:0 2px 8px rgba(0,0,0,0.06);cursor:pointer;}
+.fab{position:fixed;bottom:2rem;right:2rem;background:#1a1a1a;color:#fff;width:60px;height:60px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:30px;box-shadow:0 6px 15px rgba(0,0,0,0.3);}
 </style>
 </head>
 <body>
 
-<div class="header-box">
+<div class="main-box">
   <div class="header-top">
-    <h1 style="font-size:18px;"><i class="ti ti-tool"></i> Llama a Jhon</h1>
-    <i class="ti ti-refresh" onclick="fetchDataFromSheets()"></i>
+    <div class="title-area"><i class="ti ti-tool"></i> Llama a Jhon</div>
+    <i class="ti ti-refresh" onclick="fetchDataFromSheets()" style="font-size:20px; cursor:pointer;"></i>
   </div>
-  <div id="sync-status" style="text-align:center; font-size:11px; color:#888; margin-bottom:10px;">Base de datos al día</div>
-  <div class="stats-container">
+  <div class="stats-grid">
     <div class="stat-card"><div class="stat-number" id="count-clients">0</div><div class="stat-label">Clientes</div></div>
     <div class="stat-card"><div class="stat-number" id="count-services">0</div><div class="stat-label">Servicios</div></div>
   </div>
@@ -39,10 +39,7 @@ const SHEET_URL = 'https://script.google.com/macros/s/AKfycbwDOF7kyHlPUVB0VVKqOs
 let db = {clients:[], visits:[]};
 
 function fetchDataFromSheets() {
-  fetch(SHEET_URL).then(res => res.json()).then(data => {
-    db = data;
-    render();
-  });
+  fetch(SHEET_URL).then(res => res.json()).then(data => { db = data; render(); });
 }
 
 function render() {
@@ -55,11 +52,10 @@ function render() {
     return `
     <div class="client-card" onclick="viewClientReports('${c.ID}')">
       <div style="font-weight:700; font-size:16px;">${c.Nombre}</div>
-      <div style="font-size:13px; color:#666; margin-top:5px;">
-        <i class="ti ti-phone"></i> ${c.Teléfono || '—'}<br>
-        <i class="ti ti-map-pin"></i> ${c.Dirección || '—'}
+      <div style="font-size:13px; color:#666; margin:5px 0;">
+        <i class="ti ti-phone"></i> ${c.Teléfono || '—'} · <i class="ti ti-map-pin"></i> ${c.Dirección || '—'}
       </div>
-      <div style="margin-top:8px; font-weight:bold; color:#4a90e2; font-size:13px;">${c.Tipo} | ${vCount} servicios</div>
+      <div style="font-weight:bold; color:#1a4a9a; font-size:13px;">${c.Tipo} | ${vCount} servicios</div>
     </div>`;
   }).join('');
 }
@@ -67,7 +63,7 @@ function render() {
 function viewClientReports(id) {
   const reports = db.visits.filter(v => v.ClienteID == id);
   if(reports.length === 0) { alert("Sin servicios realizados."); return; }
-  alert("HISTORIAL:\n\n" + reports.map(r => `• ${r.Fecha}: ${r.Tipo}`).join('\n'));
+  alert("HISTORIAL DE TRABAJOS:\n\n" + reports.map(r => `• ${r.Fecha}: ${r.Tipo}`).join('\n'));
 }
 
 function addClientPrompt() {
