@@ -158,17 +158,11 @@ const SHEET_URL = 'https://script.google.com/macros/s/AKfycbz93xEp7ZF-gKOD_NaRHE
 let db = JSON.parse(localStorage.getItem('lj_db') || '{"clients":[],"visits":[]}');
 let currentClientId=null, currentVisitId=null, visitPhotos=[], sigCtx, sigDrawing=false, sigHasContent=false;
 
-// Función salvavidas: Busca la propiedad sin importar si está en mayúscula o minúscula
+// Buscador directo y sólido que respeta las mayúsculas reales de tu Excel
 function getVal(obj, keys) {
   if (!obj) return '';
   for (let k of keys) {
     if (obj[k] !== undefined && obj[k] !== null) return obj[k];
-    let lowerK = k.toLowerCase();
-    for (let key in obj) {
-      if (key.toLowerCase() === lowerK && obj[key] !== undefined && obj[key] !== null) {
-        return obj[key];
-      }
-    }
   }
   return '';
 }
@@ -242,22 +236,23 @@ function renderClients(){
   const q = document.getElementById('search-input').value.toLowerCase();
   const list = document.getElementById('client-list');
   
+  if (!db.clients) return;
+  
   const filtered = db.clients.filter(c => {
-    let n = getVal(c, ['nombre', 'Nombre']).toLowerCase();
+    let n = getVal(c, ['Nombre', 'id', 'ID']).toString().toLowerCase();
     return n.includes(q);
   });
   
   list.innerHTML = filtered.map(c => {
-    let id = getVal(c, ['id', 'ID']);
-    let name = getVal(c, ['nombre', 'Nombre']) || 'Sin Nombre';
-    let tel = getVal(c, ['telefono', 'Teléfono']) || '—';
-    let dir = getVal(c, ['direccion', 'Dirección']) || '—';
-    let tipo = getVal(c, ['tipo', 'Tipo']) || 'Split';
+    let id = getVal(c, ['ID', 'id']);
+    let name = getVal(c, ['Nombre', 'nombre']) || 'Sin Nombre';
+    let tel = getVal(c, ['Teléfono', 'telefono']) || '—';
+    let dir = getVal(c, ['Dirección', 'direccion']) || '—';
+    let tipo = getVal(c, ['Tipo', 'tipo']) || 'Split';
     
-    // Conteo cruzando IDs con flexibilidad de mayúsculas/minúsculas
-    const vCount = db.visits.filter(v => {
-      let vClientId = getVal(v, ['clientId', 'Cliente ID']);
-      return vClientId === id && id !== '';
+    const vCount = (db.visits || []).filter(v => {
+      let vClientId = getVal(v, ['Cliente ID', 'clientId']);
+      return String(vClientId) === String(id);
     }).length;
     
     return `<div class="client-card" onclick="openClient('${id}')">
@@ -273,26 +268,25 @@ function renderClients(){
 function openClient(id){ currentClientId = id; goScreen('screen-client-detail'); }
 
 function renderClientDetail(){
-  const c = db.clients.find(x => getVal(x, ['id', 'ID']) === currentClientId); if(!c) return;
+  const c = db.clients.find(x => String(getVal(x, ['ID', 'id'])) === String(currentClientId)); if(!c) return;
   
-  document.getElementById('client-detail-name').textContent = getVal(c, ['nombre', 'Nombre']);
+  document.getElementById('client-detail-name').textContent = getVal(c, ['Nombre', 'nombre']);
   document.getElementById('client-detail-info').innerHTML = `
-    <div class="detail-row"><span class="detail-label">Celular:</span><span class="detail-value">${getVal(c, ['telefono', 'Teléfono']) || '—'}</span></div>
-    <div class="detail-row"><span class="detail-label">Dirección:</span><span class="detail-value">${getVal(c, ['direccion', 'Dirección']) || '—'}</span></div>
-    <div class="detail-row"><span class="detail-label">Marca:</span><span class="detail-value">${getVal(c, ['marca', 'Marca']) || '—'}</span></div>
-    <div class="detail-row"><span class="detail-label">Capacidad:</span><span class="detail-value">${getVal(c, ['btu', 'BTU']) || '—'}</span></div>
+    <div class="detail-row"><span class="detail-label">Celular:</span><span class="detail-value">${getVal(c, ['Teléfono', 'telefono']) || '—'}</span></div>
+    <div class="detail-row"><span class="detail-label">Dirección:</span><span class="detail-value">${getVal(c, ['Dirección', 'direccion']) || '—'}</span></div>
+    <div class="detail-row"><span class="detail-label">Marca:</span><span class="detail-value">${getVal(c, ['Marca', 'marca']) || '—'}</span></div>
+    <div class="detail-row"><span class="detail-label">Capacidad:</span><span class="detail-value">${getVal(c, ['BTU', 'btu']) || '—'}</span></div>
   `;
   
-  // Buscar visitas que pertenezcan a este cliente
-  const vts = db.visits.filter(v => getVal(v, ['clientId', 'Cliente ID']) === currentClientId);
+  const vts = (db.visits || []).filter(v => String(getVal(v, ['Cliente ID', 'clientId'])) === String(currentClientId));
   
   if(vts.length === 0) {
     document.getElementById('visit-list').innerHTML = `<p style="font-size:14px;color:#888;text-align:center;padding:15px;">No hay reportes registrados aún.</p>`;
   } else {
     document.getElementById('visit-list').innerHTML = vts.map(v => {
-      let vId = getVal(v, ['id', 'ID']);
-      let vTipo = getVal(v, ['tipo', 'Tipo']) || 'Servicio';
-      let vFecha = (getVal(v, ['fecha', 'Fecha']) || '').split('T')[0];
+      let vId = getVal(v, ['ID', 'id']);
+      let vTipo = getVal(v, ['Tipo', 'tipo']) || 'Servicio';
+      let vFecha = (getVal(v, ['Fecha', 'fecha']) || '').split('T')[0];
       return `<div class="visit-card" onclick="openVisit('${vId}')">
         <div class="visit-tipo">${vTipo}</div>
         <div class="visit-fecha">${vFecha}</div>
@@ -380,14 +374,14 @@ function saveVisit(){
 }
 
 function openVisit(id){
-  currentVisitId = id; const v = db.visits.find(x => getVal(x, ['id', 'ID']) === id); if(!v) return;
+  currentVisitId = id; const v = db.visits.find(x => String(getVal(x, ['ID', 'id'])) === String(id)); if(!v) return;
   let fHtml = (v.fotos || []).map(p => `<img src="${p}" style="width:100%;border-radius:10px;margin-bottom:8px;">`).join('');
   document.getElementById('visit-detail-content').innerHTML = `
     <div class="info-card">
-      <div class="detail-row"><span class="detail-label">Servicio:</span><span class="detail-value">${getVal(v, ['tipo', 'Tipo'])}</span></div>
-      <div class="detail-row"><span class="detail-label">Fecha:</span><span class="detail-value">${(getVal(v, ['fecha', 'Fecha'])||'').split('T')[0]}</span></div>
-      <div class="section-title">Diagnóstico</div><p style="font-size:14px;background:#f9f9f9;padding:8px;border-radius:6px;margin-bottom:10px;">${getVal(v, ['detalle', 'Detalle'])||'—'}</p>
-      <div class="section-title">Trabajo Realizado</div><p style="font-size:14px;background:#f9f9f9;padding:8px;border-radius:6px;margin-bottom:10px;">${getVal(v, ['observacion', 'Observación'])||'—'}</p>
+      <div class="detail-row"><span class="detail-label">Servicio:</span><span class="detail-value">${getVal(v, ['Tipo', 'tipo'])}</span></div>
+      <div class="detail-row"><span class="detail-label">Fecha:</span><span class="detail-value">${(getVal(v, ['Fecha', 'fecha'])||'').split('T')[0]}</span></div>
+      <div class="section-title">Diagnóstico</div><p style="font-size:14px;background:#f9f9f9;padding:8px;border-radius:6px;margin-bottom:10px;">${getVal(v, ['Detalle', 'detalle'])||'—'}</p>
+      <div class="section-title">Trabajo Realizado</div><p style="font-size:14px;background:#f9f9f9;padding:8px;border-radius:6px;margin-bottom:10px;">${getVal(v, ['Observación', 'observacion'])||'—'}</p>
       ${fHtml ? '<div class="section-title">Evidencias Guardadas</div>' + fHtml : ''}
       ${v.firma ? '<div class="section-title">Firma de Conformidad</div><img src="'+v.firma+'" class="sig-preview">' : ''}
     </div>`;
@@ -400,7 +394,7 @@ function showPublicReportDirect(visitId) {
   contentDiv.innerHTML = `<p style="text-align:center;color:#666;padding:20px;"><i class="ti ti-refresh sync-spin"></i> Descargando reporte digital desde la nube...</p>`;
   
   fetchDataFromSheets(() => {
-    const v = db.visits.find(x => getVal(x, ['id', 'ID']) === visitId);
+    const v = db.visits.find(x => String(getVal(x, ['ID', 'id'])) === String(visitId));
     if (!v) {
       contentDiv.innerHTML = `<p style="text-align:center;color:#e53e3e;padding:20px;">El reporte se está procesando en la base de datos de Google Sheets. Por favor, recarga en unos segundos.</p>`;
       return;
@@ -412,14 +406,14 @@ function showPublicReportDirect(visitId) {
         <h2 style="text-align:center; font-size:18px; margin-bottom:4px;">Llama a Jhon</h2>
         <p style="text-align:center; font-size:12px; color:#666; margin-bottom:15px; border-bottom:1px dashed #ddd; padding-bottom:10px;">Reporte Técnico Digital</p>
         
-        <div class="detail-row"><span class="detail-label">Servicio:</span><span class="detail-value">${getVal(v, ['tipo', 'Tipo'])}</span></div>
-        <div class="detail-row"><span class="detail-label">Fecha:</span><span class="detail-value">${(getVal(v, ['fecha', 'Fecha'])||'').split('T')[0]}</span></div>
+        <div class="detail-row"><span class="detail-label">Servicio:</span><span class="detail-value">${getVal(v, ['Tipo', 'tipo'])}</span></div>
+        <div class="detail-row"><span class="detail-label">Fecha:</span><span class="detail-value">${(getVal(v, ['Fecha', 'fecha'])||'').split('T')[0]}</span></div>
         
         <div class="section-title">Diagnóstico</div>
-        <p style="font-size:14px;background:#f9f9f9;padding:8px;border-radius:6px;margin-bottom:10px;">${getVal(v, ['detalle', 'Detalle'])||'—'}</p>
+        <p style="font-size:14px;background:#f9f9f9;padding:8px;border-radius:6px;margin-bottom:10px;">${getVal(v, ['Detalle', 'detalle'])||'—'}</p>
         
         <div class="section-title">Trabajo Realizado</div>
-        <p style="font-size:14px;background:#f9f9f9;padding:8px;border-radius:6px;margin-bottom:10px;">${getVal(v, ['observacion', 'Observación'])||'—'}</p>
+        <p style="font-size:14px;background:#f9f9f9;padding:8px;border-radius:6px;margin-bottom:10px;">${getVal(v, ['Observación', 'observacion'])||'—'}</p>
         
         ${fHtml ? '<div class="section-title">Evidencias Guardadas</div>' + fHtml : ''}
         ${v.firma ? '<div class="section-title">Firma de Conformidad</div><img src="'+v.firma+'" class="sig-preview">' : ''}
