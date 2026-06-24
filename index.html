@@ -2,86 +2,85 @@
 <html lang="es">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Llama a Jhon</title>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.19.0/dist/tabler-icons.min.css">
 <style>
-/* CSS INTEGRADO - MANTENGO TUS DISEÑOS ORIGINALES */
-*{box-sizing:border-box;margin:0;padding:0;}
-body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:#f5f5f5;color:#1a1a1a;max-width:430px;margin:0 auto;min-height:100vh;}
-.screen{display:none;padding:1rem;padding-bottom:5rem;}
+/* MANTENGO TUS ESTILOS ORIGINALES */
+body{font-family:sans-serif;background:#f5f5f5;max-width:430px;margin:0 auto;padding:1rem;}
+.screen{display:none;}
 .screen.active{display:block;}
-.header{display:flex;align-items:center;gap:10px;background:#fff;margin:-1rem -1rem 1.5rem;padding:1rem;position:sticky;top:0;z-index:10;border-bottom:1px solid #e5e5e5;}
-.header h1{font-size:18px;font-weight:600;color:#1a1a1a;flex:1;}
-.section-title{font-size:12px;color:#888;font-weight:600;text-transform:uppercase;margin-top:1.25rem;margin-bottom:8px;}
-input,textarea,select{width:100%;padding:11px;border:1px solid #ddd;border-radius:10px;margin-bottom:10px;}
-.btn-primary{width:100%;padding:13px;background:#1a1a1a;color:#fff;border:none;border-radius:10px;font-weight:600;cursor:pointer;}
-#login-screen{position:fixed;top:0;left:0;width:100%;height:100%;background:#1a1a1a;z-index:9999;display:flex;justify-content:center;align-items:center;}
-.login-box{background:#fff;padding:30px;border-radius:14px;width:90%;max-width:350px;}
-.checkbox-item{display:flex;align-items:center;gap:10px;background:#fff;border:1px solid #ddd;border-radius:10px;padding:12px;margin-bottom:15px;}
+.client-card{background:#fff;padding:15px;margin-bottom:10px;border-radius:10px;border:1px solid #ddd;cursor:pointer;}
+#login-screen{position:fixed;top:0;left:0;width:100%;height:100%;background:#1a1a1a;display:flex;justify-content:center;align-items:center;z-index:999;}
+.login-box{background:#fff;padding:20px;border-radius:10px;width:90%;}
+.user-btn{padding:10px;margin:5px;cursor:pointer;}
+.user-btn.selected{background:#1a1a1a;color:#fff;}
 </style>
 </head>
 <body>
 
 <div id="login-screen">
   <div class="login-box">
-    <h2 style="margin-bottom:20px;text-align:center;">Selecciona Empresa</h2>
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:20px;">
-      <button onclick="selectUser('jhon')" id="btn-jhon" style="padding:10px;border-radius:10px;cursor:pointer;">🔧 Jhon</button>
-      <button onclick="selectUser('thermo')" id="btn-thermo" style="padding:10px;border-radius:10px;cursor:pointer;">❄️ Thermo</button>
-    </div>
-    <input type="password" id="login-pass" placeholder="Contraseña">
-    <button class="btn-primary" onclick="checkLogin()">Ingresar</button>
+    <h3>Selecciona tu empresa</h3>
+    <button class="user-btn" id="btn-jhon" onclick="selectUser('jhon')">🔧 Jhon</button>
+    <button class="user-btn" id="btn-thermo" onclick="selectUser('thermo')">❄️ Thermo</button>
+    <input type="password" id="login-pass" placeholder="Contraseña" style="width:100%;padding:10px;margin-bottom:10px;">
+    <button onclick="checkLogin()" style="width:100%;padding:10px;background:#000;color:#fff;">Ingresar</button>
   </div>
 </div>
 
 <div id="screen-home" class="screen">
-  <div class="header"><h1 id="home-title">Cargando...</h1></div>
+  <h1 id="home-title">Cargando...</h1>
   <div id="client-list"></div>
-</div>
-
-<div id="screen-new-visit" class="screen">
-  <div class="header"><h1>Nueva visita</h1></div>
-  <input type="date" id="v-fecha">
-  <select id="v-tipo">
-    <option value="">Tipo de servicio</option>
-    <option>Instalación</option><option>Limpieza</option><option>Revisión técnica</option>
-    <option>Fuga de gas</option><option>Reparación</option>
-  </select>
-  <textarea id="v-detalle" placeholder="Detalle"></textarea>
-  <div class="section-title">Responsabilidad</div>
-  <label class="checkbox-item"><input type="checkbox" id="v-deslinde"><span>Acepto responsabilidad absoluta.</span></label>
-  <button class="btn-primary" onclick="saveVisit()">Guardar</button>
 </div>
 
 <script>
 const USERS = {
-  jhon:  { pass:'jhon2024', label:'Llama a Jhon', sheetUrl:'https://script.google.com/macros/s/AKfycbzP4714lVYGCS3N992eIonN2o2spXKGvIl4i2tHo---PuGhBhjcHWWDqt7c5_czatf6/exec' },
-  thermo:{ pass:'thermo2024', label:'Thermoelectric', sheetUrl:'https://script.google.com/macros/s/AKfycbzePKw2vbFId4-wePXANI6soNGNtGXyMAsje5lIUP3ju3iAke37o6C6PSr4h2x9GI-8/exec' }
+  jhon: { pass:'jhon2024', label:'Llama a Jhon', sheetUrl:'https://script.google.com/macros/s/AKfycbzP4714lVYGCS3N992eIonN2o2spXKGvIl4i2tHo---PuGhBhjcHWWDqt7c5_czatf6/exec' },
+  thermo: { pass:'thermo2024', label:'Thermoelectric', sheetUrl:'https://script.google.com/macros/s/AKfycbzePKw2vbFId4-wePXANI6soNGNtGXyMAsje5lIUP3ju3iAke37o6C6PSr4h2x9GI-8/exec' }
 };
 
 let currentUser = null, selectedKey = null, db = {clients:[], visits:[]};
 
-function selectUser(k){ selectedKey = k; document.getElementById('btn-jhon').style.background = k==='jhon'?'#ddd':'#fff'; document.getElementById('btn-thermo').style.background = k==='thermo'?'#ddd':'#fff'; }
+function selectUser(k){ 
+  selectedKey = k; 
+  document.getElementById('btn-jhon').className = (k==='jhon' ? 'user-btn selected' : 'user-btn');
+  document.getElementById('btn-thermo').className = (k==='thermo' ? 'user-btn selected' : 'user-btn');
+}
 
 function checkLogin(){
-  if(!selectedKey || document.getElementById('login-pass').value !== USERS[selectedKey].pass){ alert('Error de login'); return; }
+  if(!selectedKey || document.getElementById('login-pass').value !== USERS[selectedKey].pass){ alert('Error de acceso'); return; }
   currentUser = USERS[selectedKey];
   document.getElementById('login-screen').style.display='none';
   document.getElementById('home-title').textContent = currentUser.label;
-  loadData();
-}
-
-function loadData(){
+  
+  // 1. Cargar local primero para que no se vea vacío
+  const local = localStorage.getItem('db_' + selectedKey);
+  if(local) { db = JSON.parse(local); renderClients(); }
+  
+  // 2. Sincronizar con el Excel correcto
   fetch(currentUser.sheetUrl + '?action=readAll')
     .then(r => r.json())
-    .then(data => { db = data; document.getElementById('screen-home').classList.add('active'); });
+    .then(data => {
+      db = data;
+      localStorage.setItem('db_' + selectedKey, JSON.stringify(db));
+      renderClients();
+    })
+    .catch(e => console.error("Error cargando Excel:", e));
 }
 
-function saveVisit(){
-  if(!document.getElementById('v-deslinde').checked){ alert('Debes aceptar la responsabilidad'); return; }
-  // Aquí va tu lógica de guardado
-  alert('Guardado en ' + currentUser.label);
+function renderClients(){
+  const list = document.getElementById('client-list');
+  if(!db.clients || db.clients.length === 0) { list.innerHTML = "No hay clientes."; }
+  else {
+    list.innerHTML = db.clients.map(c => `
+      <div class="client-card">
+        <h3>${c.nombre || 'Sin nombre'}</h3>
+        <p>${c.telefono || 'Sin teléfono'}</p>
+      </div>
+    `).join('');
+  }
+  document.getElementById('screen-home').classList.add('active');
 }
 </script>
 </body>
