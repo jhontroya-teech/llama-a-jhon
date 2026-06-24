@@ -31,7 +31,7 @@ textarea{min-height:85px;resize:vertical;}
 .canvas-wrap{border:1px solid #ddd;border-radius:10px;margin-bottom:8px;background:#fff;overflow:hidden;}
 canvas#sigCanvas{display:block;touch-action:none;cursor:crosshair;width:100%;height:160px;}
 .clear-sig{background:none;border:none;color:#888;font-size:13px;cursor:pointer;padding:4px 0;font-family:inherit;display:flex;align-items:center;gap:4px;}
-.empty-state text-align:center;padding:3rem 1rem;color:#aaa;}
+.empty-state{text-align:center;padding:3rem 1rem;color:#aaa;}
 .empty-state i{font-size:52px;display:block;margin-bottom:1rem;}
 .detail-row{display:flex;justify-content:space-between;align-items:flex-start;padding:10px 0;border-bottom:1px solid #f0f0f0;font-size:14px;}
 .detail-row:last-child{border-bottom:none;}
@@ -207,7 +207,7 @@ canvas#sigCanvas{display:block;touch-action:none;cursor:crosshair;width:100%;hei
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
 import { getFirestore, doc, setDoc, getDoc, collection, getDocs, deleteDoc } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
-import { getStorage, ref, uploadString, getDownloadURL } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-storage.js";
+import { getStorage, ref, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-storage.js";
 
 const firebaseConfig = {
   apiKey: "AIzaSyAdj0EzuAIep-QDDN9dLUJ_o-W_kcKr8jQ",
@@ -282,8 +282,22 @@ function copiarLinkVisita(){
 }
 
 async function subirImagen(base64, path){
-  const storageRef=ref(storage, path);
-  const snap=await uploadString(storageRef, base64, 'data_url');
+  const storageRef = ref(storage, path);
+  
+  // Convertir base64 a un Blob (Archivo binario real) para evitar bloqueos CORS
+  const byteString = atob(base64.split(',')[1]);
+  const mimeString = base64.split(',')[0].split(':')[1].split(';')[0];
+  const ab = new ArrayBuffer(byteString.length);
+  const ia = new Uint8Array(ab);
+  
+  for (let i = 0; i < byteString.length; i++) {
+      ia[i] = byteString.charCodeAt(i);
+  }
+  
+  const blob = new Blob([ab], {type: mimeString});
+
+  // Subir como archivo binario directamente
+  const snap = await uploadBytes(storageRef, blob);
   return await getDownloadURL(snap.ref);
 }
 
@@ -561,275 +575,6 @@ function editClient(){
   document.getElementById('c-telefono').value=c.telefono||'';
   document.getElementById('c-direccion').value=c.direccion||'';
   document.getElementById('c-tipo').value=c.tipo||'';
-  document.getElementById('c-marca').value=c.marca||'';
-  document.getElementById('c-btu').value=c.btu||'';
-  goScreen('screen-new-client');
-}
-
-function saveClient(){
-  const nombre=document.getElementById('c-nombre').value.trim(); if(!nombre) return;
-  const data={nombre,telefono:document.getElementById('c-telefono').value.trim(),direccion:document.getElementById('c-direccion').value.trim(),tipo:document.getElementById('c-tipo').value,marca:document.getElementById('c-marca').value.trim(),btu:document.getElementById('c-btu').value.trim()};
-  if(editingClientId){
-    const idx=db.clients.findIndex(x=>x.id===editingClientId);
-    db.clients[idx]={...db.clients[idx],...data};
-    showToast("Cliente actualizado");
-  } else {
-    const newId='c_'+Date.now();
-    db.clients.push({id:newId,...data});
-    currentClientId=newId;
-    showToast("Cliente creado");
-  }
-  saveLocalDb(); syncClientToSheets({type:'client',id:currentClientId,...data});
-  goScreen('screen-client-detail');
-}
-
-function goNewVisit(){
-  editingVisitId=null;
-  document.getElementById('new-visit-title').textContent="Nueva visita";
-  document.getElementById('v-fecha').value=new Date().toISOString().split('T')[0];
-  document.getElementById('v-tipo').value='';
-  document.getElementById('v-detalle').value='';
-  document.getElementById('v-observacion').value='';
-  document.getElementById('v-responsabilidad').checked=false;
-  
-  const btnG=document.getElementById('btn-guardar-visita');
-  const btnC=document.getElementById('btn-compartir-visita');
-  btnG.disabled=false; btnG.style.display=''; btnC.style.display='none';
-  
-  visitPhotos=[]; 
-  renderPhotoGrid(); 
-  goScreen('screen-new-visit');
-}
-
-function openVisit(id){
-  currentVisitId=id;
-  goScreen('screen-visit-detail');
-  renderVisitDetail();
-}
-window.openVisit = openVisit;
-
-function renderVisitDetail(){
-  const v=db.visits.find(x=>x.id===currentVisitId); if(!v) return;
-  const content=document.getElementById('visit-detail-content');
-  
-  const fotosHtml = (v.fotosURLs||[]).map(u=>`<img src="${u}" class="photo-thumb" style="height:auto; max-height:200px; grid-column:span 2;">`).join('');
-  const firmaHtml = v.firmaURL ? `<img src="${v.firmaURL}" class="sig-preview">` : '<p style="color:#aaa; font-size:13px;">Sin firma</p>';
-
-  content.innerHTML = `
-    <div class="info-card">
-      <div class="detail-row"><span class="detail-label">Servicio</span><span class="detail-value">${v.tipo}</span></div>
-      <div class="detail-row"><span class="detail-label">Fecha</span><span class="detail-value">${v.fecha}</span></div>
-      <div class="detail-row"><span class="detail-label">Responsabilidad</span><span class="detail-value">${v.responsabilidad?'Aceptada':'No'}</span></div>
-      <div style="margin-top:10px;"><span class="detail-label">Detalle Técnico:</span><p style="background:#fdfdfd; padding:6px; border-radius:6px; font-size:13px; margin-top:4px;">${v.detalle||'—'}</p></div>
-      <div style="margin-top:10px;"><span class="detail-label">Trabajo Realizado:</span><p style="background:#fdfdfd; padding:6px; border-radius:6px; font-size:13px; margin-top:4px;">${v.observacion||'—'}</p></div>
-      <div class="photo-grid" style="margin-top:10px;">${fotosHtml}</div>
-      <div style="margin-top:10px;"><span class="detail-label">Firma del cliente:</span><br>${firmaHtml}</div>
-    </div>
-  `;
-}
-
-function editVisit(){
-  const v=db.visits.find(x=>x.id===currentVisitId); if(!v) return;
-  editingVisitId=v.id;
-  document.getElementById('new-visit-title').textContent="Editar visita";
-  document.getElementById('v-fecha').value=v.fecha;
-  document.getElementById('v-tipo').value=v.tipo;
-  document.getElementById('v-detalle').value=v.detalle;
-  document.getElementById('v-observacion').value=v.observacion;
-  document.getElementById('v-responsabilidad').checked=v.responsabilidad || false;
-  
-  const btnG=document.getElementById('btn-guardar-visita');
-  const btnC=document.getElementById('btn-compartir-visita');
-  btnG.disabled=false; btnG.style.display=''; btnC.style.display='none';
-  
-  visitPhotos = v.fotosURLs ? [...v.fotosURLs] : [];
-  renderPhotoGrid();
-  goScreen('screen-new-visit');
-  
-  // Si hay firma previa la pintamos en el canvas como fondo temporal
-  if(v.firmaURL){
-    const img = new Image();
-    img.crossOrigin = "anonymous";
-    img.src = v.firmaURL;
-    img.onload = function(){
-      sigCtx.clearRect(0,0,sigCtx.canvas.width,sigCtx.canvas.height);
-      sigCtx.drawImage(img, 0, 0, sigCtx.canvas.width, sigCtx.canvas.height);
-      sigHasContent = true;
-    }
-  }
-}
-
-async function deleteVisit(){
-  if(!confirm("¿Seguro que deseas eliminar esta visita permanentemente?")) return;
-  try {
-    await deleteDoc(doc(db_fire, 'visitas', currentVisitId));
-    const idx = db.visits.findIndex(x=>x.id===currentVisitId);
-    if(idx>-1) db.visits.splice(idx,1);
-    saveLocalDb();
-    showToast("Visita eliminada");
-    goScreen('screen-client-detail');
-  } catch(e) {
-    showToast("Error al eliminar: " + e.message);
-  }
-}
-
-// ── SISTEMA DE COMPRESIÓN Y CARGA DE FOTOS ───────────────────────────
-function renderPhotoGrid(){
-  const grid=document.getElementById('photo-grid');
-  let html = visitPhotos.map((p,i)=>`<div style="position:relative;"><img src="${p}" class="photo-thumb"><span onclick="removePhoto(${i})" style="position:absolute; top:4px; right:4px; background:rgba(0,0,0,0.7); color:#fff; border-radius:50%; width:20px; height:20px; display:flex; align-items:center; justify-content:center; font-size:12px; cursor:pointer;">×</span></div>`).join('');
-  if(visitPhotos.length < 4){
-    html += `<div class="photo-add" onclick="document.getElementById('photo-input').click()"><i class="ti ti-camera"></i></div>`;
-  }
-  grid.innerHTML = html;
-}
-window.removePhoto = function(index){
-  visitPhotos.splice(index,1);
-  renderPhotoGrid();
-}
-
-document.getElementById('photo-input').addEventListener('change', function(e){
-  const files = Array.from(e.target.files);
-  files.forEach(file => {
-    const reader = new FileReader();
-    reader.onload = function(evt){
-      const img = new Image();
-      img.src = evt.target.result;
-      img.onload = function(){
-        // Redimensionar para ahorrar espacio
-        const canvas = document.createElement('canvas');
-        const max = 800;
-        let w = img.width, h = img.height;
-        if(w > h && w > max){ h *= max/w; w = max; }
-        else if(h > max){ w *= max/h; h = max; }
-        canvas.width = w; canvas.height = h;
-        const ctx = canvas.getContext('2d');
-        ctx.drawImage(img, 0, 0, w, h);
-        visitPhotos.push(canvas.toDataURL('image/jpeg', 0.7));
-        renderPhotoGrid();
-      }
-    }
-    reader.readAsDataURL(file);
-  });
-});
-
-// ── FIRMA DIGITAL CANVAS ───────────────────────────────────────────────
-function initSig(){
-  const canvas = document.getElementById('sigCanvas');
-  sigCtx = canvas.getContext('2d');
-  
-  // Ajustar dimensiones internas del canvas
-  canvas.width = canvas.parentElement.clientWidth;
-  canvas.height = 160;
-  
-  sigCtx.strokeStyle = "#1a1a1a";
-  sigCtx.lineWidth = 3;
-  sigCtx.lineCap = "round";
-  
-  clearSig();
-
-  function getPos(e){
-    const rect = canvas.getBoundingClientRect();
-    const clientX = e.touches ? e.touches[0].clientX : e.clientX;
-    const clientY = e.touches ? e.touches[0].clientY : e.clientY;
-    return { x: clientX - rect.left, y: clientY - rect.top };
-  }
-
-  canvas.onmousedown = canvas.ontouchstart = function(e){
-    e.preventDefault();
-    sigDrawing = true;
-    const pos = getPos(e);
-    sigCtx.beginPath();
-    sigCtx.moveTo(pos.x, pos.y);
-  };
-
-  canvas.onmousemove = canvas.ontouchmove = function(e){
-    if(!sigDrawing) return;
-    e.preventDefault();
-    const pos = getPos(e);
-    sigCtx.lineTo(pos.x, pos.y);
-    sigCtx.stroke();
-    sigHasContent = true;
-  };
-
-  canvas.onmouseup = canvas.onmouseleave = canvas.ontouchend = function(){
-    sigDrawing = false;
-  };
-}
-
-function clearSig(){
-  if(!sigCtx) return;
-  sigCtx.clearRect(0, 0, sigCtx.canvas.width, sigCtx.canvas.height);
-  sigHasContent = false;
-}
-
-// ── GUARDAR VISITA COMPLETO (LOCAL + FIREBASE + SHEET) ───────────────
-async function saveVisit(){
-  const tipo = document.getElementById('v-tipo').value;
-  const fecha = document.getElementById('v-fecha').value;
-  if(!tipo || !fecha){ alert("Por favor selecciona tipo de servicio y fecha."); return; }
-
-  const btnG = document.getElementById('btn-guardar-visita');
-  btnG.disabled = true;
-  btnG.textContent = "Procesando y Subiendo...";
-
-  const visitId = editingVisitId ? editingVisitId : 'v_' + Date.now();
-  const firmaBase64 = sigHasContent ? document.getElementById('sigCanvas').toDataURL() : null;
-
-  const temporalData = {
-    id: visitId,
-    clientId: currentClientId,
-    fecha,
-    tipo,
-    detalle: document.getElementById('v-detalle').value.trim(),
-    observacion: document.getElementById('v-observacion').value.trim(),
-    responsabilidad: document.getElementById('v-responsabilidad').checked
-  };
-
-  try {
-    // 1. Guardar archivos e información estructurada en Firebase Firestore + Storage
-    const fbDoc = await guardarVisitaFirebase(visitId, temporalData, visitPhotos, firmaBase64);
-
-    // 2. Guardar Localmente reflejando las URLs definitivas de la nube
-    const finalVisit = {
-      ...temporalData,
-      fotosURLs: fbDoc.fotosURLs,
-      firmaURL: fbDoc.firmaURL,
-      linkCompartir: fbDoc.linkCompartir
-    };
-
-    if(editingVisitId){
-      const idx = db.visits.findIndex(x=>x.id===editingVisitId);
-      if(idx>-1) db.visits[idx] = finalVisit;
-    } else {
-      db.visits.push(finalVisit);
-    }
-    saveLocalDb();
-
-    // 3. Sincronizar en segundo plano hacia tu Google Sheet
-    syncVisitToSheets({
-      id: visitId,
-      clientId: currentClientId,
-      clienteNombre: fbDoc.clienteNombre,
-      fecha,
-      tipo,
-      detalle: temporalData.detalle,
-      observacion: temporalData.observacion,
-      linkCompartir: fbDoc.linkCompartir
-    });
-
-    currentVisitId = visitId;
-    showToast("¡Reporte en la nube generado con éxito!");
-    
-    // Cambiar vista de botones para compartir de inmediato
-    btnG.style.display = 'none';
-    document.getElementById('btn-compartir-visita').style.display = 'block';
-
-  } catch(error) {
-    console.error(error);
-    alert("Hubo un error al guardar en la nube: " + error.message);
-    btnG.disabled = false;
-    btnG.textContent = "Guardar visita";
-  }
 }
 </script>
 </body>
