@@ -61,15 +61,25 @@ canvas#sigCanvas{display:block;touch-action:none;cursor:crosshair;width:100%;hei
 .loading-overlay{position:fixed;top:0;left:0;width:100%;height:100%;background:#f5f5f5;z-index:9998;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;}
 .loading-spinner{width:36px;height:36px;border:3px solid #ddd;border-top-color:#1a1a1a;border-radius:50%;animation:spin 0.8s linear infinite;}
 </style>
+
+<!-- SCRIPT DE DESBLOQUEO INMEDIATO -->
+<script>
+  document.addEventListener("DOMContentLoaded", function() {
+    var overlay = document.getElementById('loading-overlay');
+    if(overlay) { overlay.style.display = 'none'; }
+  });
+</script>
 </head>
 <body>
 <div id="toast" class="toast"></div>
 
+<!-- LOADING OVERLAY -->
 <div id="loading-overlay" class="loading-overlay">
   <div class="loading-spinner"></div>
   <p style="font-size:14px;color:#888;">Cargando...</p>
 </div>
 
+<!-- LOGIN -->
 <div id="login-screen" style="position:fixed;top:0;left:0;width:100%;height:100%;background:#1a1a1a;z-index:9999;display:none;justify-content:center;align-items:center;flex-direction:column;">
   <div style="background:#fff;padding:30px;border-radius:14px;text-align:center;width:85%;max-width:350px;">
     <h2 style="margin-bottom:5px;color:#1a1a1a;font-weight:700;">Llama a Jhon</h2>
@@ -81,6 +91,7 @@ canvas#sigCanvas{display:block;touch-action:none;cursor:crosshair;width:100%;hei
   </div>
 </div>
 
+<!-- PANEL DE INICIO -->
 <div id="screen-home" class="screen">
   <div class="header">
     <div class="app-logo"><i class="ti ti-tool"></i></div>
@@ -100,6 +111,7 @@ canvas#sigCanvas{display:block;touch-action:none;cursor:crosshair;width:100%;hei
   <button class="fab" id="btn-add-client-fab"><i class="ti ti-plus"></i></button>
 </div>
 
+<!-- CREAR / EDITAR CLIENTE -->
 <div id="screen-new-client" class="screen">
   <div class="header">
     <button class="back-btn" id="btn-back-to-home"><i class="ti ti-arrow-left"></i></button>
@@ -121,6 +133,7 @@ canvas#sigCanvas{display:block;touch-action:none;cursor:crosshair;width:100%;hei
   <button class="btn-secondary" id="btn-cancel-client">Cancelar</button>
 </div>
 
+<!-- DETALLE DEL CLIENTE -->
 <div id="screen-client-detail" class="screen">
   <div class="header">
     <button class="back-btn" id="btn-detail-back"><i class="ti ti-arrow-left"></i></button>
@@ -135,6 +148,7 @@ canvas#sigCanvas{display:block;touch-action:none;cursor:crosshair;width:100%;hei
   <div id="visit-list"></div>
 </div>
 
+<!-- FORMULARIO DE NUEVA VISITA -->
 <div id="screen-new-visit" class="screen">
   <div class="header">
     <button class="back-btn" id="btn-visit-back"><i class="ti ti-arrow-left"></i></button>
@@ -170,6 +184,7 @@ canvas#sigCanvas{display:block;touch-action:none;cursor:crosshair;width:100%;hei
   <button class="btn-secondary" id="btn-cancelar-visita">Cancelar</button>
 </div>
 
+<!-- DETALLE ADMINISTRATIVO DE LA VISITA -->
 <div id="screen-visit-detail" class="screen">
   <div class="header">
     <button class="back-btn" id="btn-vdetail-back"><i class="ti ti-arrow-left"></i></button>
@@ -276,7 +291,6 @@ async function saveClient() {
   };
 
   setSyncStatus(`<i class="ti ti-refresh sync-spin"></i> Guardando cliente...`);
-  document.getElementById('loading-overlay').style.display = 'flex';
   
   try {
     if(!editingClientId) db.clients.push(clientData);
@@ -290,8 +304,6 @@ async function saveClient() {
   } catch(e) {
     showToast('Guardado localmente');
     goScreen('screen-home');
-  } finally {
-    document.getElementById('loading-overlay').style.display = 'none';
   }
 }
 
@@ -299,9 +311,6 @@ async function saveVisit() {
   const tipo = document.getElementById('v-tipo').value;
   const fecha = document.getElementById('v-fecha').value;
   if(!tipo || !fecha) return showToast('Fecha y Tipo de servicio obligatorios');
-
-  document.getElementById('loading-overlay').style.display = 'flex';
-  document.getElementById('loading-overlay').querySelector('p').textContent = 'Creando PDF...';
 
   const visitId = 'v_' + Date.now();
   const firmaBase64 = sigHasContent ? document.getElementById('sigCanvas').toDataURL() : null;
@@ -346,14 +355,11 @@ async function saveVisit() {
     db.visits.push({ id: visitId, clientId: currentClientId, fecha: fecha, tipo: tipo, detalle: visitPayload.detalle, observacion: visitPayload.observacion, pdfUrl: '' });
     saveLocalDb();
     goScreen('screen-client-detail');
-  } finally {
-    document.getElementById('loading-overlay').style.display = 'none';
   }
 }
 
 async function deleteVisit() {
   if(!confirm('¿Eliminar permanentemente este reporte?')) return;
-  document.getElementById('loading-overlay').style.display = 'flex';
   try {
     await fetch(`${SHEET_URL}?action=deleteVisit&visitId=${currentVisitId}`);
     db.visits = db.visits.filter(x => x.id !== currentVisitId);
@@ -364,8 +370,6 @@ async function deleteVisit() {
     db.visits = db.visits.filter(x => x.id !== currentVisitId);
     saveLocalDb();
     goScreen('screen-client-detail');
-  } finally {
-    document.getElementById('loading-overlay').style.display = 'none';
   }
 }
 
@@ -389,7 +393,6 @@ function fetchDataFromSheets(){
     })
     .finally(()=>{ 
       if(icon) icon.classList.remove('sync-spin');
-      document.getElementById('loading-overlay').style.display='none';
     });
 }
 
@@ -499,9 +502,6 @@ function goNewVisit(){
 
 // --- ARRANQUE SEGURO ---
 (function init(){
-  // Ocultar pantalla de carga inmediatamente para evitar bloqueos por cualquier error externo
-  document.getElementById('loading-overlay').style.display = 'none';
-
   document.getElementById('search-input').addEventListener('input', renderClients);
   document.getElementById('manual-sync-btn').addEventListener('click', fetchDataFromSheets);
   document.getElementById('btn-add-client-fab').addEventListener('click', goNewClient);
