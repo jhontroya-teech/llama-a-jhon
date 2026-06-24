@@ -65,13 +65,11 @@ canvas#sigCanvas{display:block;touch-action:none;cursor:crosshair;width:100%;hei
 <body>
 <div id="toast" class="toast"></div>
 
-<!-- LOADING OVERLAY -->
 <div id="loading-overlay" class="loading-overlay">
   <div class="loading-spinner"></div>
   <p style="font-size:14px;color:#888;">Cargando...</p>
 </div>
 
-<!-- LOGIN -->
 <div id="login-screen" style="position:fixed;top:0;left:0;width:100%;height:100%;background:#1a1a1a;z-index:9999;display:none;justify-content:center;align-items:center;flex-direction:column;">
   <div style="background:#fff;padding:30px;border-radius:14px;text-align:center;width:85%;max-width:350px;">
     <h2 style="margin-bottom:5px;color:#1a1a1a;font-weight:700;">Llama a Jhon</h2>
@@ -83,7 +81,6 @@ canvas#sigCanvas{display:block;touch-action:none;cursor:crosshair;width:100%;hei
   </div>
 </div>
 
-<!-- PANEL DE INICIO -->
 <div id="screen-home" class="screen">
   <div class="header">
     <div class="app-logo"><i class="ti ti-tool"></i></div>
@@ -103,7 +100,6 @@ canvas#sigCanvas{display:block;touch-action:none;cursor:crosshair;width:100%;hei
   <button class="fab" id="btn-add-client-fab"><i class="ti ti-plus"></i></button>
 </div>
 
-<!-- CREAR / EDITAR CLIENTE -->
 <div id="screen-new-client" class="screen">
   <div class="header">
     <button class="back-btn" id="btn-back-to-home"><i class="ti ti-arrow-left"></i></button>
@@ -125,7 +121,6 @@ canvas#sigCanvas{display:block;touch-action:none;cursor:crosshair;width:100%;hei
   <button class="btn-secondary" id="btn-cancel-client">Cancelar</button>
 </div>
 
-<!-- DETALLE DEL CLIENTE -->
 <div id="screen-client-detail" class="screen">
   <div class="header">
     <button class="back-btn" id="btn-detail-back"><i class="ti ti-arrow-left"></i></button>
@@ -140,7 +135,6 @@ canvas#sigCanvas{display:block;touch-action:none;cursor:crosshair;width:100%;hei
   <div id="visit-list"></div>
 </div>
 
-<!-- FORMULARIO DE NUEVA VISITA -->
 <div id="screen-new-visit" class="screen">
   <div class="header">
     <button class="back-btn" id="btn-visit-back"><i class="ti ti-arrow-left"></i></button>
@@ -176,7 +170,6 @@ canvas#sigCanvas{display:block;touch-action:none;cursor:crosshair;width:100%;hei
   <button class="btn-secondary" id="btn-cancelar-visita">Cancelar</button>
 </div>
 
-<!-- DETALLE ADMINISTRATIVO DE LA VISITA -->
 <div id="screen-visit-detail" class="screen">
   <div class="header">
     <button class="back-btn" id="btn-vdetail-back"><i class="ti ti-arrow-left"></i></button>
@@ -188,14 +181,12 @@ canvas#sigCanvas{display:block;touch-action:none;cursor:crosshair;width:100%;hei
 </div>
 
 <script type="module">
-// ENLACE A TU GOOGLE APPS SCRIPT
 const SHEET_URL = 'https://script.google.com/macros/s/AKfycbyUUziORBw7RLEhWpbLOsFtjWTybII3fs3ZzZ3JEPxoqUEWj3TQIW1-7UzBFiuo-c2NAg/exec';
 
 let db = JSON.parse(localStorage.getItem('lj_db') || '{"clients":[],"visits":[]}');
 let currentClientId=null, currentVisitId=null, editingClientId=null;
 let visitPhotos=[], sigCtx=null, sigDrawing=false, sigHasContent=false;
 
-// Exponer funciones necesarias al HTML de forma global
 window.renderClients = renderClients;
 window.goNewClient = goNewClient;
 window.openClient = openClient;
@@ -218,7 +209,6 @@ function showToast(msg){
 
 function setSyncStatus(html){ const el=document.getElementById('sync-status'); if(el) el.innerHTML=html; }
 
-// --- CAPTURA MULTIPLES IMÁGENES NATIVAS EN MEMORIA ---
 document.getElementById('btn-add-photo').onclick = () => document.getElementById('photo-input').click();
 document.getElementById('photo-input').onchange = function(e) {
   const files = e.target.files;
@@ -245,7 +235,6 @@ function renderPhotosGrid() {
   });
 }
 
-// --- CONFIGURACIÓN TÁCTIL DEL PANEL DE FIRMA ---
 function initSig() {
   const canvas = document.getElementById('sigCanvas');
   sigCtx = canvas.getContext('2d');
@@ -271,7 +260,6 @@ function initSig() {
 
 function clearSig() { if(sigCtx) sigCtx.clearRect(0, 0, sigCanvas.width, sigCanvas.height); sigHasContent = false; }
 
-// --- CREAR O EDITAR CLIENTES ---
 async function saveClient() {
   const nombre = document.getElementById('c-nombre').value.trim();
   if(!nombre) return showToast('El nombre es obligatorio');
@@ -300,21 +288,20 @@ async function saveClient() {
     goScreen('screen-home');
     fetchDataFromSheets();
   } catch(e) {
-    showToast('Guardado localmente de momento');
+    showToast('Guardado localmente');
     goScreen('screen-home');
   } finally {
     document.getElementById('loading-overlay').style.display = 'none';
   }
 }
 
-// --- ENVIAR DATOS DE VISITA Y SOLICITAR PDF EN DRIVE ---
 async function saveVisit() {
   const tipo = document.getElementById('v-tipo').value;
   const fecha = document.getElementById('v-fecha').value;
   if(!tipo || !fecha) return showToast('Fecha y Tipo de servicio obligatorios');
 
   document.getElementById('loading-overlay').style.display = 'flex';
-  document.getElementById('loading-overlay').querySelector('p').textContent = 'Procesando imágenes y creando PDF...';
+  document.getElementById('loading-overlay').querySelector('p').textContent = 'Creando PDF...';
 
   const visitId = 'v_' + Date.now();
   const firmaBase64 = sigHasContent ? document.getElementById('sigCanvas').toDataURL() : null;
@@ -328,7 +315,7 @@ async function saveVisit() {
     detalle: document.getElementById('v-detalle').value,
     observacion: document.getElementById('v-observacion').value,
     responsabilidad: document.getElementById('v-responsabilidad').checked,
-    fotos: visitPhotos, // Se transmiten todas las fotos en base64 en la petición
+    fotos: visitPhotos,
     firma: firmaBase64
   };
 
@@ -349,14 +336,13 @@ async function saveVisit() {
       db.visits.push(localVisit);
       saveLocalDb();
       
-      showToast('¡Reporte generado con éxito! ✓');
+      showToast('¡Reporte generado! ✓');
       openVisit(visitId);
     } else {
-      alert('Error devuelto por Apps Script: ' + json.message);
+      alert('Error: ' + json.message);
     }
   } catch(e) {
-    alert('No se pudo recibir confirmación del servidor. El reporte se guardó localmente en el celular.');
-    // Respaldo local de seguridad
+    alert('Guardado en el celular de forma offline.');
     db.visits.push({ id: visitId, clientId: currentClientId, fecha: fecha, tipo: tipo, detalle: visitPayload.detalle, observacion: visitPayload.observacion, pdfUrl: '' });
     saveLocalDb();
     goScreen('screen-client-detail');
@@ -365,13 +351,9 @@ async function saveVisit() {
   }
 }
 
-// --- ELIMINAR VISITA TOTAL ---
 async function deleteVisit() {
-  if(!confirm('¿Estás seguro de que deseas eliminar permanentemente este reporte de visita?')) return;
-  
+  if(!confirm('¿Eliminar permanentemente este reporte?')) return;
   document.getElementById('loading-overlay').style.display = 'flex';
-  document.getElementById('loading-overlay').querySelector('p').textContent = 'Eliminando registro de Sheets...';
-
   try {
     await fetch(`${SHEET_URL}?action=deleteVisit&visitId=${currentVisitId}`);
     db.visits = db.visits.filter(x => x.id !== currentVisitId);
@@ -379,7 +361,6 @@ async function deleteVisit() {
     showToast('Visita eliminada ✓');
     goScreen('screen-client-detail');
   } catch(e) {
-    showToast('Error al conectar, borrada solo localmente');
     db.visits = db.visits.filter(x => x.id !== currentVisitId);
     saveLocalDb();
     goScreen('screen-client-detail');
@@ -388,10 +369,9 @@ async function deleteVisit() {
   }
 }
 
-// --- DESCARGAR BASE DE DATOS DE SINCRO DESDE GOOGLE ---
 function fetchDataFromSheets(){
   const icon=document.getElementById('manual-sync-btn');
-  setSyncStatus(`<i class="ti ti-refresh sync-spin"></i> Sincronizando datos...`);
+  setSyncStatus(`<i class="ti ti-refresh sync-spin"></i> Sincronizando...`);
   if(icon) icon.classList.add('sync-spin');
   
   fetch(`${SHEET_URL}?action=readAll`)
@@ -401,11 +381,11 @@ function fetchDataFromSheets(){
         db=data; 
         saveLocalDb(); 
         renderClients(); 
-        setSyncStatus(`<i class="ti ti-cloud-check" style="color:#1a7a4a"></i> Sincronizado con Google Sheets`); 
+        setSyncStatus(`<i class="ti ti-cloud-check" style="color:#1a7a4a"></i> Sincronizado`); 
       } 
     })
     .catch(()=>{
-      setSyncStatus(`<i class="ti ti-cloud-off" style="color:#e53e3e"></i> Corriendo en modo local`);
+      setSyncStatus(`<i class="ti ti-cloud-off" style="color:#e53e3e"></i> Modo local`);
     })
     .finally(()=>{ 
       if(icon) icon.classList.remove('sync-spin');
@@ -413,7 +393,6 @@ function fetchDataFromSheets(){
     });
 }
 
-// --- NAVEGACIÓN GENERAL ---
 function goScreen(id){
   document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
   document.getElementById(id).classList.add('active');
@@ -481,15 +460,11 @@ function openVisit(id) {
         <p style="font-size:14px;background:#fafafa;padding:8px;border-radius:6px;color:#444;">${v.observacion || 'No especificada.'}</p>
       </div>
     </div>
-    <p style="font-size:12px;color:#888;text-align:center;margin-bottom:10px;">Este reporte cuenta con un archivo PDF activo en Google Drive.</p>
   `;
   
   document.getElementById('btn-compartir-visita').onclick = () => {
-    if(v.pdfUrl) {
-      window.open(v.pdfUrl, '_blank');
-    } else {
-      alert('Esta visita no tiene link de PDF asignado o fue creada en modo fuera de línea.');
-    }
+    if(v.pdfUrl) { window.open(v.pdfUrl, '_blank'); } 
+    else { alert('Esta visita no tiene link de PDF asignado.'); }
   };
 }
 
@@ -522,8 +497,11 @@ function goNewVisit(){
   goScreen('screen-new-visit');
 }
 
-// --- AUTOMATIZACIÓN DE ARRANQUE ---
+// --- ARRANQUE SEGURO ---
 (function init(){
+  // Ocultar pantalla de carga inmediatamente para evitar bloqueos por cualquier error externo
+  document.getElementById('loading-overlay').style.display = 'none';
+
   document.getElementById('search-input').addEventListener('input', renderClients);
   document.getElementById('manual-sync-btn').addEventListener('click', fetchDataFromSheets);
   document.getElementById('btn-add-client-fab').addEventListener('click', goNewClient);
@@ -541,11 +519,9 @@ function goNewVisit(){
   document.getElementById('btn-delete-visit-btn').addEventListener('click', deleteVisit);
 
   if(sessionStorage.getItem("lj_logged")==="true"){
-    document.getElementById('loading-overlay').style.display='none';
     goScreen('screen-home');
     fetchDataFromSheets();
   } else {
-    document.getElementById('loading-overlay').style.display='none';
     document.getElementById('login-screen').style.display='flex';
   }
 
