@@ -55,44 +55,46 @@ canvas#sigCanvas{display:block;touch-action:none;cursor:crosshair;width:100%;hei
 .toast.show{opacity:1;}
 .app-logo{width:36px;height:36px;background:#1a1a1a;border-radius:10px;display:flex;align-items:center;justify-content:center;color:#fff;font-size:20px;flex-shrink:0;}
 .info-card{background:#fff;border:1px solid #e5e5e5;border-radius:14px;padding:14px 16px;margin-bottom:1rem;}
-.sync-indicator { font-size: 11px; color: #888; display: flex; align-items: center; gap: 4px; font-weight: 500; justify-content: center; margin-bottom: 10px; }
-.sync-spin { animation: spin 1s linear infinite; }
-@keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
-
-/* Checkbox responsabilidad */
-.checkbox-resp{display:flex;align-items:flex-start;gap:10px;background:#fff;border:1px solid #ddd;border-radius:10px;padding:12px 14px;margin-bottom:12px;cursor:pointer;}
-.checkbox-resp input[type=checkbox]{width:18px;height:18px;flex-shrink:0;margin-top:2px;accent-color:#1a1a1a;cursor:pointer;}
-.checkbox-resp label{font-size:13px;color:#444;line-height:1.4;cursor:pointer;}
-
-/* Link compartir en detalle visita */
-.link-compartir-box{background:#e6f0ff;border:1px solid #b3cdf7;border-radius:10px;padding:10px 14px;margin-bottom:10px;font-size:13px;color:#1a4a9a;word-break:break-all;}
+.sync-indicator{font-size:11px;color:#888;display:flex;align-items:center;gap:4px;font-weight:500;justify-content:center;margin-bottom:10px;}
+.sync-spin{animation:spin 1s linear infinite;}
+@keyframes spin{0%{transform:rotate(0deg);}100%{transform:rotate(360deg);}}
+.checkbox-resp{display:flex;align-items:flex-start;gap:10px;background:#fff;border:1px solid #ddd;border-radius:10px;padding:12px 14px;margin-bottom:12px;}
+/* pantalla pública */
+#screen-public-visit{display:none;padding:1rem;max-width:430px;margin:0 auto;padding-bottom:3rem;}
+.pub-header{display:flex;align-items:center;gap:10px;background:#1a1a1a;padding:1rem;margin:-1rem -1rem 1.5rem;}
+.loading-overlay{position:fixed;top:0;left:0;width:100%;height:100%;background:#f5f5f5;z-index:9998;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;}
+.loading-spinner{width:36px;height:36px;border:3px solid #ddd;border-top-color:#1a1a1a;border-radius:50%;animation:spin 0.8s linear infinite;}
 </style>
 </head>
 <body>
 <div id="toast" class="toast"></div>
 
+<!-- LOADING -->
+<div id="loading-overlay" class="loading-overlay">
+  <div class="loading-spinner"></div>
+  <p style="font-size:14px;color:#888;">Cargando...</p>
+</div>
+
 <!-- LOGIN -->
-<div id="login-screen" style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #1a1a1a; z-index: 9999; display: flex; justify-content: center; align-items: center; flex-direction: column;">
-    <div style="background: #ffffff; padding: 30px; border-radius: 14px; text-align: center; width: 85%; max-width: 350px;">
-        <h2 style="margin-bottom: 5px; color: #1a1a1a; font-weight: 700;">Llama a Jhon</h2>
-        <p style="font-size: 13px; color: #888; margin-bottom: 25px;">Control de Clientes</p>
-        <input type="text" id="username" placeholder="Usuario (Dejar vacío)" style="width:100%; padding:12px; margin-bottom:15px; border:1px solid #ddd; border-radius:10px;">
-        <input type="password" id="password" placeholder="Contraseña (Dejar vacío)" style="width:100%; padding:12px; margin-bottom:20px; border:1px solid #ddd; border-radius:10px;">
-        <button id="btn-entrar" style="width:100%; padding:13px; background:#1a1a1a; color:#fff; border:none; border-radius:10px; font-weight:600; font-size:15px; cursor:pointer;">Ingresar</button>
-        <div id="login-alert-box" style="margin-top:15px; padding:10px; border-radius:8px; font-size:14px; font-weight:600; display:none;"></div>
-    </div>
+<div id="login-screen" style="position:fixed;top:0;left:0;width:100%;height:100%;background:#1a1a1a;z-index:9999;display:none;justify-content:center;align-items:center;flex-direction:column;">
+  <div style="background:#fff;padding:30px;border-radius:14px;text-align:center;width:85%;max-width:350px;">
+    <h2 style="margin-bottom:5px;color:#1a1a1a;font-weight:700;">Llama a Jhon</h2>
+    <p style="font-size:13px;color:#888;margin-bottom:25px;">Control de Clientes</p>
+    <input type="text" id="username" placeholder="Usuario (Dejar vacío)" style="width:100%;padding:12px;margin-bottom:15px;border:1px solid #ddd;border-radius:10px;">
+    <input type="password" id="password" placeholder="Contraseña (Dejar vacío)" style="width:100%;padding:12px;margin-bottom:20px;border:1px solid #ddd;border-radius:10px;">
+    <button id="btn-entrar" style="width:100%;padding:13px;background:#1a1a1a;color:#fff;border:none;border-radius:10px;font-weight:600;font-size:15px;cursor:pointer;">Ingresar</button>
+    <div id="login-alert-box" style="margin-top:15px;padding:10px;border-radius:8px;font-size:14px;font-weight:600;display:none;"></div>
+  </div>
 </div>
 
 <!-- INICIO -->
-<div id="screen-home" class="screen active">
+<div id="screen-home" class="screen">
   <div class="header">
     <div class="app-logo"><i class="ti ti-tool"></i></div>
     <h1>Llama a Jhon</h1>
     <i class="ti ti-refresh" id="manual-sync-btn" style="font-size:20px;color:#1a4a9a;cursor:pointer;" onclick="fetchDataFromSheets()"></i>
   </div>
-  <div id="sync-status" class="sync-indicator">
-    <i class="ti ti-cloud-check"></i> Conectando con la nube...
-  </div>
+  <div id="sync-status" class="sync-indicator"><i class="ti ti-cloud-check"></i> Conectando...</div>
   <div class="stats">
     <div class="stat-card"><div class="stat-num" id="total-clients">0</div><div class="stat-label">Clientes</div></div>
     <div class="stat-card"><div class="stat-num" id="total-visits">0</div><div class="stat-label">Visitas</div></div>
@@ -163,21 +165,18 @@ canvas#sigCanvas{display:block;touch-action:none;cursor:crosshair;width:100%;hei
   <div class="section-title">Fotos</div>
   <div class="photo-grid" id="photo-grid"></div>
   <input type="file" id="photo-input" accept="image/*" multiple style="display:none" onchange="addPhotos(this)">
-
   <!-- CHECKBOX RESPONSABILIDAD -->
-  <div class="checkbox-resp" onclick="toggleCheckbox()">
-    <input type="checkbox" id="v-responsabilidad">
-    <label for="v-responsabilidad">He sido informado/a sobre los riesgos técnicos y decido proceder bajo mi propia responsabilidad, eximiendo al técnico/empresa de cualquier inconveniente derivado de esta decisión.</label>
+  <div class="checkbox-resp">
+    <input type="checkbox" id="v-responsabilidad" style="-webkit-appearance:checkbox;appearance:checkbox;width:20px;height:20px;flex-shrink:0;margin-top:2px;cursor:pointer;">
+    <label for="v-responsabilidad" style="font-size:13px;color:#444;line-height:1.4;cursor:pointer;">He sido informado/a sobre los riesgos técnicos y decido proceder bajo mi propia responsabilidad, eximiendo al técnico/empresa de cualquier inconveniente derivado de esta decisión.</label>
   </div>
-
   <div class="section-title">Firma del cliente</div>
   <p style="font-size:13px;color:#888;margin-bottom:8px;">El cliente firma con el dedo:</p>
   <div class="canvas-wrap"><canvas id="sigCanvas"></canvas></div>
   <button class="clear-sig" onclick="clearSig()"><i class="ti ti-trash"></i> Limpiar firma</button>
-
   <button class="btn-primary" id="btn-guardar-visita" onclick="saveVisit()" style="margin-top:1rem">Guardar visita</button>
   <button class="btn-share" id="btn-compartir-visita" style="display:none;" onclick="compartirVisita()"><i class="ti ti-share"></i> Compartir</button>
-  <button class="btn-secondary" onclick="goScreen('screen-client-detail')">Cancelar</button>
+  <button class="btn-secondary" id="btn-cancelar-visita" onclick="goScreen('screen-client-detail')">Cancelar</button>
 </div>
 
 <!-- DETALLE VISITA -->
@@ -189,327 +188,456 @@ canvas#sigCanvas{display:block;touch-action:none;cursor:crosshair;width:100%;hei
   <div id="visit-detail-content"></div>
   <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:1rem;">
     <button class="btn-secondary" style="margin-top:0" onclick="editVisit()"><i class="ti ti-edit"></i> Editar</button>
-    <button class="btn-secondary" style="margin-top:0" onclick="exportVisitTxt()"><i class="ti ti-download"></i> Recibo .TXT</button>
+    <button class="btn-secondary" style="margin-top:0" onclick="copiarLinkVisita()"><i class="ti ti-copy"></i> Copiar Link</button>
   </div>
-  <button id="btn-compartir-detalle" class="btn-share" style="display:none;margin-top:10px;" onclick="compartirDesdeDetalle()"><i class="ti ti-share"></i> Compartir</button>
   <button class="btn-danger" onclick="deleteVisit()" style="margin-top:10px;"><i class="ti ti-trash"></i> Eliminar visita</button>
 </div>
 
-<script>
+<!-- VISTA PÚBLICA (cualquier celular, sin login) -->
+<div id="screen-public-visit">
+  <div class="pub-header">
+    <div style="width:32px;height:32px;background:#fff;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:18px;">🔧</div>
+    <span style="color:#fff;font-weight:700;font-size:17px;">Llama a Jhon</span>
+    <span style="margin-left:auto;font-size:11px;color:#aaa;">Solo lectura</span>
+  </div>
+  <div id="public-visit-content"></div>
+</div>
+
+<!-- FIREBASE SDKs -->
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+import { getFirestore, doc, setDoc, getDoc, collection, getDocs } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+import { getStorage, ref, uploadString, getDownloadURL } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-storage.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyAdj0EzuAIep-QDDN9dLUJ_o-W_kcKr8jQ",
+  authDomain: "llama-a-jhon.firebaseapp.com",
+  projectId: "llama-a-jhon",
+  storageBucket: "llama-a-jhon.firebasestorage.app",
+  messagingSenderId: "689021989114",
+  appId: "1:689021989114:web:e29f9c2ee3c047c2869943"
+};
+
+const app = initializeApp(firebaseConfig);
+const db_fire = getFirestore(app);
+const storage = getStorage(app);
+
+// ── GOOGLE SHEETS URL (para clientes) ─────────────────────
 const SHEET_URL = 'https://script.google.com/macros/s/AKfycbyUUziORBw7RLEhWpbLOsFtjWTybII3fs3ZzZ3JEPxoqUEWj3TQIW1-7UzBFiuo-c2NAg/exec';
 
 let db = JSON.parse(localStorage.getItem('lj_db') || '{"clients":[],"visits":[]}');
 let currentClientId=null, currentVisitId=null, editingClientId=null, editingVisitId=null;
 let visitPhotos=[], sigCtx, sigDrawing=false, sigHasContent=false;
 
-function saveDb(){
-  localStorage.setItem('lj_db', JSON.stringify(db));
-  updateStats();
-}
+function saveLocalDb(){ localStorage.setItem('lj_db', JSON.stringify(db)); updateStats(); }
 
 function showToast(msg){
   const t=document.getElementById('toast');
   t.textContent=msg; t.classList.add('show');
-  setTimeout(()=>t.classList.remove('show'),2500);
+  setTimeout(()=>t.classList.remove('show'),2800);
 }
 
-function toggleCheckbox(){
-  const cb = document.getElementById('v-responsabilidad');
-  cb.checked = !cb.checked;
-}
+function setSyncStatus(html){ const el=document.getElementById('sync-status'); if(el) el.innerHTML=html; }
 
-// Genera un link único para una visita usando el ID
 function generarLinkVisita(visitId){
-  const base = window.location.href.split('?')[0].split('#')[0];
-  return base + '?visita=' + visitId;
+  const base=window.location.href.split('?')[0].split('#')[0];
+  return base+'?visita='+visitId;
 }
 
-function compartirVisita(){
-  const link = generarLinkVisita(currentVisitId);
-  if(navigator.clipboard && navigator.clipboard.writeText){
-    navigator.clipboard.writeText(link).then(()=> showToast("¡Link copiado!")).catch(()=> fallbackCopy(link));
-  } else {
-    fallbackCopy(link);
-  }
+function copiarAlPortapapeles(text){
+  if(navigator.clipboard&&navigator.clipboard.writeText){
+    navigator.clipboard.writeText(text).then(()=>showToast('¡Link copiado!')).catch(()=>fallbackCopy(text));
+  } else { fallbackCopy(text); }
 }
-
-function compartirDesdeDetalle(){
-  const v = db.visits.find(x => x.id === currentVisitId);
-  const link = v && v.linkCompartir ? v.linkCompartir : generarLinkVisita(currentVisitId);
-  if(navigator.clipboard && navigator.clipboard.writeText){
-    navigator.clipboard.writeText(link).then(()=> showToast("¡Link copiado!")).catch(()=> fallbackCopy(link));
-  } else {
-    fallbackCopy(link);
-  }
-}
-
 function fallbackCopy(text){
-  const el = document.createElement('textarea');
-  el.value = text; document.body.appendChild(el); el.select();
-  document.execCommand('copy'); document.body.removeChild(el);
-  showToast("¡Link copiado!");
+  const el=document.createElement('textarea'); el.value=text;
+  document.body.appendChild(el); el.select(); document.execCommand('copy');
+  document.body.removeChild(el); showToast('¡Link copiado!');
+}
+function compartirVisita(){ copiarAlPortapapeles(generarLinkVisita(currentVisitId)); }
+function copiarLinkVisita(){
+  const v=db.visits.find(x=>x.id===currentVisitId);
+  copiarAlPortapapeles((v&&v.linkCompartir)?v.linkCompartir:generarLinkVisita(currentVisitId));
 }
 
-function fetchDataFromSheets() {
-  const indicator = document.getElementById('sync-status');
-  const icon = document.getElementById('manual-sync-btn');
-  if(indicator) indicator.innerHTML = `<i class="ti ti-refresh sync-spin"></i> Descargando datos desde Excel...`;
+// ── SUBIR IMAGEN A FIREBASE STORAGE ───────────────────────
+async function subirImagen(base64, path){
+  const storageRef=ref(storage, path);
+  const snap=await uploadString(storageRef, base64, 'data_url');
+  return await getDownloadURL(snap.ref);
+}
+
+// ── GUARDAR VISITA EN FIREBASE ─────────────────────────────
+async function guardarVisitaFirebase(visitId, data, fotosBase64, firmaBase64){
+  setSyncStatus(`<i class="ti ti-cloud-upload sync-spin"></i> Subiendo a la nube...`);
+
+  // Subir fotos
+  const fotosURLs = [];
+  for(let i=0; i<fotosBase64.length; i++){
+    try{
+      const url = await subirImagen(fotosBase64[i], `visitas/${visitId}/foto_${i}.jpg`);
+      fotosURLs.push(url);
+    } catch(e){ console.error('Error subiendo foto',e); }
+  }
+
+  // Subir firma
+  let firmaURL = null;
+  if(firmaBase64){
+    try{ firmaURL = await subirImagen(firmaBase64, `visitas/${visitId}/firma.png`); }
+    catch(e){ console.error('Error subiendo firma',e); }
+  }
+
+  const c = db.clients.find(x=>x.id===data.clientId);
+
+  // Guardar en Firestore
+  const docData = {
+    visitId,
+    clienteNombre: c?c.nombre:'—',
+    clienteTelefono: c?(c.telefono||'—'):'—',
+    clienteDireccion: c?(c.direccion||'—'):'—',
+    fecha: data.fecha,
+    fechaGuardado: new Date().toISOString(),
+    tipo: data.tipo,
+    detalle: data.detalle||'',
+    observacion: data.observacion||'',
+    responsabilidad: data.responsabilidad||false,
+    fotosURLs,
+    firmaURL,
+    linkCompartir: generarLinkVisita(visitId)
+  };
+
+  await setDoc(doc(db_fire, 'visitas', visitId), docData);
+  setSyncStatus(`<i class="ti ti-cloud-check" style="color:#1a7a4a"></i> Guardado en la nube ✓`);
+  return docData;
+}
+
+// ── VISTA PÚBLICA ──────────────────────────────────────────
+async function checkPublicVisit(){
+  const params=new URLSearchParams(window.location.search);
+  const visitId=params.get('visita');
+  if(!visitId){ document.getElementById('loading-overlay').style.display='none'; return false; }
+
+  // Ocultar login y pantallas normales
+  document.getElementById('login-screen').style.display='none';
+  document.querySelectorAll('.screen').forEach(s=>s.style.display='none');
+  document.getElementById('loading-overlay').style.display='flex';
+
+  const publicScreen=document.getElementById('screen-public-visit');
+  publicScreen.style.display='block';
+
+  try {
+    const snap = await getDoc(doc(db_fire,'visitas',visitId));
+    document.getElementById('loading-overlay').style.display='none';
+
+    if(!snap.exists()){
+      document.getElementById('public-visit-content').innerHTML=`
+        <div style="text-align:center;padding:3rem 1rem;color:#aaa;">
+          <div style="font-size:48px;margin-bottom:1rem;">🔍</div>
+          <p style="font-size:15px;">Visita no encontrada.</p>
+        </div>`;
+      return true;
+    }
+
+    const v=snap.data();
+    const fechaStr=v.fechaGuardado
+      ? new Date(v.fechaGuardado).toLocaleString('es-EC',{day:'2-digit',month:'long',year:'numeric',hour:'2-digit',minute:'2-digit'})
+      : v.fecha;
+
+    const fotosHtml=(v.fotosURLs||[]).length
+      ?`<div style="font-size:12px;color:#888;font-weight:600;text-transform:uppercase;letter-spacing:0.5px;margin:14px 0 8px;">Fotos del trabajo</div>`
+        +(v.fotosURLs.map(u=>`<img src="${u}" style="width:100%;border-radius:10px;margin-bottom:8px;border:1px solid #eee;" loading="lazy">`).join(''))
+      :'';
+
+    const firmaHtml=v.firmaURL
+      ?`<div style="font-size:12px;color:#888;font-weight:600;text-transform:uppercase;letter-spacing:0.5px;margin:14px 0 8px;">Firma del cliente</div>
+        <img src="${v.firmaURL}" style="max-width:100%;border-radius:10px;border:1px solid #eee;">`
+      :'';
+
+    const respHtml=v.responsabilidad
+      ?`<div style="display:flex;justify-content:space-between;padding:10px 0;border-bottom:1px solid #f0f0f0;font-size:14px;">
+          <span style="color:#888;">Responsabilidad</span>
+          <span style="color:#1a7a4a;font-weight:600;">✅ Aceptada</span></div>`
+      :'';
+
+    document.getElementById('public-visit-content').innerHTML=`
+      <div style="background:#fff;border:1px solid #e5e5e5;border-radius:14px;padding:16px;margin-bottom:1rem;">
+        <div style="font-size:12px;color:#888;font-weight:600;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:10px;">Cliente</div>
+        <div style="display:flex;justify-content:space-between;padding:10px 0;border-bottom:1px solid #f0f0f0;font-size:14px;"><span style="color:#888;">Nombre</span><span style="font-weight:600;">${v.clienteNombre}</span></div>
+        <div style="display:flex;justify-content:space-between;padding:10px 0;border-bottom:1px solid #f0f0f0;font-size:14px;"><span style="color:#888;">Teléfono</span><span style="font-weight:500;">${v.clienteTelefono}</span></div>
+        <div style="display:flex;justify-content:space-between;padding:10px 0;font-size:14px;"><span style="color:#888;">Dirección</span><span style="font-weight:500;text-align:right;max-width:60%;word-break:break-word;">${v.clienteDireccion}</span></div>
+      </div>
+      <div style="background:#fff;border:1px solid #e5e5e5;border-radius:14px;padding:16px;margin-bottom:1rem;">
+        <div style="font-size:12px;color:#888;font-weight:600;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:10px;">Visita</div>
+        <div style="display:flex;justify-content:space-between;padding:10px 0;border-bottom:1px solid #f0f0f0;font-size:14px;"><span style="color:#888;">Servicio</span><span style="font-weight:700;">${v.tipo}</span></div>
+        <div style="display:flex;justify-content:space-between;padding:10px 0;border-bottom:1px solid #f0f0f0;font-size:14px;"><span style="color:#888;">Fecha y hora</span><span style="font-weight:500;text-align:right;">${fechaStr}</span></div>
+        ${respHtml}
+        <div style="font-size:12px;color:#888;font-weight:600;text-transform:uppercase;letter-spacing:0.5px;margin:14px 0 6px;">Diagnóstico / Estado</div>
+        <p style="font-size:14px;background:#f9f9f9;padding:8px;border-radius:6px;white-space:pre-wrap;">${v.detalle||'Sin detalles'}</p>
+        <div style="font-size:12px;color:#888;font-weight:600;text-transform:uppercase;letter-spacing:0.5px;margin:14px 0 6px;">Trabajo realizado</div>
+        <p style="font-size:14px;background:#f9f9f9;padding:8px;border-radius:6px;white-space:pre-wrap;">${v.observacion||'Sin observaciones'}</p>
+        ${fotosHtml}
+        ${firmaHtml}
+      </div>
+      <p style="text-align:center;font-size:12px;color:#bbb;margin-top:1rem;">Generado por Llama a Jhon • Solo lectura</p>`;
+  } catch(e){
+    document.getElementById('loading-overlay').style.display='none';
+    document.getElementById('public-visit-content').innerHTML=`
+      <div style="text-align:center;padding:3rem 1rem;color:#aaa;">
+        <p>Error al cargar la visita.</p><p style="font-size:12px;margin-top:8px;">${e.message}</p>
+      </div>`;
+  }
+  return true;
+}
+
+// ── SYNC SHEETS ────────────────────────────────────────────
+function fetchDataFromSheets(){
+  const icon=document.getElementById('manual-sync-btn');
+  setSyncStatus(`<i class="ti ti-refresh sync-spin"></i> Descargando...`);
   if(icon) icon.classList.add('sync-spin');
   fetch(`${SHEET_URL}?action=readAll`)
-    .then(res => res.json())
-    .then(data => {
-      if (data && data.clients) {
-        db = data;
-        saveDb();
-        renderClients();
-        if(indicator) indicator.innerHTML = `<i class="ti ti-cloud-check" style="color:#1a7a4a"></i> Sincronizado con Excel hace un momento`;
-      }
-    })
-    .catch(err => {
-      if(indicator) indicator.innerHTML = `<i class="ti ti-cloud-off" style="color:#e53e3e"></i> Modo local (Sin internet)`;
-    })
-    .finally(() => {
-      if(icon) icon.classList.remove('sync-spin');
-    });
+    .then(r=>r.json())
+    .then(data=>{ if(data&&data.clients){ db=data; saveLocalDb(); renderClients(); setSyncStatus(`<i class="ti ti-cloud-check" style="color:#1a7a4a"></i> Sincronizado`); } })
+    .catch(()=>setSyncStatus(`<i class="ti ti-cloud-off" style="color:#e53e3e"></i> Modo local`))
+    .finally(()=>{ if(icon) icon.classList.remove('sync-spin'); });
 }
 
-function syncToSheets(data){
-  const indicator = document.getElementById('sync-status');
-  if(indicator) indicator.innerHTML = `<i class="ti ti-cloud-upload"></i> Subiendo al Excel...`;
-  const params = new URLSearchParams();
-  Object.keys(data).forEach(k => {
-    if(k==='fotos' || k==='firma') return;
-    params.append(k, data[k] || '');
-  });
-  params.append('fotos_count', data.fotos ? data.fotos.length : 0);
-  params.append('tiene_firma', data.firma ? 'Si' : 'No');
-  fetch(`${SHEET_URL}?${params.toString()}`, { mode: 'no-cors' })
-    .then(() => {
-      if(indicator) indicator.innerHTML = `<i class="ti ti-cloud-check" style="color:#1a7a4a"></i> Guardado en la nube con éxito`;
-    })
-    .catch(() => {
-      if(indicator) indicator.innerHTML = `<i class="ti ti-alert-circle" style="color:#e6a23c"></i> Guardado local. Se subirá después.`;
-    });
+function syncClientToSheets(data){
+  const params=new URLSearchParams();
+  Object.keys(data).forEach(k=>params.append(k,data[k]||''));
+  fetch(`${SHEET_URL}?${params.toString()}`,{mode:'no-cors'}).catch(()=>{});
 }
 
-document.addEventListener("DOMContentLoaded", function() {
-  if (sessionStorage.getItem("lj_logged") === "true") {
-    document.getElementById("login-screen").style.display = "none";
+// ── INIT ──────────────────────────────────────────────────
+(async function init(){
+  const isPublic = await checkPublicVisit();
+  if(isPublic) return;
+
+  if(sessionStorage.getItem("lj_logged")==="true"){
+    document.getElementById('loading-overlay').style.display='none';
+    goScreen('screen-home');
     fetchDataFromSheets();
+  } else {
+    document.getElementById('loading-overlay').style.display='none';
+    const ls=document.getElementById('login-screen');
+    ls.style.display='flex';
   }
-  document.getElementById("btn-entrar").onclick = function() {
-    var u = document.getElementById("username").value.trim();
-    var p = document.getElementById("password").value.trim();
-    var box = document.getElementById("login-alert-box");
-    var screen = document.getElementById("login-screen");
-    box.style.display = "block";
-    if (u === "" && p === "") {
-      box.style.backgroundColor = "#e6f9f0"; box.style.color = "#1a7a4a";
-      box.textContent = "¡Bienvenido Jhon! Sincronizando...";
-      sessionStorage.setItem("lj_logged", "true");
-      setTimeout(function() { 
-        screen.style.display = "none"; 
-        fetchDataFromSheets();
-      }, 400);
+
+  document.getElementById("btn-entrar").onclick=function(){
+    const u=document.getElementById("username").value.trim();
+    const p=document.getElementById("password").value.trim();
+    const box=document.getElementById("login-alert-box");
+    box.style.display="block";
+    if(u===""&&p===""){
+      box.style.backgroundColor="#e6f9f0"; box.style.color="#1a7a4a";
+      box.textContent="¡Bienvenido Jhon! Sincronizando...";
+      sessionStorage.setItem("lj_logged","true");
+      setTimeout(()=>{ document.getElementById('login-screen').style.display='none'; goScreen('screen-home'); fetchDataFromSheets(); },400);
     } else {
-      box.style.backgroundColor = "#ffebeb"; box.style.color = "#e53e3e";
-      box.textContent = "❌ Error: Acceso restringido";
-      document.getElementById("username").value = "";
-      document.getElementById("password").value = "";
+      box.style.backgroundColor="#ffebeb"; box.style.color="#e53e3e";
+      box.textContent="❌ Error: Acceso restringido";
+      document.getElementById("username").value="";
+      document.getElementById("password").value="";
     }
   };
-});
+})();
 
+// ── NAVEGACIÓN ────────────────────────────────────────────
 function goScreen(id){
   document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
   document.getElementById(id).classList.add('active');
   window.scrollTo(0,0);
-  if(id==='screen-home'){ updateStats(); renderClients(); }
+  if(id==='screen-home'){updateStats();renderClients();}
   if(id==='screen-client-detail') renderClientDetail();
   if(id==='screen-new-visit') initSig();
 }
+window.goScreen=goScreen;
 
 function updateStats(){
-  document.getElementById('total-clients').textContent = db.clients.length;
-  document.getElementById('total-visits').textContent = db.visits.length;
+  document.getElementById('total-clients').textContent=db.clients.length;
+  document.getElementById('total-visits').textContent=db.visits.length;
 }
 
 function renderClients(){
-  const q = document.getElementById('search-input').value.toLowerCase();
-  const list = document.getElementById('client-list');
-  const filtered = db.clients.filter(c => c.nombre.toLowerCase().includes(q) || (c.direccion||'').toLowerCase().includes(q));
-  if(!filtered.length){ list.innerHTML=`<div class="empty-state"><i class="ti ti-users"></i><p>Sin resultados</p></div>`; return; }
-  list.innerHTML = filtered.map(c => {
-    const visits = db.visits.filter(v => v.clientId === c.id);
+  const q=document.getElementById('search-input').value.toLowerCase();
+  const list=document.getElementById('client-list');
+  const filtered=db.clients.filter(c=>c.nombre.toLowerCase().includes(q)||(c.direccion||'').toLowerCase().includes(q));
+  if(!filtered.length){list.innerHTML=`<div class="empty-state"><i class="ti ti-users"></i><p>Sin resultados</p></div>`;return;}
+  list.innerHTML=filtered.map(c=>{
+    const visits=db.visits.filter(v=>v.clientId===c.id);
     return `<div class="client-card" onclick="openClient('${c.id}')">
       <div class="client-name">${c.nombre}</div>
-      <div class="client-meta"><i class="ti ti-map-pin"></i> ${c.direccion || 'Sin dirección'}</div>
-      <span class="badge" style="background:#e6f0ff;color:#1a4a9a;">${c.tipo || 'Sin tipo'}</span>
+      <div class="client-meta"><i class="ti ti-map-pin"></i> ${c.direccion||'Sin dirección'}</div>
+      <span class="badge" style="background:#e6f0ff;color:#1a4a9a;">${c.tipo||'Sin tipo'}</span>
       <span class="badge" style="background:#f0f0f0;color:#555;">${visits.length} visitas</span>
     </div>`;
   }).join('');
 }
+window.renderClients=renderClients;
 
-function openClient(id){ currentClientId = id; goScreen('screen-client-detail'); }
+function openClient(id){currentClientId=id;goScreen('screen-client-detail');}
+window.openClient=openClient;
 
 function renderClientDetail(){
-  const c = db.clients.find(x => x.id === currentClientId); if(!c) return;
-  document.getElementById('client-detail-name').textContent = c.nombre;
-  document.getElementById('client-detail-info').innerHTML = `
+  const c=db.clients.find(x=>x.id===currentClientId); if(!c) return;
+  document.getElementById('client-detail-name').textContent=c.nombre;
+  document.getElementById('client-detail-info').innerHTML=`
     <div class="detail-row"><span class="detail-label">Teléfono</span><span class="detail-value">${c.telefono||'—'}</span></div>
     <div class="detail-row"><span class="detail-label">Dirección</span><span class="detail-value">${c.direccion||'—'}</span></div>
     <div class="detail-row"><span class="detail-label">Tipo</span><span class="detail-value">${c.tipo||'—'}</span></div>
     <div class="detail-row"><span class="detail-label">Marca</span><span class="detail-value">${c.marca||'—'}</span></div>
     <div class="detail-row"><span class="detail-label">BTU</span><span class="detail-value">${c.btu||'—'}</span></div>`;
-  const visits = db.visits.filter(v => v.clientId === currentClientId);
-  const vlist = document.getElementById('visit-list');
-  if(!visits.length){ vlist.innerHTML=`<div class="empty-state"><p>Sin visitas registradas</p></div>`; return; }
-  vlist.innerHTML = visits.map(v => `<div class="visit-card" onclick="openVisit('${v.id}')"><div class="visit-tipo">${v.tipo}</div><div class="visit-fecha">${v.fecha}</div></div>`).join('');
+  const visits=db.visits.filter(v=>v.clientId===currentClientId);
+  const vlist=document.getElementById('visit-list');
+  if(!visits.length){vlist.innerHTML=`<div class="empty-state"><p>Sin visitas registradas</p></div>`;return;}
+  vlist.innerHTML=visits.map(v=>`<div class="visit-card" onclick="openVisit('${v.id}')"><div class="visit-tipo">${v.tipo}</div><div class="visit-fecha">${v.fecha}</div></div>`).join('');
 }
 
 function goNewClient(){
-  editingClientId = null;
-  document.getElementById('new-client-title').textContent = "Nuevo cliente";
-  ['c-nombre','c-telefono','c-direccion','c-marca','c-btu'].forEach(id => document.getElementById(id).value = '');
-  document.getElementById('c-tipo').value = '';
+  editingClientId=null;
+  document.getElementById('new-client-title').textContent="Nuevo cliente";
+  ['c-nombre','c-telefono','c-direccion','c-marca','c-btu'].forEach(id=>document.getElementById(id).value='');
+  document.getElementById('c-tipo').value='';
   goScreen('screen-new-client');
 }
+window.goNewClient=goNewClient;
 
 function editClient(){
-  const c = db.clients.find(x => x.id === currentClientId); if(!c) return;
-  editingClientId = c.id;
-  document.getElementById('new-client-title').textContent = "Editar cliente";
-  document.getElementById('c-nombre').value = c.nombre;
-  document.getElementById('c-telefono').value = c.telefono || '';
-  document.getElementById('c-direccion').value = c.direccion || '';
-  document.getElementById('c-tipo').value = c.tipo || '';
-  document.getElementById('c-marca').value = c.marca || '';
-  document.getElementById('c-btu').value = c.btu || '';
+  const c=db.clients.find(x=>x.id===currentClientId); if(!c) return;
+  editingClientId=c.id;
+  document.getElementById('new-client-title').textContent="Editar cliente";
+  document.getElementById('c-nombre').value=c.nombre;
+  document.getElementById('c-telefono').value=c.telefono||'';
+  document.getElementById('c-direccion').value=c.direccion||'';
+  document.getElementById('c-tipo').value=c.tipo||'';
+  document.getElementById('c-marca').value=c.marca||'';
+  document.getElementById('c-btu').value=c.btu||'';
   goScreen('screen-new-client');
 }
+window.editClient=editClient;
 
 function saveClient(){
-  const nombre = document.getElementById('c-nombre').value.trim(); if(!nombre) return;
-  const data = {
-    nombre,
-    telefono: document.getElementById('c-telefono').value.trim(),
-    direccion: document.getElementById('c-direccion').value.trim(),
-    tipo: document.getElementById('c-tipo').value,
-    marca: document.getElementById('c-marca').value.trim(),
-    btu: document.getElementById('c-btu').value.trim()
-  };
+  const nombre=document.getElementById('c-nombre').value.trim(); if(!nombre) return;
+  const data={nombre,telefono:document.getElementById('c-telefono').value.trim(),direccion:document.getElementById('c-direccion').value.trim(),tipo:document.getElementById('c-tipo').value,marca:document.getElementById('c-marca').value.trim(),btu:document.getElementById('c-btu').value.trim()};
   if(editingClientId){
-    const idx = db.clients.findIndex(x => x.id === editingClientId);
-    db.clients[idx] = {...db.clients[idx], ...data};
-    showToast("Cliente actualizado localmente");
+    const idx=db.clients.findIndex(x=>x.id===editingClientId);
+    db.clients[idx]={...db.clients[idx],...data};
+    showToast("Cliente actualizado");
   } else {
-    const newId = 'c_' + Date.now();
-    db.clients.push({id: newId, ...data});
-    currentClientId = newId;
-    showToast("Cliente creado localmente");
+    const newId='c_'+Date.now();
+    db.clients.push({id:newId,...data});
+    currentClientId=newId;
+    showToast("Cliente creado");
   }
-  saveDb();
-  syncToSheets({type:'client', id:currentClientId, ...data});
+  saveLocalDb(); syncClientToSheets({type:'client',id:currentClientId,...data});
   goScreen('screen-client-detail');
 }
+window.saveClient=saveClient;
 
 function goNewVisit(){
-  editingVisitId = null;
-  document.getElementById('new-visit-title').textContent = "Nueva visita";
-  document.getElementById('v-fecha').value = new Date().toISOString().split('T')[0];
-  document.getElementById('v-tipo').value = '';
-  document.getElementById('v-detalle').value = '';
-  document.getElementById('v-observacion').value = '';
-  document.getElementById('v-responsabilidad').checked = false;
-  // Resetear botones
-  const btnGuardar = document.getElementById('btn-guardar-visita');
-  const btnCompartir = document.getElementById('btn-compartir-visita');
-  btnGuardar.disabled = false;
-  btnGuardar.style.display = '';
-  btnCompartir.style.display = 'none';
-  visitPhotos = []; renderPhotoGrid(); goScreen('screen-new-visit');
+  editingVisitId=null;
+  document.getElementById('new-visit-title').textContent="Nueva visita";
+  document.getElementById('v-fecha').value=new Date().toISOString().split('T')[0];
+  document.getElementById('v-tipo').value='';
+  document.getElementById('v-detalle').value='';
+  document.getElementById('v-observacion').value='';
+  document.getElementById('v-responsabilidad').checked=false;
+  const btnG=document.getElementById('btn-guardar-visita');
+  const btnC=document.getElementById('btn-compartir-visita');
+  btnG.disabled=false; btnG.style.display=''; btnC.style.display='none';
+  visitPhotos=[]; renderPhotoGrid(); goScreen('screen-new-visit');
 }
+window.goNewVisit=goNewVisit;
 
 function editVisit(){
-  const v = db.visits.find(x => x.id === currentVisitId); if(!v) return;
-  editingVisitId = v.id;
-  document.getElementById('new-visit-title').textContent = "Editar visita";
-  document.getElementById('v-fecha').value = v.fecha;
-  document.getElementById('v-tipo').value = v.tipo;
-  document.getElementById('v-detalle').value = v.detalle;
-  document.getElementById('v-observacion').value = v.observacion;
-  document.getElementById('v-responsabilidad').checked = v.responsabilidad || false;
-  // Resetear botones al editar
-  const btnGuardar = document.getElementById('btn-guardar-visita');
-  const btnCompartir = document.getElementById('btn-compartir-visita');
-  btnGuardar.disabled = false;
-  btnGuardar.style.display = '';
-  btnCompartir.style.display = 'none';
-  visitPhotos = [...(v.fotos || [])]; renderPhotoGrid(); goScreen('screen-new-visit');
+  const v=db.visits.find(x=>x.id===currentVisitId); if(!v) return;
+  editingVisitId=v.id;
+  document.getElementById('new-visit-title').textContent="Editar visita";
+  document.getElementById('v-fecha').value=v.fecha;
+  document.getElementById('v-tipo').value=v.tipo;
+  document.getElementById('v-detalle').value=v.detalle;
+  document.getElementById('v-observacion').value=v.observacion;
+  document.getElementById('v-responsabilidad').checked=v.responsabilidad||false;
+  const btnG=document.getElementById('btn-guardar-visita');
+  const btnC=document.getElementById('btn-compartir-visita');
+  btnG.disabled=false; btnG.style.display=''; btnC.style.display='none';
+  visitPhotos=[...(v.fotos||[])]; renderPhotoGrid(); goScreen('screen-new-visit');
 }
+window.editVisit=editVisit;
 
 function initSig(){
-  const canvas = document.getElementById('sigCanvas');
-  canvas.width = canvas.offsetWidth || 380; canvas.height = 160;
-  sigCtx = canvas.getContext('2d'); sigCtx.strokeStyle = '#1a1a1a'; sigCtx.lineWidth = 2.5;
-  sigHasContent = false;
-  canvas.ontouchstart = canvas.onmousedown = e => { sigDrawing = true; sigCtx.beginPath(); sigHasContent = true; };
-  canvas.ontouchmove = canvas.onmousemove = e => {
-    if(!sigDrawing) return; e.preventDefault(); const r = canvas.getBoundingClientRect();
-    const clX = (e.touches ? e.touches[0].clientX : e.clientX) - r.left;
-    const clY = (e.touches ? e.touches[0].clientY : e.clientY) - r.top;
-    sigCtx.lineTo(clX, clY); sigCtx.stroke();
+  const canvas=document.getElementById('sigCanvas');
+  canvas.width=canvas.offsetWidth||380; canvas.height=160;
+  sigCtx=canvas.getContext('2d'); sigCtx.strokeStyle='#1a1a1a'; sigCtx.lineWidth=2.5;
+  sigHasContent=false;
+  canvas.ontouchstart=canvas.onmousedown=e=>{sigDrawing=true;sigCtx.beginPath();sigHasContent=true;};
+  canvas.ontouchmove=canvas.onmousemove=e=>{
+    if(!sigDrawing) return; e.preventDefault();
+    const r=canvas.getBoundingClientRect();
+    sigCtx.lineTo((e.touches?e.touches[0].clientX:e.clientX)-r.left,(e.touches?e.touches[0].clientY:e.clientY)-r.top);
+    sigCtx.stroke();
   };
-  canvas.ontouchend = canvas.onmouseup = () => sigDrawing = false;
+  canvas.ontouchend=canvas.onmouseup=()=>sigDrawing=false;
 }
 
-function clearSig(){ if(sigCtx){ sigCtx.clearRect(0,0,380,160); sigHasContent = false; } }
-function addPhotos(input){ Array.from(input.files).forEach(f => { const r = new FileReader(); r.onload = e => { visitPhotos.push(e.target.result); renderPhotoGrid(); }; r.readAsDataURL(f); }); }
-function renderPhotoGrid(){ document.getElementById('photo-grid').innerHTML = visitPhotos.map(p => `<img src="${p}" class="photo-thumb">`).join('') + `<div class="photo-add" onclick="document.getElementById('photo-input').click()">+</div>`; }
+function clearSig(){if(sigCtx){sigCtx.clearRect(0,0,380,160);sigHasContent=false;}}
+window.clearSig=clearSig;
 
-function saveVisit(){
-  const newId = editingVisitId || ('v_' + Date.now());
-  const link = generarLinkVisita(newId);
+function addPhotos(input){Array.from(input.files).forEach(f=>{const r=new FileReader();r.onload=e=>{visitPhotos.push(e.target.result);renderPhotoGrid();};r.readAsDataURL(f);});}
+window.addPhotos=addPhotos;
 
-  const data = {
-    clientId: currentClientId,
-    fecha: document.getElementById('v-fecha').value,
-    tipo: document.getElementById('v-tipo').value,
-    detalle: document.getElementById('v-detalle').value,
-    observacion: document.getElementById('v-observacion').value,
-    responsabilidad: document.getElementById('v-responsabilidad').checked,
-    fotos: [...visitPhotos],
-    firma: sigHasContent ? document.getElementById('sigCanvas').toDataURL() : null,
-    linkCompartir: link
+function renderPhotoGrid(){document.getElementById('photo-grid').innerHTML=visitPhotos.map(p=>`<img src="${p}" class="photo-thumb">`).join('')+`<div class="photo-add" onclick="document.getElementById('photo-input').click()">+</div>`;}
+
+async function saveVisit(){
+  const btnG=document.getElementById('btn-guardar-visita');
+  const btnC=document.getElementById('btn-compartir-visita');
+  btnG.disabled=true; btnG.textContent='Guardando...';
+
+  const newId=editingVisitId||('v_'+Date.now());
+  const firmaBase64=sigHasContent?document.getElementById('sigCanvas').toDataURL():null;
+
+  const data={
+    clientId:currentClientId,
+    fecha:document.getElementById('v-fecha').value,
+    tipo:document.getElementById('v-tipo').value,
+    detalle:document.getElementById('v-detalle').value,
+    observacion:document.getElementById('v-observacion').value,
+    responsabilidad:document.getElementById('v-responsabilidad').checked,
+    fotos:[...visitPhotos],
+    firma:firmaBase64,
+    linkCompartir:generarLinkVisita(newId)
   };
 
+  // Guardar local
   if(editingVisitId){
-    const idx = db.visits.findIndex(x => x.id === editingVisitId);
-    db.visits[idx] = {...db.visits[idx], ...data};
+    const idx=db.visits.findIndex(x=>x.id===editingVisitId);
+    db.visits[idx]={...db.visits[idx],...data};
   } else {
-    db.visits.push({id: newId, ...data});
-    currentVisitId = newId;
+    db.visits.push({id:newId,...data});
+    currentVisitId=newId;
   }
-  saveDb();
-  syncToSheets({type:'visit', id:currentVisitId, linkCompartir: link, ...data});
+  saveLocalDb();
 
-  // Mensaje guardado correctamente + inhabilitar botón + mostrar Compartir
-  showToast("✅ Guardado correctamente");
-  const btnGuardar = document.getElementById('btn-guardar-visita');
-  const btnCompartir = document.getElementById('btn-compartir-visita');
-  btnGuardar.disabled = true;
-  btnCompartir.style.display = 'flex';
+  // Subir a Firebase
+  try {
+    await guardarVisitaFirebase(newId, data, visitPhotos, firmaBase64);
+    showToast('✅ Guardado correctamente');
+  } catch(e){
+    showToast('⚠️ Guardado local. Sin internet.');
+    setSyncStatus(`<i class="ti ti-alert-circle" style="color:#e6a23c"></i> Sin conexión`);
+  }
+
+  btnG.textContent='Guardar visita';
+  btnC.style.display='flex';
 }
+window.saveVisit=saveVisit;
 
 function openVisit(id){
-  currentVisitId = id;
-  const v = db.visits.find(x => x.id === id); if(!v) return;
-  let fHtml = (v.fotos || []).map(p => `<img src="${p}" style="width:100%;border-radius:10px;margin-bottom:8px;">`).join('');
-  let sHtml = v.firma ? `<div class="section-title">Firma del cliente</div><img src="${v.firma}" class="sig-preview">` : '';
-  let respHtml = v.responsabilidad ? `<div class="detail-row"><span class="detail-label">Responsabilidad</span><span class="detail-value" style="color:#1a7a4a;">✅ Aceptada por cliente</span></div>` : '';
-  let linkHtml = v.linkCompartir ? `<div class="section-title" style="margin-top:12px;">Link para compartir</div><div class="link-compartir-box">${v.linkCompartir}</div>` : '';
-
-  document.getElementById('visit-detail-content').innerHTML = `
+  currentVisitId=id;
+  const v=db.visits.find(x=>x.id===id); if(!v) return;
+  const fHtml=(v.fotos||[]).map(p=>`<img src="${p}" style="width:100%;border-radius:10px;margin-bottom:8px;">`).join('');
+  const sHtml=v.firma?`<div class="section-title">Firma del cliente</div><img src="${v.firma}" class="sig-preview">`:'';
+  const respHtml=v.responsabilidad?`<div class="detail-row"><span class="detail-label">Responsabilidad</span><span class="detail-value" style="color:#1a7a4a;">✅ Aceptada</span></div>`:'';
+  document.getElementById('visit-detail-content').innerHTML=`
     <div class="info-card">
       <div class="detail-row"><span class="detail-label">Servicio</span><span class="detail-value" style="font-weight:700;">${v.tipo}</span></div>
       <div class="detail-row"><span class="detail-label">Fecha</span><span class="detail-value">${v.fecha}</span></div>
@@ -518,41 +646,27 @@ function openVisit(id){
       <p style="font-size:14px;background:#f9f9f9;padding:8px;border-radius:6px;white-space:pre-wrap;">${v.detalle||'Sin detalles'}</p>
       <div class="section-title" style="margin-top:12px;">Trabajo realizado</div>
       <p style="font-size:14px;background:#f9f9f9;padding:8px;border-radius:6px;white-space:pre-wrap;">${v.observacion||'Sin observaciones'}</p>
-      ${fHtml ? '<div class="section-title">Evidencias fotográficas</div>' + fHtml : ''}
+      ${fHtml?'<div class="section-title">Evidencias fotográficas</div>'+fHtml:''}
       ${sHtml}
-      ${linkHtml}
     </div>`;
-
-  // Mostrar botón compartir si tiene link
-  const btnCompartirDetalle = document.getElementById('btn-compartir-detalle');
-  if(v.linkCompartir){
-    btnCompartirDetalle.style.display = 'flex';
-  } else {
-    btnCompartirDetalle.style.display = 'none';
-  }
-
   goScreen('screen-visit-detail');
 }
+window.openVisit=openVisit;
 
 function deleteVisit(){
   if(confirm("¿Seguro que quieres eliminar esta visita?")){
-    db.visits = db.visits.filter(x => x.id !== currentVisitId);
-    saveDb(); showToast("Visita eliminada");
+    db.visits=db.visits.filter(x=>x.id!==currentVisitId);
+    saveLocalDb(); showToast("Visita eliminada");
     goScreen('screen-client-detail');
   }
 }
+window.deleteVisit=deleteVisit;
 
-function exportVisitTxt(){
-  const c = db.clients.find(x => x.id === currentClientId);
-  const v = db.visits.find(x => x.id === currentVisitId);
-  if(!c||!v) return;
-  const txt = `=========================\n      LLAMA A JHON\n=========================\nCliente: ${c.nombre}\nTeléfono: ${c.telefono||'—'}\nDirección: ${c.direccion||'—'}\n-------------------------\nFecha de visita: ${v.fecha}\nTipo de trabajo: ${v.tipo}\n-------------------------\nDIAGNÓSTICO:\n${v.detalle||'—'}\n\nTRABAJO REALIZADO:\n${v.observacion||'—'}\n=========================`;
-  const blob = new Blob([txt], {type: 'text/plain;charset=utf-8'});
-  const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = `Recibo_${c.nombre.replace(/\s+/g,'_')}_${v.fecha}.txt`;
-  document.body.appendChild(a); a.click(); document.body.removeChild(a);
-}
+// Exponer funciones globales necesarias para onclick en HTML
+window.compartirVisita=compartirVisita;
+window.copiarLinkVisita=copiarLinkVisita;
+window.fetchDataFromSheets=fetchDataFromSheets;
 
-updateStats(); renderClients();
 </script>
 </body>
 </html>
