@@ -61,8 +61,6 @@ canvas#sigCanvas{display:block;touch-action:none;cursor:crosshair;width:100%;hei
 .loading-overlay{position:fixed;top:0;left:0;width:100%;height:100%;background:#f5f5f5;z-index:9998;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;}
 .loading-spinner{width:36px;height:36px;border:3px solid #ddd;border-top-color:#1a1a1a;border-radius:50%;animation:spin 0.8s linear infinite;}
 </style>
-
-<!-- SCRIPT DE DESBLOQUEO INMEDIATO -->
 <script>
   document.addEventListener("DOMContentLoaded", function() {
     var overlay = document.getElementById('loading-overlay');
@@ -73,13 +71,11 @@ canvas#sigCanvas{display:block;touch-action:none;cursor:crosshair;width:100%;hei
 <body>
 <div id="toast" class="toast"></div>
 
-<!-- LOADING OVERLAY -->
 <div id="loading-overlay" class="loading-overlay">
   <div class="loading-spinner"></div>
   <p style="font-size:14px;color:#888;">Cargando...</p>
 </div>
 
-<!-- LOGIN -->
 <div id="login-screen" style="position:fixed;top:0;left:0;width:100%;height:100%;background:#1a1a1a;z-index:9999;display:none;justify-content:center;align-items:center;flex-direction:column;">
   <div style="background:#fff;padding:30px;border-radius:14px;text-align:center;width:85%;max-width:350px;">
     <h2 style="margin-bottom:5px;color:#1a1a1a;font-weight:700;">Llama a Jhon</h2>
@@ -91,7 +87,6 @@ canvas#sigCanvas{display:block;touch-action:none;cursor:crosshair;width:100%;hei
   </div>
 </div>
 
-<!-- PANEL DE INICIO -->
 <div id="screen-home" class="screen">
   <div class="header">
     <div class="app-logo"><i class="ti ti-tool"></i></div>
@@ -111,7 +106,6 @@ canvas#sigCanvas{display:block;touch-action:none;cursor:crosshair;width:100%;hei
   <button class="fab" id="btn-add-client-fab"><i class="ti ti-plus"></i></button>
 </div>
 
-<!-- CREAR / EDITAR CLIENTE -->
 <div id="screen-new-client" class="screen">
   <div class="header">
     <button class="back-btn" id="btn-back-to-home"><i class="ti ti-arrow-left"></i></button>
@@ -133,7 +127,6 @@ canvas#sigCanvas{display:block;touch-action:none;cursor:crosshair;width:100%;hei
   <button class="btn-secondary" id="btn-cancel-client">Cancelar</button>
 </div>
 
-<!-- DETALLE DEL CLIENTE -->
 <div id="screen-client-detail" class="screen">
   <div class="header">
     <button class="back-btn" id="btn-detail-back"><i class="ti ti-arrow-left"></i></button>
@@ -148,7 +141,6 @@ canvas#sigCanvas{display:block;touch-action:none;cursor:crosshair;width:100%;hei
   <div id="visit-list"></div>
 </div>
 
-<!-- FORMULARIO DE NUEVA VISITA -->
 <div id="screen-new-visit" class="screen">
   <div class="header">
     <button class="back-btn" id="btn-visit-back"><i class="ti ti-arrow-left"></i></button>
@@ -184,7 +176,6 @@ canvas#sigCanvas{display:block;touch-action:none;cursor:crosshair;width:100%;hei
   <button class="btn-secondary" id="btn-cancelar-visita">Cancelar</button>
 </div>
 
-<!-- DETALLE ADMINISTRATIVO DE LA VISITA -->
 <div id="screen-visit-detail" class="screen">
   <div class="header">
     <button class="back-btn" id="btn-vdetail-back"><i class="ti ti-arrow-left"></i></button>
@@ -192,7 +183,8 @@ canvas#sigCanvas{display:block;touch-action:none;cursor:crosshair;width:100%;hei
   </div>
   <div id="visit-detail-content"></div>
   <button class="btn-share" id="btn-compartir-visita"><i class="ti ti-file-text"></i> Abrir / Compartir PDF Online</button>
-  <button class="btn-danger" id="btn-delete-visit-btn" style="margin-top:15px;"><i class="ti ti-trash"></i> Eliminar visita permanente</button>
+  <button class="btn-secondary" id="btn-visit-go-home" style="margin-top:10px; font-weight:700;"><i class="ti ti-home"></i> INICIO</button>
+  <button class="btn-danger" id="btn-delete-visit-btn" style="margin-top:25px;"><i class="ti ti-trash"></i> Eliminar visita permanente</button>
 </div>
 
 <script type="module">
@@ -328,6 +320,8 @@ async function saveVisit() {
     firma: firmaBase64
   };
 
+  setSyncStatus(`<i class="ti ti-refresh sync-spin"></i> Guardando visita y creando PDF...`);
+
   try {
     const res = await fetch(SHEET_URL, { method: 'POST', body: JSON.stringify(visitPayload) });
     const json = await res.json();
@@ -340,7 +334,7 @@ async function saveVisit() {
         tipo: tipo,
         detalle: visitPayload.detalle,
         observacion: visitPayload.observacion,
-        pdfUrl: json.pdfUrl
+        pdfUrl: json.pdfUrl || json.pdf || json.pdfurl || ''
       };
       db.visits.push(localVisit);
       saveLocalDb();
@@ -466,8 +460,13 @@ function openVisit(id) {
   `;
   
   document.getElementById('btn-compartir-visita').onclick = () => {
-    if(v.pdfUrl) { window.open(v.pdfUrl, '_blank'); } 
-    else { alert('Esta visita no tiene link de PDF asignado.'); }
+    const link = v.pdfUrl || v.pdf || v.pdfurl || '';
+    if(link && link.trim() !== "") { 
+      window.open(link, '_blank'); 
+    } 
+    else { 
+      alert('Esta visita no tiene link de PDF asignado.'); 
+    }
   };
 }
 
@@ -500,7 +499,6 @@ function goNewVisit(){
   goScreen('screen-new-visit');
 }
 
-// --- ARRANQUE SEGURO ---
 (function init(){
   document.getElementById('search-input').addEventListener('input', renderClients);
   document.getElementById('manual-sync-btn').addEventListener('click', fetchDataFromSheets);
@@ -516,6 +514,7 @@ function goNewVisit(){
   document.getElementById('btn-guardar-visita').addEventListener('click', saveVisit);
   document.getElementById('btn-cancelar-visita').addEventListener('click', () => goScreen('screen-client-detail'));
   document.getElementById('btn-vdetail-back').addEventListener('click', () => goScreen('screen-client-detail'));
+  document.getElementById('btn-visit-go-home').addEventListener('click', () => goScreen('screen-home'));
   document.getElementById('btn-delete-visit-btn').addEventListener('click', deleteVisit);
 
   if(sessionStorage.getItem("lj_logged")==="true"){
