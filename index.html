@@ -19,8 +19,11 @@ input,textarea,select{width:100%;padding:11px 14px;border:1px solid #ddd;border-
 input:focus,textarea:focus,select:focus{border-color:#1a1a1a;}
 textarea{min-height:85px;resize:vertical;}
 .btn-primary{width:100%;padding:13px;background:#1a1a1a;color:#fff;border:none;border-radius:10px;font-size:15px;font-weight:600;cursor:pointer;margin-top:8px;font-family:inherit;}
+.btn-primary:disabled{background:#999;cursor:not-allowed;}
 .btn-secondary{width:100%;padding:13px;background:#fff;color:#1a1a1a;border:1px solid #ddd;border-radius:10px;font-size:15px;cursor:pointer;margin-top:8px;font-family:inherit;}
 .btn-danger{width:100%;padding:13px;background:#fff;color:#e53e3e;border:1px solid #e53e3e;border-radius:10px;font-size:15px;cursor:pointer;margin-top:8px;font-family:inherit;}
+.btn-green{width:100%;padding:13px;background:#25D366;color:#fff;border:none;border-radius:10px;font-size:15px;font-weight:600;cursor:pointer;margin-top:8px;font-family:inherit;display:flex;align-items:center;justify-content:center;gap:8px;}
+.btn-blue{width:100%;padding:13px;background:#1a4a9a;color:#fff;border:none;border-radius:10px;font-size:15px;font-weight:600;cursor:pointer;margin-top:8px;font-family:inherit;display:flex;align-items:center;justify-content:center;gap:8px;}
 .client-card{background:#fff;border:1px solid #e5e5e5;border-radius:14px;padding:14px 16px;margin-bottom:10px;cursor:pointer;}
 .client-name{font-size:16px;font-weight:600;color:#1a1a1a;}
 .client-meta{font-size:13px;color:#888;margin-top:3px;}
@@ -56,22 +59,30 @@ canvas#sigCanvas{display:block;touch-action:none;cursor:crosshair;width:100%;hei
 .sync-indicator { font-size: 11px; color: #888; display: flex; align-items: center; gap: 4px; font-weight: 500; justify-content: center; margin-bottom: 10px; }
 .sync-spin { animation: spin 1s linear infinite; }
 @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+/* NUEVO: pantalla pública */
+#screen-public-visit{display:none;padding:1rem;max-width:430px;margin:0 auto;padding-bottom:3rem;}
+.pub-header{display:flex;align-items:center;gap:10px;background:#1a1a1a;padding:1rem;margin:-1rem -1rem 1.5rem;}
+.loading-overlay{position:fixed;top:0;left:0;width:100%;height:100%;background:#f5f5f5;z-index:9998;display:none;flex-direction:column;align-items:center;justify-content:center;gap:12px;}
+.loading-spinner{width:36px;height:36px;border:3px solid #ddd;border-top-color:#1a1a1a;border-radius:50%;animation:spin 0.8s linear infinite;}
 </style>
 </head>
 <body>
 <div id="toast" class="toast"></div>
 
-<!-- LOGIN ACCESO INTELIGENTE EXPRES -->
+<!-- LOADING (para vista pública) -->
+<div id="loading-overlay" class="loading-overlay">
+  <div class="loading-spinner"></div>
+  <p style="font-size:14px;color:#888;">Cargando reporte...</p>
+</div>
+
+<!-- LOGIN -->
 <div id="login-screen" style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #1a1a1a; z-index: 9999; display: flex; justify-content: center; align-items: center; flex-direction: column;">
     <div style="background: #ffffff; padding: 30px; border-radius: 14px; text-align: center; width: 85%; max-width: 350px;">
         <h2 style="margin-bottom: 5px; color: #1a1a1a; font-weight: 700;">Llama a Jhon</h2>
         <p style="font-size: 13px; color: #888; margin-bottom: 25px;">Control de Clientes</p>
-        
         <input type="text" id="username" placeholder="Usuario (Dejar vacío)" style="width:100%; padding:12px; margin-bottom:15px; border:1px solid #ddd; border-radius:10px;">
         <input type="password" id="password" placeholder="Contraseña (Dejar vacío)" style="width:100%; padding:12px; margin-bottom:20px; border:1px solid #ddd; border-radius:10px;">
-        
         <button id="btn-entrar" style="width:100%; padding:13px; background:#1a1a1a; color:#fff; border:none; border-radius:10px; font-weight:600; font-size:15px; cursor:pointer;">Ingresar</button>
-        
         <div id="login-alert-box" style="margin-top:15px; padding:10px; border-radius:8px; font-size:14px; font-weight:600; display:none;"></div>
     </div>
 </div>
@@ -83,11 +94,9 @@ canvas#sigCanvas{display:block;touch-action:none;cursor:crosshair;width:100%;hei
     <h1>Llama a Jhon</h1>
     <i class="ti ti-refresh" id="manual-sync-btn" style="font-size:20px;color:#1a4a9a;cursor:pointer;" onclick="fetchDataFromSheets()"></i>
   </div>
-  
   <div id="sync-status" class="sync-indicator">
     <i class="ti ti-cloud-check"></i> Conectando con la nube...
   </div>
-
   <div class="stats">
     <div class="stat-card"><div class="stat-num" id="total-clients">0</div><div class="stat-label">Clientes</div></div>
     <div class="stat-card"><div class="stat-num" id="total-visits">0</div><div class="stat-label">Visitas</div></div>
@@ -162,8 +171,18 @@ canvas#sigCanvas{display:block;touch-action:none;cursor:crosshair;width:100%;hei
   <p style="font-size:13px;color:#888;margin-bottom:8px;">El cliente firma con el dedo:</p>
   <div class="canvas-wrap"><canvas id="sigCanvas"></canvas></div>
   <button class="clear-sig" onclick="clearSig()"><i class="ti ti-trash"></i> Limpiar firma</button>
-  <button class="btn-primary" onclick="saveVisit()" style="margin-top:1rem">Guardar visita</button>
-  <button class="btn-secondary" onclick="goScreen('screen-client-detail')">Cancelar</button>
+
+  <!-- BOTONES DESPUÉS DE GUARDAR -->
+  <button class="btn-primary" id="btn-guardar-visita" onclick="saveVisit()" style="margin-top:1rem">Guardar visita</button>
+  <div id="post-save-btns" style="display:none;">
+    <button class="btn-green" onclick="compartirPDF()">
+      <i class="ti ti-brand-whatsapp"></i> Compartir PDF por WhatsApp
+    </button>
+    <button class="btn-secondary" onclick="goScreen('screen-home')" style="margin-top:8px;">
+      <i class="ti ti-home"></i> Inicio
+    </button>
+  </div>
+  <button class="btn-secondary" id="btn-cancelar-visita" onclick="goScreen('screen-client-detail')">Cancelar</button>
 </div>
 
 <!-- DETALLE VISITA -->
@@ -175,22 +194,55 @@ canvas#sigCanvas{display:block;touch-action:none;cursor:crosshair;width:100%;hei
   <div id="visit-detail-content"></div>
   <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:1rem;">
     <button class="btn-secondary" style="margin-top:0" onclick="editVisit()"><i class="ti ti-edit"></i> Editar</button>
-    <button class="btn-secondary" style="margin-top:0" onclick="exportVisitTxt()"><i class="ti ti-download"></i> Recibo .TXT</button>
+    <button class="btn-blue" style="margin-top:0" id="btn-ver-pdf" onclick="verPDF()"><i class="ti ti-file-type-pdf"></i> Ver PDF</button>
   </div>
   <button class="btn-danger" onclick="deleteVisit()" style="margin-top:10px;"><i class="ti ti-trash"></i> Eliminar visita</button>
 </div>
 
-<script>
+<!-- VISTA PÚBLICA (cualquier celular, sin login) -->
+<div id="screen-public-visit">
+  <div class="pub-header">
+    <div style="width:32px;height:32px;background:#fff;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:18px;">🔧</div>
+    <span style="color:#fff;font-weight:700;font-size:17px;margin-left:8px;">Llama a Jhon</span>
+    <span style="margin-left:auto;font-size:11px;color:#aaa;">Reporte técnico</span>
+  </div>
+  <div id="public-visit-content"></div>
+  <button id="btn-dl-pdf" class="btn-blue" style="display:none;margin-top:1rem;">
+    <i class="ti ti-download"></i> Descargar PDF
+  </button>
+</div>
+
+<!-- jsPDF -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+
+<!-- FIREBASE -->
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+import { getFirestore, doc, setDoc, getDoc } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+import { getStorage, ref, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-storage.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyAdj0EzuAIep-QDDN9dLUJ_o-W_kcKr8jQ",
+  authDomain: "llama-a-jhon.firebaseapp.com",
+  projectId: "llama-a-jhon",
+  storageBucket: "llama-a-jhon.firebasestorage.app",
+  messagingSenderId: "689021989114",
+  appId: "1:689021989114:web:e29f9c2ee3c047c2869943"
+};
+
+const fireApp = initializeApp(firebaseConfig);
+const db_fire = getFirestore(fireApp);
+const storage  = getStorage(fireApp);
+
 const SHEET_URL = 'https://script.google.com/macros/s/AKfycbyUUziORBw7RLEhWpbLOsFtjWTybII3fs3ZzZ3JEPxoqUEWj3TQIW1-7UzBFiuo-c2NAg/exec';
 
 let db = JSON.parse(localStorage.getItem('lj_db') || '{"clients":[],"visits":[]}');
 let currentClientId=null, currentVisitId=null, editingClientId=null, editingVisitId=null;
 let visitPhotos=[], sigCtx, sigDrawing=false, sigHasContent=false;
+let pdfUrlActual = null;
 
-function saveDb(){
-  localStorage.setItem('lj_db', JSON.stringify(db));
-  updateStats();
-}
+// ── HELPERS ───────────────────────────────────────────────
+function saveDb(){ localStorage.setItem('lj_db', JSON.stringify(db)); updateStats(); }
 
 function showToast(msg){
   const t=document.getElementById('toast');
@@ -198,83 +250,315 @@ function showToast(msg){
   setTimeout(()=>t.classList.remove('show'),2500);
 }
 
-function fetchDataFromSheets() {
-  const indicator = document.getElementById('sync-status');
-  const icon = document.getElementById('manual-sync-btn');
-  
-  if(indicator) indicator.innerHTML = `<i class="ti ti-refresh sync-spin"></i> Descargando datos desde Excel...`;
-  if(icon) icon.classList.add('sync-spin');
+function setSyncStatus(html){ const el=document.getElementById('sync-status'); if(el) el.innerHTML=html; }
 
-  fetch(`${SHEET_URL}?action=readAll`)
-    .then(res => res.json())
-    .then(data => {
-      if (data && data.clients) {
-        db = data;
-        saveDb();
-        renderClients();
-        if(indicator) indicator.innerHTML = `<i class="ti ti-cloud-check" style="color:#1a7a4a"></i> Sincronizado con Excel hace un momento`;
-      }
-    })
-    .catch(err => {
-      if(indicator) indicator.innerHTML = `<i class="ti ti-cloud-off" style="color:#e53e3e"></i> Modo local (Sin internet)`;
-    })
-    .finally(() => {
-      if(icon) icon.classList.remove('sync-spin');
-    });
+// ── SUBIR IMAGEN ──────────────────────────────────────────
+async function subirImagen(base64, path){
+  const storageRef = ref(storage, path);
+  const byteString = atob(base64.split(',')[1]);
+  const mime = base64.split(',')[0].split(':')[1].split(';')[0];
+  const ab = new ArrayBuffer(byteString.length);
+  const ia = new Uint8Array(ab);
+  for(let i=0;i<byteString.length;i++) ia[i]=byteString.charCodeAt(i);
+  const blob = new Blob([ab],{type:mime});
+  const snap = await uploadBytes(storageRef, blob);
+  return await getDownloadURL(snap.ref);
 }
+
+// ── GENERAR PDF ───────────────────────────────────────────
+async function generarPDFBlob(v, clienteNombre, clienteTel, clienteDir){
+  const { jsPDF } = window.jspdf;
+  const pdf = new jsPDF({unit:'mm', format:'a4'});
+  const W=210, M=15;
+  let y=15;
+
+  // Cabecera negra
+  pdf.setFillColor(26,26,26);
+  pdf.rect(0,0,W,30,'F');
+  pdf.setTextColor(255,255,255);
+  pdf.setFontSize(16); pdf.setFont('helvetica','bold');
+  pdf.text('Llama a Jhon - Servicio Técnico', M, 13);
+  pdf.setFontSize(9); pdf.setFont('helvetica','normal');
+  pdf.text('Reporte oficial de servicio de aire acondicionado', M, 20);
+  const fechaStr = v.fechaGuardado
+    ? new Date(v.fechaGuardado).toLocaleString('es-EC',{day:'2-digit',month:'long',year:'numeric',hour:'2-digit',minute:'2-digit'})
+    : (v.fecha||'');
+  pdf.text('Generado: '+fechaStr, M, 27);
+  y=38;
+
+  function seccionTitulo(t){
+    pdf.setFillColor(240,240,240);
+    pdf.rect(M,y,W-M*2,7,'F');
+    pdf.setTextColor(50,50,50); pdf.setFontSize(9); pdf.setFont('helvetica','bold');
+    pdf.text(t.toUpperCase(), M+2, y+5);
+    y+=10;
+  }
+  function fila(label, val){
+    pdf.setFontSize(8); pdf.setTextColor(120,120,120); pdf.setFont('helvetica','normal');
+    pdf.text(label+':', M+2, y);
+    pdf.setTextColor(30,30,30); pdf.setFontSize(9);
+    const lines=pdf.splitTextToSize(val||'—', W-M*2-38);
+    pdf.text(lines, M+40, y);
+    y+=lines.length*5+2;
+  }
+  function bloque(titulo, texto){
+    seccionTitulo(titulo);
+    pdf.setFont('helvetica','normal'); pdf.setTextColor(30,30,30); pdf.setFontSize(9);
+    const lines=pdf.splitTextToSize(texto||'Sin información.', W-M*2-4);
+    pdf.text(lines, M+2, y);
+    y+=lines.length*5+6;
+  }
+
+  seccionTitulo('Información del cliente');
+  fila('Nombre', clienteNombre);
+  fila('Teléfono', clienteTel);
+  fila('Dirección', clienteDir);
+  y+=4;
+
+  seccionTitulo('Servicio');
+  fila('Tipo', v.tipo);
+  fila('Fecha', fechaStr);
+  y+=4;
+
+  bloque('Diagnóstico / Estado inicial', v.detalle);
+  bloque('Trabajo realizado', v.observacion);
+
+  // Fotos
+  const fotos = v.fotosURLs || v.fotos || [];
+  if(fotos.length){
+    seccionTitulo('Evidencias fotográficas');
+    let xImg=M;
+    for(let i=0;i<Math.min(fotos.length,6);i++){
+      try{
+        let imgData=fotos[i];
+        if(imgData.startsWith('http')){
+          const canvas=document.createElement('canvas');
+          const ctx2=canvas.getContext('2d');
+          const img=new Image(); img.crossOrigin='anonymous';
+          await new Promise((res,rej)=>{img.onload=res;img.onerror=rej;img.src=imgData;});
+          canvas.width=img.width; canvas.height=img.height;
+          ctx2.drawImage(img,0,0);
+          imgData=canvas.toDataURL('image/jpeg',0.7);
+        }
+        const iW=55,iH=42;
+        if(xImg+iW>W-M){xImg=M;y+=iH+5;}
+        if(y+iH>270){pdf.addPage();y=15;xImg=M;}
+        pdf.addImage(imgData,'JPEG',xImg,y,iW,iH,undefined,'MEDIUM');
+        xImg+=iW+5;
+      }catch(e){console.warn('foto error',e);}
+    }
+    y+=47;
+  }
+
+  // Firma
+  const firma=v.firmaURL||v.firma;
+  if(firma){
+    if(y+45>270){pdf.addPage();y=15;}
+    seccionTitulo('Firma del cliente');
+    try{
+      let firmaData=firma;
+      if(firmaData.startsWith('http')){
+        const canvas=document.createElement('canvas');
+        const ctx2=canvas.getContext('2d');
+        const img=new Image(); img.crossOrigin='anonymous';
+        await new Promise((res,rej)=>{img.onload=res;img.onerror=rej;img.src=firmaData;});
+        canvas.width=img.width; canvas.height=img.height;
+        ctx2.drawImage(img,0,0);
+        firmaData=canvas.toDataURL('image/png');
+      }
+      pdf.addImage(firmaData,'PNG',M,y,80,30,undefined,'MEDIUM');
+      y+=35;
+    }catch(e){console.warn('firma error',e);}
+  }
+
+  // Pie
+  if(y+12>270){pdf.addPage();y=15;}
+  pdf.setDrawColor(200,200,200); pdf.line(M,y,W-M,y); y+=6;
+  pdf.setFontSize(8); pdf.setTextColor(150,150,150); pdf.setFont('helvetica','italic');
+  pdf.text('Reporte generado por Llama a Jhon - Servicio Técnico', M, y);
+
+  return pdf.output('blob');
+}
+
+// ── SUBIR PDF A FIREBASE ──────────────────────────────────
+async function subirPDF(visitId, pdfBlob){
+  const pdfRef = ref(storage, `pdfs/${visitId}/reporte.pdf`);
+  await uploadBytes(pdfRef, pdfBlob, {contentType:'application/pdf'});
+  return await getDownloadURL(pdfRef);
+}
+
+// ── GUARDAR EN FIREBASE + GENERAR PDF ────────────────────
+async function guardarEnFirebase(visitId, data, fotosBase64, firmaBase64){
+  setSyncStatus(`<i class="ti ti-cloud-upload sync-spin"></i> Subiendo fotos...`);
+
+  const fotosURLs=[];
+  for(let i=0;i<fotosBase64.length;i++){
+    if(fotosBase64[i].startsWith('data:image')){
+      try{ fotosURLs.push(await subirImagen(fotosBase64[i],`visitas/${visitId}/foto_${i}.jpg`)); }
+      catch(e){ console.error(e); }
+    } else { fotosURLs.push(fotosBase64[i]); }
+  }
+
+  let firmaURL=null;
+  if(firmaBase64&&firmaBase64.startsWith('data:image')){
+    try{ firmaURL=await subirImagen(firmaBase64,`visitas/${visitId}/firma.png`); }
+    catch(e){ console.error(e); }
+  }
+
+  const c=db.clients.find(x=>x.id===data.clientId);
+  const clienteNombre=c?c.nombre:'—';
+  const clienteTel=c?(c.telefono||'—'):'—';
+  const clienteDir=c?(c.direccion||'—'):'—';
+
+  const docData={
+    visitId, clientId:data.clientId,
+    clienteNombre, clienteTelefono:clienteTel, clienteDireccion:clienteDir,
+    fecha:data.fecha, fechaGuardado:new Date().toISOString(),
+    tipo:data.tipo, detalle:data.detalle||'', observacion:data.observacion||'',
+    fotosURLs, firmaURL, pdfURL:null
+  };
+
+  await setDoc(doc(db_fire,'visitas',visitId), docData);
+
+  // Generar PDF
+  setSyncStatus(`<i class="ti ti-file-type-pdf sync-spin"></i> Generando PDF...`);
+  let pdfURL=null;
+  try{
+    const blob=await generarPDFBlob(docData, clienteNombre, clienteTel, clienteDir);
+    pdfURL=await subirPDF(visitId, blob);
+    await setDoc(doc(db_fire,'visitas',visitId),{pdfURL},{merge:true});
+  }catch(e){ console.error('PDF error',e); }
+
+  setSyncStatus(`<i class="ti ti-cloud-check" style="color:#1a7a4a"></i> ¡PDF listo en la nube ✓`);
+  return pdfURL;
+}
+
+// ── VISTA PÚBLICA ─────────────────────────────────────────
+async function checkPublicVisit(){
+  const params=new URLSearchParams(window.location.search);
+  const visitId=params.get('visita');
+  if(!visitId) return false;
+
+  document.getElementById('login-screen').style.display='none';
+  document.querySelectorAll('.screen').forEach(s=>s.style.display='none');
+  document.getElementById('loading-overlay').style.display='flex';
+  document.getElementById('screen-public-visit').style.display='block';
+
+  try{
+    const snap=await getDoc(doc(db_fire,'visitas',visitId));
+    document.getElementById('loading-overlay').style.display='none';
+
+    if(!snap.exists()){
+      document.getElementById('public-visit-content').innerHTML=`
+        <div style="text-align:center;padding:3rem 1rem;color:#aaa;">
+          <div style="font-size:48px;margin-bottom:1rem;">🔍</div>
+          <p>El reporte no existe o fue removido.</p></div>`;
+      return true;
+    }
+
+    const v=snap.data();
+    const fechaStr=v.fechaGuardado
+      ?new Date(v.fechaGuardado).toLocaleString('es-EC',{day:'2-digit',month:'long',year:'numeric',hour:'2-digit',minute:'2-digit'})
+      :v.fecha;
+
+    const fotosHtml=(v.fotosURLs||[]).length
+      ?`<div style="font-size:12px;color:#888;font-weight:600;text-transform:uppercase;letter-spacing:0.5px;margin:14px 0 8px;">Fotos del trabajo</div>`
+        +(v.fotosURLs.map(u=>`<img src="${u}" style="width:100%;border-radius:10px;margin-bottom:8px;border:1px solid #eee;" loading="lazy">`).join(''))
+      :'';
+
+    const firmaHtml=v.firmaURL
+      ?`<div style="font-size:12px;color:#888;font-weight:600;text-transform:uppercase;letter-spacing:0.5px;margin:14px 0 8px;">Firma del cliente</div>
+        <img src="${v.firmaURL}" style="max-width:100%;border-radius:10px;border:1px solid #eee;background:#fafafa;">`:'';
+
+    document.getElementById('public-visit-content').innerHTML=`
+      <div style="background:#fff;border:1px solid #e5e5e5;border-radius:14px;padding:16px;margin-bottom:1rem;">
+        <div style="font-size:12px;color:#888;font-weight:600;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:10px;">Cliente</div>
+        <div class="detail-row"><span class="detail-label">Nombre</span><span class="detail-value">${v.clienteNombre}</span></div>
+        <div class="detail-row"><span class="detail-label">Teléfono</span><span class="detail-value">${v.clienteTelefono}</span></div>
+        <div class="detail-row"><span class="detail-label">Dirección</span><span class="detail-value">${v.clienteDireccion}</span></div>
+      </div>
+      <div style="background:#fff;border:1px solid #e5e5e5;border-radius:14px;padding:16px;margin-bottom:1rem;">
+        <div style="font-size:12px;color:#888;font-weight:600;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:10px;">Servicio</div>
+        <div class="detail-row"><span class="detail-label">Tipo</span><span class="detail-value" style="color:#1a4a9a;font-weight:700;">${v.tipo}</span></div>
+        <div class="detail-row"><span class="detail-label">Fecha</span><span class="detail-value">${fechaStr}</span></div>
+        <div style="font-size:12px;color:#888;font-weight:600;text-transform:uppercase;letter-spacing:0.5px;margin:14px 0 6px;">Diagnóstico</div>
+        <p style="font-size:14px;background:#f9f9f9;padding:10px;border-radius:8px;white-space:pre-wrap;">${v.detalle||'—'}</p>
+        <div style="font-size:12px;color:#888;font-weight:600;text-transform:uppercase;letter-spacing:0.5px;margin:14px 0 6px;">Trabajo realizado</div>
+        <p style="font-size:14px;background:#f9f9f9;padding:10px;border-radius:8px;white-space:pre-wrap;">${v.observacion||'—'}</p>
+        ${fotosHtml}${firmaHtml}
+      </div>
+      <p style="text-align:center;font-size:12px;color:#bbb;margin-top:1rem;">Llama a Jhon - Servicio Técnico</p>`;
+
+    if(v.pdfURL){
+      const btn=document.getElementById('btn-dl-pdf');
+      btn.style.display='flex';
+      btn.onclick=()=>window.open(v.pdfURL,'_blank');
+    }
+  }catch(e){
+    document.getElementById('loading-overlay').style.display='none';
+    document.getElementById('public-visit-content').innerHTML=`
+      <div style="text-align:center;padding:3rem 1rem;color:#aaa;"><p>Error al cargar el reporte.</p><p style="font-size:12px;">${e.message}</p></div>`;
+  }
+  return true;
+}
+
+// ── SYNC SHEETS ───────────────────────────────────────────
+function fetchDataFromSheets(){
+  const indicator=document.getElementById('sync-status');
+  const icon=document.getElementById('manual-sync-btn');
+  if(indicator) indicator.innerHTML=`<i class="ti ti-refresh sync-spin"></i> Descargando datos desde Excel...`;
+  if(icon) icon.classList.add('sync-spin');
+  fetch(`${SHEET_URL}?action=readAll`)
+    .then(r=>r.json())
+    .then(data=>{ if(data&&data.clients){ db=data; saveDb(); renderClients(); if(indicator) indicator.innerHTML=`<i class="ti ti-cloud-check" style="color:#1a7a4a"></i> Sincronizado con Excel`; } })
+    .catch(()=>{ if(indicator) indicator.innerHTML=`<i class="ti ti-cloud-off" style="color:#e53e3e"></i> Modo local (Sin internet)`; })
+    .finally(()=>{ if(icon) icon.classList.remove('sync-spin'); });
+}
+window.fetchDataFromSheets=fetchDataFromSheets;
 
 function syncToSheets(data){
-  const indicator = document.getElementById('sync-status');
-  if(indicator) indicator.innerHTML = `<i class="ti ti-cloud-upload"></i> Subiendo al Excel...`;
-
-  const params = new URLSearchParams();
-  Object.keys(data).forEach(k => {
-    if(k==='fotos' || k==='firma') return;
-    params.append(k, data[k] || '');
-  });
-  params.append('fotos_count', data.fotos ? data.fotos.length : 0);
-  params.append('tiene_firma', data.firma ? 'Si' : 'No');
-
-  fetch(`${SHEET_URL}?${params.toString()}`, { mode: 'no-cors' })
-    .then(() => {
-      if(indicator) indicator.innerHTML = `<i class="ti ti-cloud-check" style="color:#1a7a4a"></i> Guardado en la nube con éxito`;
-    })
-    .catch(() => {
-      if(indicator) indicator.innerHTML = `<i class="ti ti-alert-circle" style="color:#e6a23c"></i> Guardado local. Se subirá después.`;
-    });
+  const indicator=document.getElementById('sync-status');
+  if(indicator) indicator.innerHTML=`<i class="ti ti-cloud-upload"></i> Subiendo al Excel...`;
+  const params=new URLSearchParams();
+  Object.keys(data).forEach(k=>{ if(k==='fotos'||k==='firma') return; params.append(k,data[k]||''); });
+  params.append('fotos_count',data.fotos?data.fotos.length:0);
+  params.append('tiene_firma',data.firma?'Si':'No');
+  fetch(`${SHEET_URL}?${params.toString()}`,{mode:'no-cors'})
+    .then(()=>{ if(indicator) indicator.innerHTML=`<i class="ti ti-cloud-check" style="color:#1a7a4a"></i> Guardado en la nube con éxito`; })
+    .catch(()=>{ if(indicator) indicator.innerHTML=`<i class="ti ti-alert-circle" style="color:#e6a23c"></i> Guardado local. Se subirá después.`; });
 }
 
-document.addEventListener("DOMContentLoaded", function() {
-  if (sessionStorage.getItem("lj_logged") === "true") {
-    document.getElementById("login-screen").style.display = "none";
+// ── INIT ──────────────────────────────────────────────────
+document.addEventListener("DOMContentLoaded", async function(){
+  const isPublic = await checkPublicVisit();
+  if(isPublic) return;
+
+  if(sessionStorage.getItem("lj_logged")==="true"){
+    document.getElementById("login-screen").style.display="none";
     fetchDataFromSheets();
   }
 
-  document.getElementById("btn-entrar").onclick = function() {
-    var u = document.getElementById("username").value.trim();
-    var p = document.getElementById("password").value.trim();
-    var box = document.getElementById("login-alert-box");
-    var screen = document.getElementById("login-screen");
-
-    box.style.display = "block";
-
-    if (u === "" && p === "") {
-      box.style.backgroundColor = "#e6f9f0"; box.style.color = "#1a7a4a";
-      box.textContent = "¡Bienvenido Jhon! Sincronizando...";
-      sessionStorage.setItem("lj_logged", "true");
-      setTimeout(function() { 
-        screen.style.display = "none"; 
-        fetchDataFromSheets();
-      }, 400);
+  document.getElementById("btn-entrar").onclick=function(){
+    var u=document.getElementById("username").value.trim();
+    var p=document.getElementById("password").value.trim();
+    var box=document.getElementById("login-alert-box");
+    var screen=document.getElementById("login-screen");
+    box.style.display="block";
+    if(u===""&&p===""){
+      box.style.backgroundColor="#e6f9f0"; box.style.color="#1a7a4a";
+      box.textContent="¡Bienvenido Jhon! Sincronizando...";
+      sessionStorage.setItem("lj_logged","true");
+      setTimeout(function(){ screen.style.display="none"; fetchDataFromSheets(); },400);
     } else {
-      box.style.backgroundColor = "#ffebeb"; box.style.color = "#e53e3e";
-      box.textContent = "❌ Error: Acceso restringido";
-      document.getElementById("username").value = "";
-      document.getElementById("password").value = "";
+      box.style.backgroundColor="#ffebeb"; box.style.color="#e53e3e";
+      box.textContent="❌ Error: Acceso restringido";
+      document.getElementById("username").value="";
+      document.getElementById("password").value="";
     }
   };
 });
 
+// ── NAVEGACIÓN ────────────────────────────────────────────
 function goScreen(id){
   document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
   document.getElementById(id).classList.add('active');
@@ -283,161 +567,203 @@ function goScreen(id){
   if(id==='screen-client-detail') renderClientDetail();
   if(id==='screen-new-visit') initSig();
 }
+window.goScreen=goScreen;
 
 function updateStats(){
-  document.getElementById('total-clients').textContent = db.clients.length;
-  document.getElementById('total-visits').textContent = db.visits.length;
+  document.getElementById('total-clients').textContent=db.clients.length;
+  document.getElementById('total-visits').textContent=db.visits.length;
 }
 
 function renderClients(){
-  const q = document.getElementById('search-input').value.toLowerCase();
-  const list = document.getElementById('client-list');
-  const filtered = db.clients.filter(c => c.nombre.toLowerCase().includes(q) || (c.direccion||'').toLowerCase().includes(q));
+  const q=document.getElementById('search-input').value.toLowerCase();
+  const list=document.getElementById('client-list');
+  const filtered=db.clients.filter(c=>c.nombre.toLowerCase().includes(q)||(c.direccion||'').toLowerCase().includes(q));
   if(!filtered.length){ list.innerHTML=`<div class="empty-state"><i class="ti ti-users"></i><p>Sin resultados</p></div>`; return; }
-  list.innerHTML = filtered.map(c => {
-    const visits = db.visits.filter(v => v.clientId === c.id);
+  list.innerHTML=filtered.map(c=>{
+    const visits=db.visits.filter(v=>v.clientId===c.id);
     return `<div class="client-card" onclick="openClient('${c.id}')">
       <div class="client-name">${c.nombre}</div>
-      <div class="client-meta"><i class="ti ti-map-pin"></i> ${c.direccion || 'Sin dirección'}</div>
-      <span class="badge" style="background:#e6f0ff;color:#1a4a9a;">${c.tipo || 'Sin tipo'}</span>
+      <div class="client-meta"><i class="ti ti-map-pin"></i> ${c.direccion||'Sin dirección'}</div>
+      <span class="badge" style="background:#e6f0ff;color:#1a4a9a;">${c.tipo||'Sin tipo'}</span>
       <span class="badge" style="background:#f0f0f0;color:#555;">${visits.length} visitas</span>
     </div>`;
   }).join('');
 }
+window.renderClients=renderClients;
 
-function openClient(id){ currentClientId = id; goScreen('screen-client-detail'); }
+function openClient(id){ currentClientId=id; goScreen('screen-client-detail'); }
+window.openClient=openClient;
 
 function renderClientDetail(){
-  const c = db.clients.find(x => x.id === currentClientId); if(!c) return;
-  document.getElementById('client-detail-name').textContent = c.nombre;
-  document.getElementById('client-detail-info').innerHTML = `
+  const c=db.clients.find(x=>x.id===currentClientId); if(!c) return;
+  document.getElementById('client-detail-name').textContent=c.nombre;
+  document.getElementById('client-detail-info').innerHTML=`
     <div class="detail-row"><span class="detail-label">Teléfono</span><span class="detail-value">${c.telefono||'—'}</span></div>
     <div class="detail-row"><span class="detail-label">Dirección</span><span class="detail-value">${c.direccion||'—'}</span></div>
     <div class="detail-row"><span class="detail-label">Tipo</span><span class="detail-value">${c.tipo||'—'}</span></div>
     <div class="detail-row"><span class="detail-label">Marca</span><span class="detail-value">${c.marca||'—'}</span></div>
     <div class="detail-row"><span class="detail-label">BTU</span><span class="detail-value">${c.btu||'—'}</span></div>`;
-  
-  const visits = db.visits.filter(v => v.clientId === currentClientId);
-  const vlist = document.getElementById('visit-list');
+  const visits=db.visits.filter(v=>v.clientId===currentClientId);
+  const vlist=document.getElementById('visit-list');
   if(!visits.length){ vlist.innerHTML=`<div class="empty-state"><p>Sin visitas registradas</p></div>`; return; }
-  vlist.innerHTML = visits.map(v => `<div class="visit-card" onclick="openVisit('${v.id}')"><div class="visit-tipo">${v.tipo}</div><div class="visit-fecha">${v.fecha}</div></div>`).join('');
+  vlist.innerHTML=visits.map(v=>`<div class="visit-card" onclick="openVisit('${v.id}')"><div class="visit-tipo">${v.tipo}</div><div class="visit-fecha">${v.fecha}</div></div>`).join('');
 }
 
 function goNewClient(){
-  editingClientId = null;
-  document.getElementById('new-client-title').textContent = "Nuevo cliente";
-  ['c-nombre','c-telefono','c-direccion','c-marca','c-btu'].forEach(id => document.getElementById(id).value = '');
-  document.getElementById('c-tipo').value = '';
+  editingClientId=null;
+  document.getElementById('new-client-title').textContent="Nuevo cliente";
+  ['c-nombre','c-telefono','c-direccion','c-marca','c-btu'].forEach(id=>document.getElementById(id).value='');
+  document.getElementById('c-tipo').value='';
   goScreen('screen-new-client');
 }
+window.goNewClient=goNewClient;
 
 function editClient(){
-  const c = db.clients.find(x => x.id === currentClientId); if(!c) return;
-  editingClientId = c.id;
-  document.getElementById('new-client-title').textContent = "Editar cliente";
-  document.getElementById('c-nombre').value = c.nombre;
-  document.getElementById('c-telefono').value = c.telefono || '';
-  document.getElementById('c-direccion').value = c.direccion || '';
-  document.getElementById('c-tipo').value = c.tipo || '';
-  document.getElementById('c-marca').value = c.marca || '';
-  document.getElementById('c-btu').value = c.btu || '';
+  const c=db.clients.find(x=>x.id===currentClientId); if(!c) return;
+  editingClientId=c.id;
+  document.getElementById('new-client-title').textContent="Editar cliente";
+  document.getElementById('c-nombre').value=c.nombre;
+  document.getElementById('c-telefono').value=c.telefono||'';
+  document.getElementById('c-direccion').value=c.direccion||'';
+  document.getElementById('c-tipo').value=c.tipo||'';
+  document.getElementById('c-marca').value=c.marca||'';
+  document.getElementById('c-btu').value=c.btu||'';
   goScreen('screen-new-client');
 }
+window.editClient=editClient;
 
 function saveClient(){
-  const nombre = document.getElementById('c-nombre').value.trim(); if(!nombre) return;
-  const data = {
-    nombre,
-    telefono: document.getElementById('c-telefono').value.trim(),
-    direccion: document.getElementById('c-direccion').value.trim(),
-    tipo: document.getElementById('c-tipo').value,
-    marca: document.getElementById('c-marca').value.trim(),
-    btu: document.getElementById('c-btu').value.trim()
-  };
-  
+  const nombre=document.getElementById('c-nombre').value.trim(); if(!nombre) return;
+  const data={nombre,telefono:document.getElementById('c-telefono').value.trim(),direccion:document.getElementById('c-direccion').value.trim(),tipo:document.getElementById('c-tipo').value,marca:document.getElementById('c-marca').value.trim(),btu:document.getElementById('c-btu').value.trim()};
   if(editingClientId){
-    const idx = db.clients.findIndex(x => x.id === editingClientId);
-    db.clients[idx] = {...db.clients[idx], ...data};
+    const idx=db.clients.findIndex(x=>x.id===editingClientId);
+    db.clients[idx]={...db.clients[idx],...data};
     showToast("Cliente actualizado localmente");
   } else {
-    const newId = 'c_' + Date.now();
-    db.clients.push({id: newId, ...data});
-    currentClientId = newId;
+    const newId='c_'+Date.now(); db.clients.push({id:newId,...data}); currentClientId=newId;
     showToast("Cliente creado localmente");
   }
-  saveDb();
-  syncToSheets({type:'client', id:currentClientId, ...data});
+  saveDb(); syncToSheets({type:'client',id:currentClientId,...data});
   goScreen('screen-client-detail');
 }
+window.saveClient=saveClient;
 
 function goNewVisit(){
-  editingVisitId = null;
-  document.getElementById('new-visit-title').textContent = "Nueva visita";
-  document.getElementById('v-fecha').value = new Date().toISOString().split('T')[0];
-  document.getElementById('v-tipo').value = ''; document.getElementById('v-detalle').value = ''; document.getElementById('v-observacion').value = '';
-  visitPhotos = []; renderPhotoGrid(); goScreen('screen-new-visit');
+  editingVisitId=null;
+  document.getElementById('new-visit-title').textContent="Nueva visita";
+  document.getElementById('v-fecha').value=new Date().toISOString().split('T')[0];
+  document.getElementById('v-tipo').value='';
+  document.getElementById('v-detalle').value='';
+  document.getElementById('v-observacion').value='';
+  // Resetear botones
+  const btnG=document.getElementById('btn-guardar-visita');
+  btnG.disabled=false; btnG.textContent='Guardar visita';
+  document.getElementById('post-save-btns').style.display='none';
+  document.getElementById('btn-cancelar-visita').style.display='';
+  pdfUrlActual=null;
+  visitPhotos=[]; renderPhotoGrid(); goScreen('screen-new-visit');
 }
+window.goNewVisit=goNewVisit;
 
 function editVisit(){
-  const v = db.visits.find(x => x.id === currentVisitId); if(!v) return;
-  editingVisitId = v.id;
-  document.getElementById('new-visit-title').textContent = "Editar visita";
-  document.getElementById('v-fecha').value = v.fecha;
-  document.getElementById('v-tipo').value = v.tipo;
-  document.getElementById('v-detalle').value = v.detalle;
-  document.getElementById('v-observacion').value = v.observacion;
-  visitPhotos = [...(v.fotos || [])]; renderPhotoGrid(); goScreen('screen-new-visit');
+  const v=db.visits.find(x=>x.id===currentVisitId); if(!v) return;
+  editingVisitId=v.id;
+  document.getElementById('new-visit-title').textContent="Editar visita";
+  document.getElementById('v-fecha').value=v.fecha;
+  document.getElementById('v-tipo').value=v.tipo;
+  document.getElementById('v-detalle').value=v.detalle;
+  document.getElementById('v-observacion').value=v.observacion;
+  const btnG=document.getElementById('btn-guardar-visita');
+  btnG.disabled=false; btnG.textContent='Guardar visita';
+  document.getElementById('post-save-btns').style.display='none';
+  document.getElementById('btn-cancelar-visita').style.display='';
+  pdfUrlActual=null;
+  visitPhotos=[...(v.fotos||[])]; renderPhotoGrid(); goScreen('screen-new-visit');
 }
+window.editVisit=editVisit;
 
 function initSig(){
-  const canvas = document.getElementById('sigCanvas');
-  canvas.width = canvas.offsetWidth || 380; canvas.height = 160;
-  sigCtx = canvas.getContext('2d'); sigCtx.strokeStyle = '#1a1a1a'; sigCtx.lineWidth = 2.5;
-  sigHasContent = false;
-  canvas.ontouchstart = canvas.onmousedown = e => { sigDrawing = true; sigCtx.beginPath(); sigHasContent = true; };
-  canvas.ontouchmove = canvas.onmousemove = e => {
-    if(!sigDrawing) return; e.preventDefault(); const r = canvas.getBoundingClientRect();
-    const clX = (e.touches ? e.touches[0].clientX : e.clientX) - r.left;
-    const clY = (e.touches ? e.touches[0].clientY : e.clientY) - r.top;
-    sigCtx.lineTo(clX, clY); sigCtx.stroke();
+  const canvas=document.getElementById('sigCanvas');
+  canvas.width=canvas.offsetWidth||380; canvas.height=160;
+  sigCtx=canvas.getContext('2d'); sigCtx.strokeStyle='#1a1a1a'; sigCtx.lineWidth=2.5;
+  sigHasContent=false;
+  canvas.ontouchstart=canvas.onmousedown=e=>{sigDrawing=true;sigCtx.beginPath();sigHasContent=true;};
+  canvas.ontouchmove=canvas.onmousemove=e=>{
+    if(!sigDrawing) return; e.preventDefault(); const r=canvas.getBoundingClientRect();
+    sigCtx.lineTo((e.touches?e.touches[0].clientX:e.clientX)-r.left,(e.touches?e.touches[0].clientY:e.clientY)-r.top);
+    sigCtx.stroke();
   };
-  canvas.ontouchend = canvas.onmouseup = () => sigDrawing = false;
+  canvas.ontouchend=canvas.onmouseup=()=>sigDrawing=false;
 }
 
-function clearSig(){ if(sigCtx){ sigCtx.clearRect(0,0,380,160); sigHasContent = false; } }
-function addPhotos(input){ Array.from(input.files).forEach(f => { const r = new FileReader(); r.onload = e => { visitPhotos.push(e.target.result); renderPhotoGrid(); }; r.readAsDataURL(f); }); }
-function renderPhotoGrid(){ document.getElementById('photo-grid').innerHTML = visitPhotos.map(p => `<img src="${p}" class="photo-thumb">`).join('') + `<div class="photo-add" onclick="document.getElementById('photo-input').click()">+</div>`; }
+function clearSig(){ if(sigCtx){ sigCtx.clearRect(0,0,380,160); sigHasContent=false; } }
+window.clearSig=clearSig;
 
-function saveVisit(){
-  const data = {
-    clientId: currentClientId,
-    fecha: document.getElementById('v-fecha').value,
-    tipo: document.getElementById('v-tipo').value,
-    detalle: document.getElementById('v-detalle').value,
-    observacion: document.getElementById('v-observacion').value,
-    fotos: [...visitPhotos],
-    firma: sigHasContent ? document.getElementById('sigCanvas').toDataURL() : null
+function addPhotos(input){ Array.from(input.files).forEach(f=>{ const r=new FileReader(); r.onload=e=>{visitPhotos.push(e.target.result);renderPhotoGrid();}; r.readAsDataURL(f); }); }
+window.addPhotos=addPhotos;
+
+function renderPhotoGrid(){ document.getElementById('photo-grid').innerHTML=visitPhotos.map(p=>`<img src="${p}" class="photo-thumb">`).join('')+`<div class="photo-add" onclick="document.getElementById('photo-input').click()">+</div>`; }
+
+async function saveVisit(){
+  const btnG=document.getElementById('btn-guardar-visita');
+  btnG.disabled=true; btnG.textContent='Guardando...';
+
+  const newId=editingVisitId||('v_'+Date.now());
+  const firmaBase64=sigHasContent?document.getElementById('sigCanvas').toDataURL():null;
+
+  const data={
+    clientId:currentClientId,
+    fecha:document.getElementById('v-fecha').value,
+    tipo:document.getElementById('v-tipo').value,
+    detalle:document.getElementById('v-detalle').value,
+    observacion:document.getElementById('v-observacion').value,
+    fotos:[...visitPhotos],
+    firma:firmaBase64
   };
+
+  // Guardar local
   if(editingVisitId){
-    const idx = db.visits.findIndex(x => x.id === editingVisitId);
-    db.visits[idx] = {...db.visits[idx], ...data};
-    showToast("Visita actualizada localmente");
+    const idx=db.visits.findIndex(x=>x.id===editingVisitId);
+    db.visits[idx]={...db.visits[idx],...data};
   } else {
-    const newId = 'v_' + Date.now();
-    db.visits.push({id: newId, ...data});
-    currentVisitId = newId;
-    showToast("Visita guardada localmente");
+    db.visits.push({id:newId,...data}); currentVisitId=newId;
   }
   saveDb();
-  syncToSheets({type:'visit', id:currentVisitId, ...data});
-  goScreen('screen-client-detail');
+  syncToSheets({type:'visit',id:currentVisitId,...data});
+
+  // Subir a Firebase + generar PDF
+  try{
+    const pdfURL=await guardarEnFirebase(newId, data, visitPhotos, firmaBase64);
+    pdfUrlActual=pdfURL;
+    // Guardar pdfURL en local también
+    const idx=db.visits.findIndex(x=>x.id===newId);
+    if(idx>=0){ db.visits[idx].pdfURL=pdfURL; saveDb(); }
+    showToast('✅ Visita guardada');
+  } catch(e){
+    showToast('⚠️ Guardado local. Sin internet.');
+  }
+
+  btnG.textContent='Visita guardada';
+  // Mostrar botones post-guardado, ocultar cancelar
+  document.getElementById('post-save-btns').style.display='block';
+  document.getElementById('btn-cancelar-visita').style.display='none';
 }
+window.saveVisit=saveVisit;
+
+function compartirPDF(){
+  const link=pdfUrlActual||'Sin link disponible';
+  const msg=`Hola, aquí puede ver el reporte de su servicio de aire acondicionado:\n${link}`;
+  window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(msg)}`,'_blank');
+}
+window.compartirPDF=compartirPDF;
 
 function openVisit(id){
-  currentVisitId = id; const v = db.visits.find(x => x.id === id); if(!v) return;
-  let fHtml = (v.fotos || []).map(p => `<img src="${p}" style="width:100%;border-radius:10px;margin-bottom:8px;">`).join('');
-  let sHtml = v.firma ? `<div class="section-title">Firma del cliente</div><img src="${v.firma}" class="sig-preview">` : '';
-  document.getElementById('visit-detail-content').innerHTML = `
+  currentVisitId=id;
+  const v=db.visits.find(x=>x.id===id); if(!v) return;
+  pdfUrlActual=v.pdfURL||null;
+  const fHtml=(v.fotos||[]).map(p=>`<img src="${p}" style="width:100%;border-radius:10px;margin-bottom:8px;">`).join('');
+  const sHtml=v.firma?`<div class="section-title">Firma del cliente</div><img src="${v.firma}" class="sig-preview">`:'';
+  document.getElementById('visit-detail-content').innerHTML=`
     <div class="info-card">
       <div class="detail-row"><span class="detail-label">Servicio</span><span class="detail-value" style="font-weight:700;">${v.tipo}</span></div>
       <div class="detail-row"><span class="detail-label">Fecha</span><span class="detail-value">${v.fecha}</span></div>
@@ -445,29 +771,44 @@ function openVisit(id){
       <p style="font-size:14px;background:#f9f9f9;padding:8px;border-radius:6px;white-space:pre-wrap;">${v.detalle||'Sin detalles'}</p>
       <div class="section-title" style="margin-top:12px;">Trabajo realizado</div>
       <p style="font-size:14px;background:#f9f9f9;padding:8px;border-radius:6px;white-space:pre-wrap;">${v.observacion||'Sin observaciones'}</p>
-      ${fHtml ? '<div class="section-title">Evidencias fotográficas</div>' + fHtml : ''}
+      ${fHtml?'<div class="section-title">Evidencias fotográficas</div>'+fHtml:''}
       ${sHtml}
     </div>`;
+  // Mostrar/ocultar botón Ver PDF
+  const btnPdf=document.getElementById('btn-ver-pdf');
+  if(v.pdfURL){ btnPdf.style.display='flex'; }
+  else { btnPdf.style.display='none'; }
   goScreen('screen-visit-detail');
 }
+window.openVisit=openVisit;
+
+function verPDF(){
+  const v=db.visits.find(x=>x.id===currentVisitId);
+  const url=v&&v.pdfURL?v.pdfURL:null;
+  if(url){ window.open(url,'_blank'); }
+  else { showToast('PDF no disponible aún'); }
+}
+window.verPDF=verPDF;
 
 function deleteVisit(){
   if(confirm("¿Seguro que quieres eliminar esta visita?")){
-    db.visits = db.visits.filter(x => x.id !== currentVisitId);
+    db.visits=db.visits.filter(x=>x.id!==currentVisitId);
     saveDb(); showToast("Visita eliminada");
     goScreen('screen-client-detail');
   }
 }
+window.deleteVisit=deleteVisit;
 
 function exportVisitTxt(){
-  const c = db.clients.find(x => x.id === currentClientId);
-  const v = db.visits.find(x => x.id === currentVisitId);
+  const c=db.clients.find(x=>x.id===currentClientId);
+  const v=db.visits.find(x=>x.id===currentVisitId);
   if(!c||!v) return;
-  const txt = `=========================\n      LLAMA A JHON\n=========================\nCliente: ${c.nombre}\nTeléfono: ${c.telefono||'—'}\nDirección: ${c.direccion||'—'}\n-------------------------\nFecha de visita: ${v.fecha}\nTipo de trabajo: ${v.tipo}\n-------------------------\nDIAGNÓSTICO:\n${v.detalle||'—'}\n\nTRABAJO REALIZADO:\n${v.observacion||'—'}\n=========================`;
-  const blob = new Blob([txt], {type: 'text/plain;charset=utf-8'});
-  const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = `Recibo_${c.nombre.replace(/\s+/g,'_')}_${v.fecha}.txt`;
+  const txt=`=========================\n      LLAMA A JHON\n=========================\nCliente: ${c.nombre}\nTeléfono: ${c.telefono||'—'}\nDirección: ${c.direccion||'—'}\n-------------------------\nFecha de visita: ${v.fecha}\nTipo de trabajo: ${v.tipo}\n-------------------------\nDIAGNÓSTICO:\n${v.detalle||'—'}\n\nTRABAJO REALIZADO:\n${v.observacion||'—'}\n=========================`;
+  const blob=new Blob([txt],{type:'text/plain;charset=utf-8'});
+  const a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download=`Recibo_${c.nombre.replace(/\s+/g,'_')}_${v.fecha}.txt`;
   document.body.appendChild(a); a.click(); document.body.removeChild(a);
 }
+window.exportVisitTxt=exportVisitTxt;
 
 updateStats(); renderClients();
 </script>
