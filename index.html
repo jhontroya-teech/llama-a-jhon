@@ -721,7 +721,7 @@ async function saveVisit(){
     firma:firmaBase64
   };
 
-  // Guardar local
+  // Guardar local primero
   if(editingVisitId){
     const idx=db.visits.findIndex(x=>x.id===editingVisitId);
     db.visits[idx]={...db.visits[idx],...data};
@@ -731,22 +731,24 @@ async function saveVisit(){
   saveDb();
   syncToSheets({type:'visit',id:currentVisitId,...data});
 
-  // Subir a Firebase + generar PDF
-  try{
-    const pdfURL=await guardarEnFirebase(newId, data, visitPhotos, firmaBase64);
-    pdfUrlActual=pdfURL;
-    // Guardar pdfURL en local también
-    const idx=db.visits.findIndex(x=>x.id===newId);
-    if(idx>=0){ db.visits[idx].pdfURL=pdfURL; saveDb(); }
-    showToast('✅ Visita guardada');
-  } catch(e){
-    showToast('⚠️ Guardado local. Sin internet.');
-  }
-
-  btnG.textContent='Visita guardada';
-  // Mostrar botones post-guardado, ocultar cancelar
+  // ── Mostrar botones INMEDIATAMENTE ──
+  btnG.textContent='✅ Visita guardada';
   document.getElementById('post-save-btns').style.display='block';
   document.getElementById('btn-cancelar-visita').style.display='none';
+  showToast('✅ Visita guardada');
+  setSyncStatus(`<i class="ti ti-cloud-upload sync-spin"></i> Subiendo a la nube...`);
+
+  // Subir a Firebase + PDF en segundo plano
+  guardarEnFirebase(newId, data, visitPhotos, firmaBase64)
+    .then(pdfURL=>{
+      pdfUrlActual=pdfURL;
+      const idx=db.visits.findIndex(x=>x.id===newId);
+      if(idx>=0){ db.visits[idx].pdfURL=pdfURL; saveDb(); }
+    })
+    .catch(e=>{
+      console.error('Firebase error:',e);
+      setSyncStatus(`<i class="ti ti-alert-circle" style="color:#e6a23c"></i> Guardado local. PDF no disponible.`);
+    });
 }
 window.saveVisit=saveVisit;
 
