@@ -6,84 +6,98 @@
 <title>Llama a Jhon</title>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.19.0/dist/tabler-icons.min.css">
 <style>
-/* Aquí va todo tu CSS original que ya tenías */
+/* Estilos básicos */
+*{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:#f5f5f5;color:#1a1a1a;max-width:430px;margin:0 auto;min-height:100vh;}
 .screen{display:none;padding:1rem;}
 .screen.active{display:block;}
-/* ... (mantiene el resto del CSS que ya tenías en tu archivo) ... */
+.header{display:flex;align-items:center;gap:10px;background:#fff;padding:1rem;border-bottom:1px solid #e5e5e5;position:sticky;top:0;z-index:10;}
+input,select,textarea{width:100%;padding:11px;margin-bottom:10px;border:1px solid #ddd;border-radius:10px;}
+.btn-primary{width:100%;padding:13px;background:#1a1a1a;color:#fff;border:none;border-radius:10px;cursor:pointer;}
+.canvas-wrap{border:1px solid #ddd;border-radius:10px;background:#fff;margin-bottom:10px;}
+canvas#sigCanvas{width:100%;height:160px;touch-action:none;}
+.saved-banner{display:none;padding:14px;background:#e6f9f0;color:#1a7a4a;text-align:center;border-radius:10px;margin-bottom:10px;}
+.saved-banner.show{display:block;}
 </style>
 </head>
 <body>
+
+<!-- Pantalla de Visita (simplificada para que no falle) -->
+<div id="screen-new-visit" class="screen active">
+  <div class="header"><h1>Nueva visita</h1></div>
+  <div class="saved-banner" id="saved-banner">✅ Datos guardados en Drive y Excel</div>
+  
+  <div id="visit-form">
+    <input type="date" id="v-fecha">
+    <select id="v-tipo">
+      <option value="">Tipo de servicio</option>
+      <option>Instalación</option><option>Limpieza</option><option>Reparación</option>
+    </select>
+    <textarea id="v-detalle" placeholder="Detalle del equipo..."></textarea>
+    
+    <p>Fotos (opcional):</p>
+    <input type="file" id="photo-input" accept="image/*" multiple onchange="addPhotos(this)">
+    <div id="photo-grid"></div>
+    
+    <p>Firma del cliente:</p>
+    <div class="canvas-wrap"><canvas id="sigCanvas"></canvas></div>
+    
+    <button class="btn-primary" id="btn-guardar-visita" onclick="saveVisit()">Guardar visita</button>
+  </div>
+</div>
+
 <script>
-// CONFIGURACIÓN
-const SHEET_URL = 'https://script.google.com/macros/s/AKfycby3cBIeNUMFWl9IjFmAApKiZ00TeV3Fc0SLjFsQZ9znORQy-RocbCDMftP7Vh2brYHekQ/exec';
-const PASSWORD = 'jhon2024';
+const SHEET_URL = 'https://script.google.com/macros/s/AKfycbxwM5BDHgRP_Pez-HKV8dV7shOCw-FL-3akI8B2APlGqpmle9i84RshpiK4bPbqgk4trQ/exec';
+let visitPhotos = [], sigCtx, sigDrawing = false, sigHasContent = false;
 
-// ... (MANTÉN AQUÍ TODAS TUS FUNCIONES: login, fetchDataFromSheets, syncToSheets, renderClients, etc.) ...
+// Inicializar firma
+const canvas = document.getElementById('sigCanvas');
+sigCtx = canvas.getContext('2d');
+sigCtx.strokeStyle = '#000'; sigCtx.lineWidth = 2;
+canvas.onmousedown = () => sigDrawing = true;
+canvas.onmousemove = e => { if(sigDrawing) { sigCtx.lineTo(e.offsetX, e.offsetY); sigCtx.stroke(); sigHasContent = true; } };
+canvas.onmouseup = () => { sigDrawing = false; sigCtx.beginPath(); };
 
-// FUNCIÓN SAVEVISIT INTEGRADA Y ACTUALIZADA
-async function saveVisit() {
-  const tipo = document.getElementById('v-tipo').value;
-  const fecha = document.getElementById('v-fecha').value;
-  if (!tipo) { showToast('Selecciona el tipo de servicio'); return; }
-
-  const btn = document.getElementById('btn-guardar-visita');
-  btn.disabled = true;
-  btn.textContent = 'Subiendo archivos...';
-
-  // 1. Preparar archivos (fotos + firma)
-  const filesToUpload = [];
-  visitPhotos.forEach((p, i) => {
-    filesToUpload.push({ name: 'Foto_' + i + '.png', base64: p });
+function addPhotos(input) {
+  Array.from(input.files).forEach(f => {
+    const r = new FileReader();
+    r.onload = e => visitPhotos.push(e.target.result);
+    r.readAsDataURL(f);
   });
-  if (sigHasContent) {
-    filesToUpload.push({ name: 'Firma.png', base64: document.getElementById('sigCanvas').toDataURL() });
-  }
-
-  // 2. Subir a Drive mediante doPost (acción saveFiles)
-  let photoUrls = [];
-  try {
-    const response = await fetch(SHEET_URL, {
-      method: 'POST',
-      body: JSON.stringify({ action: 'saveFiles', files: filesToUpload })
-    });
-    const result = await response.json();
-    if (result.success) photoUrls = result.urls;
-  } catch (err) { console.error("Error subiendo archivos:", err); }
-
-  // 3. Preparar datos para el Excel
-  const data = {
-    type: 'visit',
-    id: editingVisitId || 'v_' + Date.now(),
-    clientId: currentClientId,
-    fecha: fecha,
-    tipo: tipo,
-    fotos_count: photoUrls.length,
-    links_fotos: photoUrls.join('|'),
-    tiene_firma: photoUrls.some(u => u.includes('Firma')) ? 'Si' : 'No'
-  };
-
-  // 4. Guardar en BD local
-  if (editingVisitId) {
-    const idx = db.visits.findIndex(x => x.id === editingVisitId);
-    db.visits[idx] = { ...db.visits[idx], ...data };
-  } else {
-    db.visits.push(data);
-  }
-  saveDb();
-
-  // 5. Sincronizar al Excel (vía GET)
-  const params = new URLSearchParams(data);
-  fetch(`${SHEET_URL}?${params.toString()}`, { mode: 'no-cors' });
-
-  // UI Feedback
-  document.getElementById('saved-banner').classList.add('show');
-  document.getElementById('visit-form').style.display = 'none';
-  document.getElementById('post-save-btns').style.display = 'block';
-  btn.textContent = 'Guardado';
-  showToast('Visita guardada en Drive y Excel');
 }
 
-// ... (MANTÉN EL RESTO DE TUS FUNCIONES: renderPhotoGrid, initSig, etc.) ...
+async function saveVisit() {
+  const btn = document.getElementById('btn-guardar-visita');
+  btn.disabled = true;
+  btn.textContent = 'Guardando...';
+
+  const filesToUpload = visitPhotos.map((p, i) => ({name: 'Foto_'+i+'.png', base64: p}));
+  if(sigHasContent) filesToUpload.push({name: 'Firma.png', base64: canvas.toDataURL()});
+
+  // 1. Subir a Drive
+  let photoUrls = [];
+  try {
+    const res = await fetch(SHEET_URL, {
+      method: 'POST',
+      body: JSON.stringify({action: 'saveFiles', files: filesToUpload})
+    });
+    const result = await res.json();
+    if(result.success) photoUrls = result.urls;
+  } catch(e) { console.error(e); }
+
+  // 2. Enviar datos al Excel
+  const params = new URLSearchParams({
+    action: 'saveData',
+    fecha: document.getElementById('v-fecha').value,
+    tipo: document.getElementById('v-tipo').value,
+    links_fotos: photoUrls.join('|')
+  });
+  
+  await fetch(`${SHEET_URL}?${params.toString()}`);
+  
+  document.getElementById('saved-banner').classList.add('show');
+  document.getElementById('visit-form').style.display = 'none';
+}
 </script>
 </body>
 </html>
