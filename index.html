@@ -6,22 +6,21 @@
 <title>Llama a Jhon</title>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.19.0/dist/tabler-icons.min.css">
 <style>
-/* ... (MANTÉN AQUÍ TODO TU CSS ORIGINAL QUE YA TENÍAS) ... */
+/* Aquí va todo tu CSS original que ya tenías */
+.screen{display:none;padding:1rem;}
+.screen.active{display:block;}
+/* ... (mantiene el resto del CSS que ya tenías en tu archivo) ... */
 </style>
 </head>
 <body>
 <script>
 // CONFIGURACIÓN
-const SHEET_URL = 'TU_URL_DEL_DEPLOYMENT_AQUI'; // ¡ASEGÚRATE DE PONER TU URL REAL!
+const SHEET_URL = 'https://script.google.com/macros/s/AKfycby3cBIeNUMFWl9IjFmAApKiZ00TeV3Fc0SLjFsQZ9znORQy-RocbCDMftP7Vh2brYHekQ/exec';
 const PASSWORD = 'jhon2024';
 
-let db = {clients: [], visits: []};
-let currentClientId = null, currentVisitId = null, editingClientId = null, editingVisitId = null;
-let visitPhotos = [], sigCtx, sigDrawing = false, sigHasContent = false;
+// ... (MANTÉN AQUÍ TODAS TUS FUNCIONES: login, fetchDataFromSheets, syncToSheets, renderClients, etc.) ...
 
-// ... (MANTÉN LAS FUNCIONES DE LOGIN, FETCH, RENDERCLIENTS, ETC. ORIGINALES) ...
-
-// ESTA ES LA FUNCIÓN SAVEVISIT ACTUALIZADA
+// FUNCIÓN SAVEVISIT INTEGRADA Y ACTUALIZADA
 async function saveVisit() {
   const tipo = document.getElementById('v-tipo').value;
   const fecha = document.getElementById('v-fecha').value;
@@ -31,7 +30,7 @@ async function saveVisit() {
   btn.disabled = true;
   btn.textContent = 'Subiendo archivos...';
 
-  // 1. Preparar archivos
+  // 1. Preparar archivos (fotos + firma)
   const filesToUpload = [];
   visitPhotos.forEach((p, i) => {
     filesToUpload.push({ name: 'Foto_' + i + '.png', base64: p });
@@ -40,7 +39,7 @@ async function saveVisit() {
     filesToUpload.push({ name: 'Firma.png', base64: document.getElementById('sigCanvas').toDataURL() });
   }
 
-  // 2. Subir a Drive
+  // 2. Subir a Drive mediante doPost (acción saveFiles)
   let photoUrls = [];
   try {
     const response = await fetch(SHEET_URL, {
@@ -51,19 +50,19 @@ async function saveVisit() {
     if (result.success) photoUrls = result.urls;
   } catch (err) { console.error("Error subiendo archivos:", err); }
 
-  // 3. Datos a guardar
+  // 3. Preparar datos para el Excel
   const data = {
     type: 'visit',
     id: editingVisitId || 'v_' + Date.now(),
     clientId: currentClientId,
-    fecha,
-    tipo,
+    fecha: fecha,
+    tipo: tipo,
     fotos_count: photoUrls.length,
     links_fotos: photoUrls.join('|'),
     tiene_firma: photoUrls.some(u => u.includes('Firma')) ? 'Si' : 'No'
   };
 
-  // 4. Guardar local y Sincronizar
+  // 4. Guardar en BD local
   if (editingVisitId) {
     const idx = db.visits.findIndex(x => x.id === editingVisitId);
     db.visits[idx] = { ...db.visits[idx], ...data };
@@ -71,17 +70,20 @@ async function saveVisit() {
     db.visits.push(data);
   }
   saveDb();
-  
+
+  // 5. Sincronizar al Excel (vía GET)
   const params = new URLSearchParams(data);
   fetch(`${SHEET_URL}?${params.toString()}`, { mode: 'no-cors' });
 
+  // UI Feedback
   document.getElementById('saved-banner').classList.add('show');
   document.getElementById('visit-form').style.display = 'none';
   document.getElementById('post-save-btns').style.display = 'block';
   btn.textContent = 'Guardado';
+  showToast('Visita guardada en Drive y Excel');
 }
 
-// ... (MANTÉN EL RESTO DE TUS FUNCIONES AL FINAL: openVisit, initSig, etc.) ...
+// ... (MANTÉN EL RESTO DE TUS FUNCIONES: renderPhotoGrid, initSig, etc.) ...
 </script>
 </body>
 </html>
