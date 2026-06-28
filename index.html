@@ -121,6 +121,40 @@ canvas.sigCanvas{display:block;touch-action:none;cursor:crosshair;width:100%;hei
 /* Botón cambiar usuario */
 .btn-switch-user{display:flex;align-items:center;gap:6px;padding:7px 13px;background:#fff;border:1.5px solid #e5e5e5;border-radius:20px;font-size:13px;font-weight:600;cursor:pointer;color:#1a1a1a;white-space:nowrap;}
 .btn-switch-user i{font-size:16px;}
+/* ── PESTAÑAS ── */
+.tabs{display:flex;background:#fff;border-bottom:1px solid #e5e5e5;margin:-1.5rem -1rem 1rem;}
+.tab-btn{flex:1;padding:12px 0;border:none;background:none;font-size:14px;font-weight:500;color:#888;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px;border-bottom:2px solid transparent;font-family:inherit;}
+.tab-btn.active-thermo{color:#0a6e4a;border-bottom-color:#0a6e4a;}
+.tab-btn.active-jhon{color:#1a4a9a;border-bottom-color:#1a4a9a;}
+/* ── CALENDARIO ── */
+.cal-wrap{background:#fff;border:1px solid #e5e5e5;border-radius:14px;padding:14px;margin-bottom:1rem;}
+.cal-nav{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;}
+.cal-nav button{background:none;border:none;cursor:pointer;color:#888;font-size:20px;padding:4px 8px;border-radius:8px;}
+.cal-nav span{font-size:15px;font-weight:600;color:#1a1a1a;}
+.cal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:2px;text-align:center;}
+.cal-day-label{font-size:11px;color:#aaa;padding:4px 0;font-weight:600;}
+.cal-day{font-size:13px;color:#555;padding:6px 2px;border-radius:50%;cursor:pointer;position:relative;line-height:1;}
+.cal-day:hover{background:#f0f0f0;}
+.cal-day.has-visits::after{content:'';display:block;width:5px;height:5px;border-radius:50%;margin:2px auto 0;}
+.cal-day.empty{color:#ddd;cursor:default;}
+.cal-day.empty:hover{background:none;}
+.cal-day-selected-thermo{background:#0a6e4a !important;color:#fff !important;}
+.cal-day-selected-thermo.has-visits::after{background:#a3d9c0 !important;}
+.cal-day-selected-jhon{background:#1a4a9a !important;color:#fff !important;}
+.cal-day-selected-jhon.has-visits::after{background:#a3bfef !important;}
+.cal-has-thermo::after{background:#0a6e4a;}
+.cal-has-jhon::after{background:#1a4a9a;}
+.cal-day-summary{background:#fff;border:1px solid #e5e5e5;border-radius:14px;padding:14px;margin-bottom:1rem;}
+.cal-day-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;}
+.cal-day-title{font-size:14px;font-weight:600;color:#1a1a1a;}
+.cal-day-total{font-size:13px;font-weight:700;}
+.cal-visit-item{background:#f9f9f9;border-radius:10px;padding:10px 12px;margin-bottom:8px;cursor:pointer;border:1px solid #eee;}
+.cal-visit-item:last-child{margin-bottom:0;}
+.cal-visit-name{font-size:14px;font-weight:600;color:#1a1a1a;}
+.cal-visit-meta{display:flex;justify-content:space-between;margin-top:3px;}
+.cal-visit-tipo{font-size:12px;color:#888;}
+.cal-visit-costo{font-size:12px;font-weight:600;}
+.cal-empty{text-align:center;padding:2rem 1rem;color:#aaa;font-size:14px;}
 /* Botones PDF y Home por app */
 .btn-pdf-thermo{width:100%;padding:13px;background:#0a6e4a;color:#fff;border:none;border-radius:10px;font-size:15px;font-weight:600;cursor:pointer;margin-top:8px;font-family:inherit;display:flex;align-items:center;justify-content:center;gap:8px;}
 .btn-pdf-jhon{width:100%;padding:13px;background:#1a4a9a;color:#fff;border:none;border-radius:10px;font-size:15px;font-weight:600;cursor:pointer;margin-top:8px;font-family:inherit;display:flex;align-items:center;justify-content:center;gap:8px;}
@@ -179,16 +213,33 @@ canvas.sigCanvas{display:block;touch-action:none;cursor:crosshair;width:100%;hei
       <i class="ti ti-refresh" id="te-manual-sync-btn" style="font-size:20px;color:#0a6e4a;cursor:pointer;margin-right:8px;" onclick="teFetchData()"></i>
       <button class="btn-switch-user" onclick="switchUser()"><i class="ti ti-user-circle"></i> Cambiar usuario</button>
     </div>
+    <div class="tabs">
+      <button class="tab-btn active-thermo" id="te-tab-clientes" onclick="teSetTab('clientes')"><i class="ti ti-users"></i> Clientes</button>
+      <button class="tab-btn" id="te-tab-agenda" onclick="teSetTab('agenda')"><i class="ti ti-calendar"></i> Agenda</button>
+    </div>
     <div id="te-sync-status" class="sync-indicator"><i class="ti ti-cloud-check"></i> Conectando...</div>
-    <div class="stats">
-      <div class="stat-card"><div class="stat-num" id="te-total-clients">0</div><div class="stat-label">Clientes</div></div>
-      <div class="stat-card"><div class="stat-num" id="te-total-visits">0</div><div class="stat-label">Visitas</div></div>
+    <div id="te-tab-clientes-content">
+      <div class="stats">
+        <div class="stat-card"><div class="stat-num" id="te-total-clients">0</div><div class="stat-label">Clientes</div></div>
+        <div class="stat-card"><div class="stat-num" id="te-total-visits">0</div><div class="stat-label">Visitas</div></div>
+      </div>
+      <div class="search-wrap">
+        <i class="ti ti-search"></i>
+        <input type="text" id="te-search-input" placeholder="Buscar cliente..." oninput="teRenderClients()">
+      </div>
+      <div id="te-client-list"></div>
     </div>
-    <div class="search-wrap">
-      <i class="ti ti-search"></i>
-      <input type="text" id="te-search-input" placeholder="Buscar cliente..." oninput="teRenderClients()">
+    <div id="te-tab-agenda-content" style="display:none;">
+      <div class="cal-wrap">
+        <div class="cal-nav">
+          <button onclick="teCalPrev()"><i class="ti ti-chevron-left"></i></button>
+          <span id="te-cal-title"></span>
+          <button onclick="teCalNext()"><i class="ti ti-chevron-right"></i></button>
+        </div>
+        <div class="cal-grid" id="te-cal-grid"></div>
+      </div>
+      <div id="te-cal-day-panel"></div>
     </div>
-    <div id="te-client-list"></div>
     <button class="fab" onclick="teGoNewClient()"><i class="ti ti-plus"></i></button>
   </div>
 
@@ -308,16 +359,33 @@ canvas.sigCanvas{display:block;touch-action:none;cursor:crosshair;width:100%;hei
       <i class="ti ti-refresh" id="lj-manual-sync-btn" style="font-size:20px;color:#1a4a9a;cursor:pointer;margin-right:8px;" onclick="ljFetchData()"></i>
       <button class="btn-switch-user" onclick="switchUser()"><i class="ti ti-user-circle"></i> Cambiar usuario</button>
     </div>
+    <div class="tabs">
+      <button class="tab-btn active-jhon" id="lj-tab-clientes" onclick="ljSetTab('clientes')"><i class="ti ti-users"></i> Clientes</button>
+      <button class="tab-btn" id="lj-tab-agenda" onclick="ljSetTab('agenda')"><i class="ti ti-calendar"></i> Agenda</button>
+    </div>
     <div id="lj-sync-status" class="sync-indicator"><i class="ti ti-cloud-check"></i> Conectando...</div>
-    <div class="stats">
-      <div class="stat-card"><div class="stat-num" id="lj-total-clients">0</div><div class="stat-label">Clientes</div></div>
-      <div class="stat-card"><div class="stat-num" id="lj-total-visits">0</div><div class="stat-label">Visitas</div></div>
+    <div id="lj-tab-clientes-content">
+      <div class="stats">
+        <div class="stat-card"><div class="stat-num" id="lj-total-clients">0</div><div class="stat-label">Clientes</div></div>
+        <div class="stat-card"><div class="stat-num" id="lj-total-visits">0</div><div class="stat-label">Visitas</div></div>
+      </div>
+      <div class="search-wrap">
+        <i class="ti ti-search"></i>
+        <input type="text" id="lj-search-input" placeholder="Buscar cliente..." oninput="ljRenderClients()">
+      </div>
+      <div id="lj-client-list"></div>
     </div>
-    <div class="search-wrap">
-      <i class="ti ti-search"></i>
-      <input type="text" id="lj-search-input" placeholder="Buscar cliente..." oninput="ljRenderClients()">
+    <div id="lj-tab-agenda-content" style="display:none;">
+      <div class="cal-wrap">
+        <div class="cal-nav">
+          <button onclick="ljCalPrev()"><i class="ti ti-chevron-left"></i></button>
+          <span id="lj-cal-title"></span>
+          <button onclick="ljCalNext()"><i class="ti ti-chevron-right"></i></button>
+        </div>
+        <div class="cal-grid" id="lj-cal-grid"></div>
+      </div>
+      <div id="lj-cal-day-panel"></div>
     </div>
-    <div id="lj-client-list"></div>
     <button class="fab" onclick="ljGoNewClient()"><i class="ti ti-plus"></i></button>
   </div>
 
@@ -555,7 +623,7 @@ function teGoScreen(id){
   document.querySelectorAll('#app-thermo .screen').forEach(s=>s.classList.remove('active'));
   document.getElementById(id).classList.add('active');
   window.scrollTo(0,0);
-  if(id==='te-screen-home'){ teUpdateStats(); teRenderClients(); }
+  if(id==='te-screen-home'){ teUpdateStats(); teRenderClients(); if(teCalYear!==undefined) teRenderCal(); }
   if(id==='te-screen-client-detail') teRenderClientDetail();
   if(id==='te-screen-new-visit') teInitSig();
 }
@@ -794,7 +862,7 @@ function ljGoScreen(id){
   document.querySelectorAll('#app-jhon .screen').forEach(s=>s.classList.remove('active'));
   document.getElementById(id).classList.add('active');
   window.scrollTo(0,0);
-  if(id==='lj-screen-home'){ ljUpdateStats(); ljRenderClients(); }
+  if(id==='lj-screen-home'){ ljUpdateStats(); ljRenderClients(); if(ljCalYear!==undefined) ljRenderCal(); }
   if(id==='lj-screen-client-detail') ljRenderClientDetail();
   if(id==='lj-screen-new-visit') ljInitSig();
 }
@@ -992,6 +1060,201 @@ async function ljGenerarPDF(){
 }
 
 ljUpdateStats(); ljRenderClients();
+
+// ══════════════════════════════════════════════════════════
+//  CALENDARIO — THERMOELECTRIC
+// ══════════════════════════════════════════════════════════
+let teCalYear, teCalMonth, teCalSelDay=null;
+const MESES=['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
+const DIAS=['Lu','Ma','Mi','Ju','Vi','Sa','Do'];
+
+function teSetTab(tab){
+  const isClientes = tab==='clientes';
+  document.getElementById('te-tab-clientes-content').style.display = isClientes?'block':'none';
+  document.getElementById('te-tab-agenda-content').style.display = isClientes?'none':'block';
+  document.getElementById('te-tab-clientes').className = 'tab-btn'+(isClientes?' active-thermo':'');
+  document.getElementById('te-tab-agenda').className = 'tab-btn'+(!isClientes?' active-thermo':'');
+  if(!isClientes) teRenderCal();
+}
+
+function teInitCal(){
+  const now=new Date();
+  teCalYear=now.getFullYear(); teCalMonth=now.getMonth();
+}
+
+function teCalPrev(){ teCalMonth--; if(teCalMonth<0){teCalMonth=11;teCalYear--;} teCalSelDay=null; teRenderCal(); }
+function teCalNext(){ teCalMonth++; if(teCalMonth>11){teCalMonth=0;teCalYear++;} teCalSelDay=null; teRenderCal(); }
+
+function teVisitDaysInMonth(y,m){
+  const days={};
+  teDb.visits.forEach(v=>{
+    if(!v.fecha) return;
+    const d=new Date(v.fecha+'T12:00:00');
+    if(d.getFullYear()===y&&d.getMonth()===m){
+      const day=d.getDate();
+      if(!days[day]) days[day]=[];
+      days[day].push(v);
+    }
+  });
+  return days;
+}
+
+function teRenderCal(){
+  if(teCalYear===undefined) teInitCal();
+  document.getElementById('te-cal-title').textContent=MESES[teCalMonth]+' '+teCalYear;
+  const daysMap=teVisitDaysInMonth(teCalYear,teCalMonth);
+  const firstDay=new Date(teCalYear,teCalMonth,1).getDay();
+  const offset=firstDay===0?6:firstDay-1;
+  const total=new Date(teCalYear,teCalMonth+1,0).getDate();
+  let html=DIAS.map(d=>`<div class="cal-day-label">${d}</div>`).join('');
+  for(let i=0;i<offset;i++) html+=`<div class="cal-day empty"></div>`;
+  for(let d=1;d<=total;d++){
+    const hasV=daysMap[d]?'has-visits cal-has-thermo':'';
+    const isSel=teCalSelDay===d?'cal-day-selected-thermo':'';
+    html+=`<div class="cal-day ${hasV} ${isSel}" onclick="teSelectDay(${d})">${d}</div>`;
+  }
+  document.getElementById('te-cal-grid').innerHTML=html;
+  if(teCalSelDay) teRenderDayPanel(teCalSelDay);
+  else document.getElementById('te-cal-day-panel').innerHTML='<div class="cal-empty"><i class="ti ti-hand-click" style="font-size:28px;display:block;margin-bottom:8px;"></i>Toca un día para ver los servicios</div>';
+}
+
+function teSelectDay(d){
+  teCalSelDay=d;
+  teRenderCal();
+}
+
+function teRenderDayPanel(d){
+  const daysMap=teVisitDaysInMonth(teCalYear,teCalMonth);
+  const visits=daysMap[d]||[];
+  const panel=document.getElementById('te-cal-day-panel');
+  if(!visits.length){
+    panel.innerHTML=`<div class="cal-day-summary"><div class="cal-day-header"><span class="cal-day-title">${d} de ${MESES[teCalMonth]}</span></div><div class="cal-empty">Sin servicios ese día</div></div>`;
+    return;
+  }
+  const total=visits.reduce((s,v)=>s+(parseFloat(v.costoServicio)||0),0);
+  const color='#0a6e4a';
+  let html=`<div class="cal-day-summary">
+    <div class="cal-day-header">
+      <span class="cal-day-title">${d} de ${MESES[teCalMonth]} — ${visits.length} servicio${visits.length>1?'s':''}</span>
+      <span class="cal-day-total" style="color:${color}">$${total.toFixed(2)}</span>
+    </div>`;
+  visits.forEach(v=>{
+    const c=teDb.clients.find(x=>x.id===v.clientId);
+    html+=`<div class="cal-visit-item" onclick="teOpenVisitFromCal('${v.id}','${v.clientId}')">
+      <div class="cal-visit-name">${c?c.nombre:'Cliente'}</div>
+      <div class="cal-visit-meta">
+        <span class="cal-visit-tipo">${v.tipo||'—'}${v.modoPago?' · '+v.modoPago:''}</span>
+        <span class="cal-visit-costo" style="color:${color}">${v.costoServicio?'$'+parseFloat(v.costoServicio).toFixed(2):'Sin costo'}</span>
+      </div>
+    </div>`;
+  });
+  html+='</div>';
+  panel.innerHTML=html;
+}
+
+function teOpenVisitFromCal(visitId, clientId){
+  teCurrentClientId=clientId;
+  teCurrentVisitId=visitId;
+  teGoScreen('te-screen-visit-detail');
+  teOpenVisit(visitId);
+}
+
+// ══════════════════════════════════════════════════════════
+//  CALENDARIO — LLAMA A JHON
+// ══════════════════════════════════════════════════════════
+let ljCalYear, ljCalMonth, ljCalSelDay=null;
+
+function ljSetTab(tab){
+  const isClientes = tab==='clientes';
+  document.getElementById('lj-tab-clientes-content').style.display = isClientes?'block':'none';
+  document.getElementById('lj-tab-agenda-content').style.display = isClientes?'none':'block';
+  document.getElementById('lj-tab-clientes').className = 'tab-btn'+(isClientes?' active-jhon':'');
+  document.getElementById('lj-tab-agenda').className = 'tab-btn'+(!isClientes?' active-jhon':'');
+  if(!isClientes) ljRenderCal();
+}
+
+function ljInitCal(){
+  const now=new Date();
+  ljCalYear=now.getFullYear(); ljCalMonth=now.getMonth();
+}
+
+function ljCalPrev(){ ljCalMonth--; if(ljCalMonth<0){ljCalMonth=11;ljCalYear--;} ljCalSelDay=null; ljRenderCal(); }
+function ljCalNext(){ ljCalMonth++; if(ljCalMonth>11){ljCalMonth=0;ljCalYear++;} ljCalSelDay=null; ljRenderCal(); }
+
+function ljVisitDaysInMonth(y,m){
+  const days={};
+  ljDb.visits.forEach(v=>{
+    if(!v.fecha) return;
+    const d=new Date(v.fecha+'T12:00:00');
+    if(d.getFullYear()===y&&d.getMonth()===m){
+      const day=d.getDate();
+      if(!days[day]) days[day]=[];
+      days[day].push(v);
+    }
+  });
+  return days;
+}
+
+function ljRenderCal(){
+  if(ljCalYear===undefined) ljInitCal();
+  document.getElementById('lj-cal-title').textContent=MESES[ljCalMonth]+' '+ljCalYear;
+  const daysMap=ljVisitDaysInMonth(ljCalYear,ljCalMonth);
+  const firstDay=new Date(ljCalYear,ljCalMonth,1).getDay();
+  const offset=firstDay===0?6:firstDay-1;
+  const total=new Date(ljCalYear,ljCalMonth+1,0).getDate();
+  let html=DIAS.map(d=>`<div class="cal-day-label">${d}</div>`).join('');
+  for(let i=0;i<offset;i++) html+=`<div class="cal-day empty"></div>`;
+  for(let d=1;d<=total;d++){
+    const hasV=daysMap[d]?'has-visits cal-has-jhon':'';
+    const isSel=ljCalSelDay===d?'cal-day-selected-jhon':'';
+    html+=`<div class="cal-day ${hasV} ${isSel}" onclick="ljSelectDay(${d})">${d}</div>`;
+  }
+  document.getElementById('lj-cal-grid').innerHTML=html;
+  if(ljCalSelDay) ljRenderDayPanel(ljCalSelDay);
+  else document.getElementById('lj-cal-day-panel').innerHTML='<div class="cal-empty"><i class="ti ti-hand-click" style="font-size:28px;display:block;margin-bottom:8px;"></i>Toca un día para ver los servicios</div>';
+}
+
+function ljSelectDay(d){
+  ljCalSelDay=d;
+  ljRenderCal();
+}
+
+function ljRenderDayPanel(d){
+  const daysMap=ljVisitDaysInMonth(ljCalYear,ljCalMonth);
+  const visits=daysMap[d]||[];
+  const panel=document.getElementById('lj-cal-day-panel');
+  if(!visits.length){
+    panel.innerHTML=`<div class="cal-day-summary"><div class="cal-day-header"><span class="cal-day-title">${d} de ${MESES[ljCalMonth]}</span></div><div class="cal-empty">Sin servicios ese día</div></div>`;
+    return;
+  }
+  const total=visits.reduce((s,v)=>s+(parseFloat(v.costoServicio)||0),0);
+  const color='#1a4a9a';
+  let html=`<div class="cal-day-summary">
+    <div class="cal-day-header">
+      <span class="cal-day-title">${d} de ${MESES[ljCalMonth]} — ${visits.length} servicio${visits.length>1?'s':''}</span>
+      <span class="cal-day-total" style="color:${color}">$${total.toFixed(2)}</span>
+    </div>`;
+  visits.forEach(v=>{
+    const c=ljDb.clients.find(x=>x.id===v.clientId);
+    html+=`<div class="cal-visit-item" onclick="ljOpenVisitFromCal('${v.id}','${v.clientId}')">
+      <div class="cal-visit-name">${c?c.nombre:'Cliente'}</div>
+      <div class="cal-visit-meta">
+        <span class="cal-visit-tipo">${v.tipo||'—'}${v.modoPago?' · '+v.modoPago:''}</span>
+        <span class="cal-visit-costo" style="color:${color}">${v.costoServicio?'$'+parseFloat(v.costoServicio).toFixed(2):'Sin costo'}</span>
+      </div>
+    </div>`;
+  });
+  html+='</div>';
+  panel.innerHTML=html;
+}
+
+function ljOpenVisitFromCal(visitId, clientId){
+  ljCurrentClientId=clientId;
+  ljCurrentVisitId=visitId;
+  ljGoScreen('lj-screen-visit-detail');
+  ljOpenVisit(visitId);
+}
+
 </script>
 </body>
 </html>
