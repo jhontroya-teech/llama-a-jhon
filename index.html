@@ -611,9 +611,31 @@ function teSyncToSheets(data){
   const ind=document.getElementById('te-sync-status');
   if(ind) ind.innerHTML=`<i class="ti ti-cloud-upload"></i> Subiendo al Excel...`;
   const params=new URLSearchParams();
-  Object.keys(data).forEach(k=>{ if(k==='fotos'||k==='firma') return; params.append(k,data[k]||''); });
-  params.append('fotos_count',data.fotos?data.fotos.length:0);
-  params.append('tiene_firma',data.firma?'Si':'No');
+  // Campos básicos
+  params.append('type', data.type||'');
+  params.append('id', data.id||'');
+  if(data.type==='client'){
+    params.append('nombre', data.nombre||'');
+    params.append('telefono', data.telefono||'');
+    params.append('direccion', data.direccion||'');
+    params.append('tipo', data.tipo||'');
+    params.append('marca', data.marca||'');
+    params.append('btu', data.btu||'');
+  }
+  if(data.type==='visit'){
+    params.append('clientId', data.clientId||'');
+    params.append('fecha', data.fecha||'');
+    params.append('tipo', data.tipo||'');
+    params.append('tipos', data.tipo||'');
+    params.append('detalle', data.detalle||'');
+    params.append('observacion', data.observacion||'');
+    params.append('responsabilidad', data.responsabilidad?'Si':'No');
+    params.append('tiene_firma', data.firma?'Si':'No');
+    params.append('fotos_count', data.fotos?data.fotos.length:0);
+    params.append('link_reporte', '');
+    params.append('modoPago', data.modoPago||'');
+    params.append('costoServicio', data.costoServicio||'');
+  }
   fetch(`${TE_SHEET_URL}?${params.toString()}`,{mode:'no-cors'})
     .then(()=>{ if(ind) ind.innerHTML=`<i class="ti ti-cloud-check" style="color:#0a6e4a"></i> Guardado en la nube`; })
     .catch(()=>{ if(ind) ind.innerHTML=`<i class="ti ti-alert-circle" style="color:#e6a23c"></i> Guardado local.`; });
@@ -825,7 +847,7 @@ teUpdateStats(); teRenderClients();
 // ══════════════════════════════════════════════════════════
 //  LLAMA A JHON
 // ══════════════════════════════════════════════════════════
-const LJ_SHEET_URL = 'https://script.google.com/macros/s/AKfycbyUUziORBw7RLEhWpbLOsFtjWTybII3fs3ZzZ3JEPxoqUEWj3TQIW1-7UzBFiuo-c2NAg/exec';
+const LJ_SHEET_URL = 'https://script.google.com/macros/s/AKfycbzJoNDoXaa0A6vDyrvy07ttPJjboPXQjWu5xurohONK2fTyMDCCEM_8okm3pExO6PzwRw/exec';
 let ljDb = JSON.parse(localStorage.getItem('lj_db') || '{"clients":[],"visits":[]}');
 let ljCurrentClientId=null, ljCurrentVisitId=null, ljEditingClientId=null, ljEditingVisitId=null;
 let ljVisitPhotos=[], ljSigCtx, ljSigDrawing=false, ljSigHasContent=false;
@@ -850,9 +872,30 @@ function ljSyncToSheets(data){
   const ind=document.getElementById('lj-sync-status');
   if(ind) ind.innerHTML=`<i class="ti ti-cloud-upload"></i> Subiendo al Excel...`;
   const params=new URLSearchParams();
-  Object.keys(data).forEach(k=>{ if(k==='fotos'||k==='firma') return; params.append(k,data[k]||''); });
-  params.append('fotos_count',data.fotos?data.fotos.length:0);
-  params.append('tiene_firma',data.firma?'Si':'No');
+  params.append('type', data.type||'');
+  params.append('id', data.id||'');
+  if(data.type==='client'){
+    params.append('nombre', data.nombre||'');
+    params.append('telefono', data.telefono||'');
+    params.append('direccion', data.direccion||'');
+    params.append('tipo', data.tipo||'');
+    params.append('marca', data.marca||'');
+    params.append('btu', data.btu||'');
+  }
+  if(data.type==='visit'){
+    params.append('clientId', data.clientId||'');
+    params.append('fecha', data.fecha||'');
+    params.append('tipo', data.tipo||'');
+    params.append('tipos', data.tipo||'');
+    params.append('detalle', data.detalle||'');
+    params.append('observacion', data.observacion||'');
+    params.append('responsabilidad', data.responsabilidad?'Si':'No');
+    params.append('tiene_firma', data.firma?'Si':'No');
+    params.append('fotos_count', data.fotos?data.fotos.length:0);
+    params.append('link_reporte', '');
+    params.append('modoPago', data.modoPago||'');
+    params.append('costoServicio', data.costoServicio||'');
+  }
   fetch(`${LJ_SHEET_URL}?${params.toString()}`,{mode:'no-cors'})
     .then(()=>{ if(ind) ind.innerHTML=`<i class="ti ti-cloud-check" style="color:#1a4a9a"></i> Guardado en la nube`; })
     .catch(()=>{ if(ind) ind.innerHTML=`<i class="ti ti-alert-circle" style="color:#e6a23c"></i> Guardado local.`; });
