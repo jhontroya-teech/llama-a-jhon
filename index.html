@@ -63,6 +63,14 @@ canvas#sigCanvas{display:block;touch-action:none;cursor:crosshair;width:100%;hei
 .checkbox-resp{display:flex;align-items:flex-start;gap:10px;background:#fffbe6;border:1px solid #ffe58f;border-radius:10px;padding:12px 14px;margin-bottom:12px;margin-top:4px;}
 .checkbox-resp input[type=checkbox]{width:20px;height:20px;flex-shrink:0;margin-top:2px;cursor:pointer;-webkit-appearance:checkbox;appearance:checkbox;}
 .checkbox-resp label{font-size:13px;color:#444;line-height:1.5;cursor:pointer;}
+/* Modo de pago */
+.pago-box{background:#fff;border:1px solid #e5e5e5;border-radius:10px;padding:12px 14px;margin-bottom:10px;}
+.pago-opciones{display:flex;gap:16px;margin-bottom:12px;}
+.pago-opcion{display:flex;align-items:center;gap:8px;cursor:pointer;font-size:15px;color:#1a1a1a;}
+.pago-opcion input[type=radio]{width:18px;height:18px;cursor:pointer;-webkit-appearance:radio;appearance:radio;flex-shrink:0;}
+.costo-wrap{position:relative;}
+.costo-wrap span{position:absolute;left:14px;top:50%;transform:translateY(-50%);color:#555;font-size:15px;font-weight:600;pointer-events:none;}
+.costo-wrap input{padding-left:28px;margin-bottom:0;}
 </style>
 </head>
 <body>
@@ -165,6 +173,25 @@ canvas#sigCanvas{display:block;touch-action:none;cursor:crosshair;width:100%;hei
   <div class="checkbox-resp">
     <input type="checkbox" id="v-responsabilidad">
     <label for="v-responsabilidad"> "Acepto que fui informado por el técnico sobre las condiciones y riesgos del servicio, asumiendo la total responsabilidad como cliente."</label>
+  </div>
+
+  <!-- MODO DE PAGO -->
+  <div class="section-title">Modo de pago</div>
+  <div class="pago-box">
+    <div class="pago-opciones">
+      <label class="pago-opcion">
+        <input type="radio" name="v-modopago" id="v-pago-transferencia" value="Transferencia">
+        Transferencia
+      </label>
+      <label class="pago-opcion">
+        <input type="radio" name="v-modopago" id="v-pago-efectivo" value="Efectivo">
+        Efectivo
+      </label>
+    </div>
+    <div class="costo-wrap">
+      <span>$</span>
+      <input type="number" id="v-costo" placeholder="0.00" min="0" step="0.01">
+    </div>
   </div>
 
   <div class="section-title">Firma del cliente</div>
@@ -367,6 +394,9 @@ function goNewVisit(){
   document.getElementById('v-detalle').value='';
   document.getElementById('v-observacion').value='';
   document.getElementById('v-responsabilidad').checked=false;
+  // Resetear modo de pago
+  document.querySelectorAll('input[name="v-modopago"]').forEach(r=>r.checked=false);
+  document.getElementById('v-costo').value='';
   // Resetear botones
   const btnG=document.getElementById('btn-guardar-visita');
   btnG.disabled=false; btnG.textContent='Guardar visita';
@@ -384,6 +414,9 @@ function editVisit(){
   document.getElementById('v-detalle').value=v.detalle;
   document.getElementById('v-observacion').value=v.observacion;
   document.getElementById('v-responsabilidad').checked=v.responsabilidad||false;
+  // Cargar modo de pago
+  document.querySelectorAll('input[name="v-modopago"]').forEach(r=>{ r.checked=(r.value===(v.modoPago||'')); });
+  document.getElementById('v-costo').value=v.costoServicio||'';
   const btnG=document.getElementById('btn-guardar-visita');
   btnG.disabled=false; btnG.textContent='Guardar visita';
   document.getElementById('post-save-btns').style.display='none';
@@ -414,6 +447,9 @@ function saveVisit(){
   btnG.disabled=true;
   btnG.textContent='✅ Visita guardada';
 
+  // Leer modo de pago seleccionado
+  const pagoSel=document.querySelector('input[name="v-modopago"]:checked');
+
   const data={
     clientId:currentClientId,
     fecha:document.getElementById('v-fecha').value,
@@ -421,6 +457,8 @@ function saveVisit(){
     detalle:document.getElementById('v-detalle').value,
     observacion:document.getElementById('v-observacion').value,
     responsabilidad:document.getElementById('v-responsabilidad').checked,
+    modoPago:pagoSel?pagoSel.value:'',
+    costoServicio:document.getElementById('v-costo').value,
     fotos:[...visitPhotos],
     firma:sigHasContent?document.getElementById('sigCanvas').toDataURL():null
   };
@@ -447,11 +485,16 @@ function openVisit(id){
   const fHtml=(v.fotos||[]).map(p=>`<img src="${p}" style="width:100%;border-radius:10px;margin-bottom:8px;">`).join('');
   const sHtml=v.firma?`<div class="section-title">Firma del cliente</div><img src="${v.firma}" class="sig-preview">`:'';
   const respHtml=v.responsabilidad?`<div class="detail-row"><span class="detail-label">Responsabilidad</span><span class="detail-value" style="color:#1a7a4a;">✅ Aceptada</span></div>`:'';
+  // Pago
+  const pagoHtml=(v.modoPago||v.costoServicio)?`
+    <div class="detail-row"><span class="detail-label">Modo de pago</span><span class="detail-value">${v.modoPago||'—'}</span></div>
+    <div class="detail-row"><span class="detail-label">Costo del servicio</span><span class="detail-value" style="color:#1a7a4a;font-weight:700;">${v.costoServicio?'$'+parseFloat(v.costoServicio).toFixed(2):'—'}</span></div>`:'';
   document.getElementById('visit-detail-content').innerHTML=`
     <div class="info-card">
       <div class="detail-row"><span class="detail-label">Servicio</span><span class="detail-value" style="font-weight:700;">${v.tipo}</span></div>
       <div class="detail-row"><span class="detail-label">Fecha</span><span class="detail-value">${v.fecha}</span></div>
       ${respHtml}
+      ${pagoHtml}
       <div class="section-title" style="margin-top:12px;">Diagnóstico / Estado</div>
       <p style="font-size:14px;background:#f9f9f9;padding:8px;border-radius:6px;white-space:pre-wrap;">${v.detalle||'Sin detalles'}</p>
       <div class="section-title" style="margin-top:12px;">Trabajo realizado</div>
@@ -528,6 +571,8 @@ async function generarYCompartirPDF(){
   fila('Tipo', v.tipo);
   fila('Fecha', v.fecha);
   fila('Responsabilidad', v.responsabilidad?'✓ Aceptada por el cliente':'No aplica');
+  fila('Modo de pago', v.modoPago||'—');
+  fila('Costo del servicio', v.costoServicio?'$'+parseFloat(v.costoServicio).toFixed(2):'—');
   y+=4;
 
   bloque('Diagnóstico / Estado inicial del equipo', v.detalle);
