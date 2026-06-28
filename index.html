@@ -36,8 +36,9 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
 #login-screen{
   position:fixed;top:0;left:0;width:100%;height:100%;
   z-index:8888;display:none;justify-content:center;align-items:center;flex-direction:column;
+  background:#0a6e4a;
 }
-#login-screen.active{display:flex;}
+#login-screen.active{display:flex !important;}
 #login-screen.mode-thermo{background:#0a6e4a;}
 #login-screen.mode-jhon{background:#1a1a1a;}
 .login-box{background:#fff;padding:30px;border-radius:14px;text-align:center;width:85%;max-width:350px;}
@@ -440,7 +441,11 @@ function showLogin(app){
   const ls = document.getElementById('login-screen');
   const title = document.getElementById('login-title');
   const btn = document.getElementById('login-btn');
-  ls.className = 'active mode-' + app;
+  // Ocultar pantalla de selección
+  document.getElementById('select-screen').style.display = 'none';
+  // Mostrar login con estilo inline para garantizar visibilidad
+  ls.style.display = 'flex';
+  ls.style.background = app === 'thermo' ? '#0a6e4a' : '#1a1a1a';
   title.className = app;
   title.textContent = app === 'thermo' ? 'Thermoelectric' : 'Llama a Jhon';
   btn.className = 'login-btn ' + app;
@@ -456,7 +461,7 @@ function doLogin(){
   const cred = USERS[currentApp];
   if(u === cred.usuario && p === cred.pass){
     sessionStorage.setItem('app_logged', currentApp);
-    document.getElementById('login-screen').className = '';
+    document.getElementById('login-screen').style.display = 'none';
     document.getElementById('select-screen').style.display = 'none';
     launchApp(currentApp);
   } else {
@@ -474,7 +479,7 @@ document.getElementById('login-pass').addEventListener('keydown', e => { if(e.ke
 document.getElementById('login-user').addEventListener('keydown', e => { if(e.key==='Enter') doLogin(); });
 
 function backToSelect(){
-  document.getElementById('login-screen').className = '';
+  document.getElementById('login-screen').style.display = 'none';
   document.getElementById('select-screen').style.display = 'flex';
 }
 
@@ -490,7 +495,7 @@ function switchUser(){
   sessionStorage.removeItem('app_logged');
   document.getElementById('app-thermo').classList.remove('active');
   document.getElementById('app-jhon').classList.remove('active');
-  document.getElementById('login-screen').className = '';
+  document.getElementById('login-screen').style.display = 'none';
   document.getElementById('select-screen').style.display = 'flex';
 }
 
