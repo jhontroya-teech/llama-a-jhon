@@ -600,8 +600,15 @@ function teFetchData(){
   if(icon) icon.classList.add('sync-spin');
   fetch(`${TE_SHEET_URL}?action=readAll`)
     .then(r=>r.json())
-    .then(data=>{ if(data&&data.clients){ teDb=data; teSaveDb(); teRenderClients();
-      if(ind) ind.innerHTML=`<i class="ti ti-cloud-check" style="color:#0a6e4a"></i> Sincronizado con Excel`; }
+    .then(data=>{
+      if(data && data.clients){
+        const serverVisits = data.visits  || [];
+        const localVisits  = teDb.visits  || [];
+        const mergedVisits = serverVisits.length > 0 ? serverVisits : localVisits;
+        teDb = { clients: data.clients, visits: mergedVisits };
+        teSaveDb(); teRenderClients();
+        if(ind) ind.innerHTML=`<i class="ti ti-cloud-check" style="color:#0a6e4a"></i> Sincronizado con Excel`;
+      }
     })
     .catch(()=>{ if(ind) ind.innerHTML=`<i class="ti ti-cloud-off" style="color:#e53e3e"></i> Modo local (Sin internet)`; })
     .finally(()=>{ if(icon) icon.classList.remove('sync-spin'); });
@@ -861,8 +868,22 @@ function ljFetchData(){
   if(icon) icon.classList.add('sync-spin');
   fetch(`${LJ_SHEET_URL}?action=readAll`)
     .then(r=>r.json())
-    .then(data=>{ if(data&&data.clients){ ljDb=data; ljSaveDb(); ljRenderClients();
-      if(ind) ind.innerHTML=`<i class="ti ti-cloud-check" style="color:#1a4a9a"></i> Sincronizado con Excel`; }
+    .then(data=>{
+      if(data && data.clients){
+        // Merge seguro: si el servidor no devuelve visits o los devuelve vacíos,
+        // conservar los que ya tenemos en local para no perder datos
+        const serverClients = data.clients || [];
+        const serverVisits  = data.visits  || [];
+        const localVisits   = ljDb.visits  || [];
+
+        // Usar visits del servidor si tiene datos; si no, conservar los locales
+        const mergedVisits = serverVisits.length > 0 ? serverVisits : localVisits;
+
+        ljDb = { clients: serverClients, visits: mergedVisits };
+        ljSaveDb();
+        ljRenderClients();
+        if(ind) ind.innerHTML=`<i class="ti ti-cloud-check" style="color:#1a4a9a"></i> Sincronizado con Excel`;
+      }
     })
     .catch(()=>{ if(ind) ind.innerHTML=`<i class="ti ti-cloud-off" style="color:#e53e3e"></i> Modo local (Sin internet)`; })
     .finally(()=>{ if(icon) icon.classList.remove('sync-spin'); });
