@@ -862,8 +862,10 @@ function teSaveVisit(){
   const pagoSel=document.querySelector('input[name="te-v-modopago"]:checked');
   const firmaData = teSigHasContent ? document.getElementById('te-sigCanvas').toDataURL() : null;
   const fotosLinksArr = teVisitPhotos.filter(p=>p.link).map(p=>p.link);
+  const fotosBase64Arr = teVisitPhotos.map(p=>p.preview).filter(Boolean);
 
-  // Datos para guardar en localStorage — solo los links, no base64 (liviano)
+  // Datos para guardar en localStorage — incluye fotos y firma en base64
+  // para que siempre se vean en ESTE dispositivo, sin depender de Drive/internet
   const dataLocal = {
     clientId: teCurrentClientId,
     fecha: document.getElementById('te-v-fecha').value,
@@ -875,7 +877,9 @@ function teSaveVisit(){
     costoServicio: document.getElementById('te-v-costo').value,
     fotos_count: teVisitPhotos.length,
     tiene_firma: firmaData ? 'Si' : 'No',
-    fotosLinks: fotosLinksArr
+    fotosLinks: fotosLinksArr,
+    fotos: fotosBase64Arr,
+    firma: firmaData
   };
 
   // Datos completos para enviar al Excel
@@ -906,7 +910,7 @@ function teOpenVisit(id){
   teCurrentVisitId=id; const v=teDb.visits.find(x=>x.id===id); if(!v) return;
   const fotosLinksArr = v.fotosLinks ? (Array.isArray(v.fotosLinks)?v.fotosLinks:String(v.fotosLinks).split(',').filter(Boolean)) : [];
   const fotosViejas = v.fotos||[];
-  const fHtml=(fotosLinksArr.length?fotosLinksArr:fotosViejas).map(p=>`<img src="${p}" style="width:100%;border-radius:10px;margin-bottom:8px;" loading="lazy">`).join('');
+  const fHtml=(fotosViejas.length?fotosViejas:fotosLinksArr).map(p=>`<img src="${p}" style="width:100%;border-radius:10px;margin-bottom:8px;" loading="lazy">`).join('');
   const sHtml=v.firma?`<div class="section-title">Firma del cliente</div><img src="${v.firma}" class="sig-preview">`:'';
   const respHtml=v.responsabilidad?`<div class="detail-row"><span class="detail-label">Responsabilidad</span><span class="detail-value" style="color:#0a6e4a;">✅ Aceptada</span></div>`:'';
   const pagoHtml=(v.modoPago||v.costoServicio)?`<div class="detail-row"><span class="detail-label">Modo de pago</span><span class="detail-value">${v.modoPago||'—'}</span></div><div class="detail-row"><span class="detail-label">Costo</span><span class="detail-value" style="color:#0a6e4a;font-weight:700;">${v.costoServicio?'$'+parseFloat(v.costoServicio).toFixed(2):'—'}</span></div>`:'';
@@ -1239,6 +1243,7 @@ function ljSaveVisit(){
   const pagoSel=document.querySelector('input[name="lj-v-modopago"]:checked');
   const firmaData = ljSigHasContent ? document.getElementById('lj-sigCanvas').toDataURL() : null;
   const fotosLinksArr = ljVisitPhotos.filter(p=>p.link).map(p=>p.link);
+  const fotosBase64Arr = ljVisitPhotos.map(p=>p.preview).filter(Boolean);
 
   const dataLocal = {
     clientId: ljCurrentClientId,
@@ -1251,7 +1256,9 @@ function ljSaveVisit(){
     costoServicio: document.getElementById('lj-v-costo').value,
     fotos_count: ljVisitPhotos.length,
     tiene_firma: firmaData ? 'Si' : 'No',
-    fotosLinks: fotosLinksArr
+    fotosLinks: fotosLinksArr,
+    fotos: fotosBase64Arr,
+    firma: firmaData
   };
 
   const dataSync = { ...dataLocal, fotosLinks: fotosLinksArr.join(','), firma: firmaData };
@@ -1281,7 +1288,7 @@ function ljOpenVisit(id){
   ljCurrentVisitId=id; const v=ljDb.visits.find(x=>x.id===id); if(!v) return;
   const fotosLinksArr = v.fotosLinks ? (Array.isArray(v.fotosLinks)?v.fotosLinks:String(v.fotosLinks).split(',').filter(Boolean)) : [];
   const fotosViejas = v.fotos||[];
-  const fHtml=(fotosLinksArr.length?fotosLinksArr:fotosViejas).map(p=>`<img src="${p}" style="width:100%;border-radius:10px;margin-bottom:8px;" loading="lazy">`).join('');
+  const fHtml=(fotosViejas.length?fotosViejas:fotosLinksArr).map(p=>`<img src="${p}" style="width:100%;border-radius:10px;margin-bottom:8px;" loading="lazy">`).join('');
   const sHtml=v.firma?`<div class="section-title">Firma del cliente</div><img src="${v.firma}" class="sig-preview">`:'';
   const respHtml=v.responsabilidad?`<div class="detail-row"><span class="detail-label">Responsabilidad</span><span class="detail-value" style="color:#1a7a4a;">✅ Aceptada</span></div>`:'';
   const pagoHtml=(v.modoPago||v.costoServicio)?`<div class="detail-row"><span class="detail-label">Modo de pago</span><span class="detail-value">${v.modoPago||'—'}</span></div><div class="detail-row"><span class="detail-label">Costo</span><span class="detail-value" style="color:#1a7a4a;font-weight:700;">${v.costoServicio?'$'+parseFloat(v.costoServicio).toFixed(2):'—'}</span></div>`:'';
