@@ -586,7 +586,7 @@ document.addEventListener('DOMContentLoaded', function(){
 // ══════════════════════════════════════════════════════════
 //  THERMOELECTRIC
 // ══════════════════════════════════════════════════════════
-const TE_SHEET_URL = "https://script.google.com/macros/s/AKfycbxfhlqXx8PgwPGZRqK9d2mcXDXXgJfs5iD8Gd6zpGNnaHIWunG3M3rQ3aeZcnNvfj7-/exec";
+const TE_SHEET_URL = "https://script.google.com/macros/s/AKfycbyIQ6ILvNApkiMTNnlM3DDzDIBkQFl2rgt7Oj_ZQLkZ6hXuek-1y-XRqBL_aWgP_KNw/exec";
 let teDb = JSON.parse(localStorage.getItem('te_db') || '{"clients":[],"visits":[]}');
 let teCurrentClientId=null, teCurrentVisitId=null, teEditingClientId=null, teEditingVisitId=null;
 let teVisitPhotos=[], teSigCtx, teSigDrawing=false, teSigHasContent=false;
@@ -616,9 +616,10 @@ function teFetchData(){
 
 function teSyncToSheets(data){
   const ind=document.getElementById('te-sync-status');
-  if(ind) ind.innerHTML=`<i class="ti ti-cloud-upload"></i> Subiendo al Excel...`;
+  if(ind) ind.innerHTML=`<i class="ti ti-cloud-upload sync-spin"></i> Subiendo al Excel...`;
+
+  // Construir parámetros
   const params=new URLSearchParams();
-  // Campos básicos
   params.append('type', data.type||'');
   params.append('id', data.id||'');
   if(data.type==='client'){
@@ -643,9 +644,32 @@ function teSyncToSheets(data){
     params.append('modoPago', data.modoPago||'');
     params.append('costoServicio', data.costoServicio||'');
   }
-  fetch(`${TE_SHEET_URL}?${params.toString()}`,{mode:'no-cors'})
-    .then(()=>{ if(ind) ind.innerHTML=`<i class="ti ti-cloud-check" style="color:#0a6e4a"></i> Guardado en la nube`; })
-    .catch(()=>{ if(ind) ind.innerHTML=`<i class="ti ti-alert-circle" style="color:#e6a23c"></i> Guardado local.`; });
+
+  // POST con redirect follow para que funcione en celulares con datos móviles
+  fetch(TE_SHEET_URL, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+    body: params.toString(),
+    redirect: 'follow'
+  })
+  .then(r => r.text())
+  .then(txt => {
+    try {
+      const res = JSON.parse(txt);
+      if(res.status === 'ok'){
+        if(ind) ind.innerHTML=`<i class="ti ti-cloud-check" style="color:#0a6e4a"></i> Guardado en Excel ✓`;
+      } else {
+        throw new Error(res.msg||'error');
+      }
+    } catch(e){
+      if(ind) ind.innerHTML=`<i class="ti ti-alert-circle" style="color:#e6a23c"></i> Error al guardar`;
+      console.error('TE Sheets error:', txt);
+    }
+  })
+  .catch(err => {
+    if(ind) ind.innerHTML=`<i class="ti ti-cloud-off" style="color:#e53e3e"></i> Sin conexión — guardado local`;
+    console.error('TE fetch error:', err);
+  });
 }
 
 function teGoScreen(id){
@@ -854,7 +878,7 @@ teUpdateStats(); teRenderClients();
 // ══════════════════════════════════════════════════════════
 //  LLAMA A JHON
 // ══════════════════════════════════════════════════════════
-const LJ_SHEET_URL = "https://script.google.com/macros/s/AKfycbyG-aXqE9OE7wrktSZkTQge8LsNdSLZl74NCx4CXb-TYS2TU_Zsq2z5jCSnc40msRDM/exec";
+const LJ_SHEET_URL = "https://script.google.com/macros/s/AKfycbzmm2flDhvkSwZS6dxvT9QIrp3jWXrH5v3-WkEUyZqX8b6E2a7QZQCW-GWhJzGF8vDf_Q/exec";
 let ljDb = JSON.parse(localStorage.getItem('lj_db') || '{"clients":[],"visits":[]}');
 let ljCurrentClientId=null, ljCurrentVisitId=null, ljEditingClientId=null, ljEditingVisitId=null;
 let ljVisitPhotos=[], ljSigCtx, ljSigDrawing=false, ljSigHasContent=false;
@@ -891,7 +915,8 @@ function ljFetchData(){
 
 function ljSyncToSheets(data){
   const ind=document.getElementById('lj-sync-status');
-  if(ind) ind.innerHTML=`<i class="ti ti-cloud-upload"></i> Subiendo al Excel...`;
+  if(ind) ind.innerHTML=`<i class="ti ti-cloud-upload sync-spin"></i> Subiendo al Excel...`;
+
   const params=new URLSearchParams();
   params.append('type', data.type||'');
   params.append('id', data.id||'');
@@ -917,9 +942,31 @@ function ljSyncToSheets(data){
     params.append('modoPago', data.modoPago||'');
     params.append('costoServicio', data.costoServicio||'');
   }
-  fetch(`${LJ_SHEET_URL}?${params.toString()}`,{mode:'no-cors'})
-    .then(()=>{ if(ind) ind.innerHTML=`<i class="ti ti-cloud-check" style="color:#1a4a9a"></i> Guardado en la nube`; })
-    .catch(()=>{ if(ind) ind.innerHTML=`<i class="ti ti-alert-circle" style="color:#e6a23c"></i> Guardado local.`; });
+
+  fetch(LJ_SHEET_URL, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+    body: params.toString(),
+    redirect: 'follow'
+  })
+  .then(r => r.text())
+  .then(txt => {
+    try {
+      const res = JSON.parse(txt);
+      if(res.status === 'ok'){
+        if(ind) ind.innerHTML=`<i class="ti ti-cloud-check" style="color:#1a4a9a"></i> Guardado en Excel ✓`;
+      } else {
+        throw new Error(res.msg||'error');
+      }
+    } catch(e){
+      if(ind) ind.innerHTML=`<i class="ti ti-alert-circle" style="color:#e6a23c"></i> Error al guardar`;
+      console.error('LJ Sheets error:', txt);
+    }
+  })
+  .catch(err => {
+    if(ind) ind.innerHTML=`<i class="ti ti-cloud-off" style="color:#e53e3e"></i> Sin conexión — guardado local`;
+    console.error('LJ fetch error:', err);
+  });
 }
 
 function ljGoScreen(id){
