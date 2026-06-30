@@ -586,7 +586,7 @@ document.addEventListener('DOMContentLoaded', function(){
 // ══════════════════════════════════════════════════════════
 //  THERMOELECTRIC
 // ══════════════════════════════════════════════════════════
-const TE_SHEET_URL = "https://script.google.com/macros/s/AKfycbzBavGzx3hC2b6-oW-zjZMTC-CM5jGZbgxaE9gj7vCnopKlFgCpkeXTFA5mGO4v-CuB/exec";
+const TE_SHEET_URL = "https://script.google.com/macros/s/AKfycbwn7Zl6FAPhGZD_IdmMhPtJ8YroOC8g5MTeUGKLxWQjLdHhq2JnzLG0PLUYW1yBONI/exec";
 let teDb = JSON.parse(localStorage.getItem('te_db') || '{"clients":[],"visits":[]}');
 let teCurrentClientId=null, teCurrentVisitId=null, teEditingClientId=null, teEditingVisitId=null;
 let teVisitPhotos=[], teSigCtx, teSigDrawing=false, teSigHasContent=false;
@@ -821,7 +821,7 @@ function teAddPhotos(input){
       const visitaId=teCurrentVisitId||teEditingVisitId||('v_'+Date.now());
       const params=new URLSearchParams();
       params.append('action','uploadPhoto');
-      params.append('foto', encodeURIComponent(e.target.result));
+      params.append('foto', e.target.result);
       params.append('cliente', nombreCliente);
       params.append('visitaId', visitaId);
       fetch(TE_SHEET_URL,{method:'POST',headers:{'Content-Type':'application/x-www-form-urlencoded'},body:params.toString()})
@@ -956,7 +956,7 @@ teUpdateStats(); teRenderClients();
 // ══════════════════════════════════════════════════════════
 //  LLAMA A JHON
 // ══════════════════════════════════════════════════════════
-const LJ_SHEET_URL = "https://script.google.com/macros/s/AKfycbyCedrik4--IneVRH9wDdJYqRwKo7FjR14ERftXgfA7Q5jLzpGVCkX_szYT3Nk883aCBQ/exec";
+const LJ_SHEET_URL = "https://script.google.com/macros/s/AKfycbyLeNNclLSGTs0rQ3tPzvFTcp5nK9hoG1ziM1Pd0xIOxNebHDr11EXkSMvPfq1C-tytAw/exec";
 let ljDb = JSON.parse(localStorage.getItem('lj_db') || '{"clients":[],"visits":[]}');
 let ljCurrentClientId=null, ljCurrentVisitId=null, ljEditingClientId=null, ljEditingVisitId=null;
 let ljVisitPhotos=[], ljSigCtx, ljSigDrawing=false, ljSigHasContent=false;
@@ -1196,7 +1196,7 @@ function ljAddPhotos(input){
       const visitaId=ljCurrentVisitId||ljEditingVisitId||('v_'+Date.now());
       const params=new URLSearchParams();
       params.append('action','uploadPhoto');
-      params.append('foto', encodeURIComponent(e.target.result));
+      params.append('foto', e.target.result);
       params.append('cliente', nombreCliente);
       params.append('visitaId', visitaId);
       fetch(LJ_SHEET_URL,{method:'POST',headers:{'Content-Type':'application/x-www-form-urlencoded'},body:params.toString()})
