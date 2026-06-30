@@ -815,10 +815,48 @@ function teSaveVisit(){
   const btnG=document.getElementById('te-btn-guardar-visita');
   btnG.disabled=true; btnG.textContent='✅ Visita guardada';
   const pagoSel=document.querySelector('input[name="te-v-modopago"]:checked');
-  const data={clientId:teCurrentClientId,fecha:document.getElementById('te-v-fecha').value,tipo:document.getElementById('te-v-tipo').value,detalle:document.getElementById('te-v-detalle').value,observacion:document.getElementById('te-v-observacion').value,responsabilidad:document.getElementById('te-v-responsabilidad').checked,modoPago:pagoSel?pagoSel.value:'',costoServicio:document.getElementById('te-v-costo').value,fotos:[...teVisitPhotos],firma:teSigHasContent?document.getElementById('te-sigCanvas').toDataURL():null};
-  if(teEditingVisitId){ const idx=teDb.visits.findIndex(x=>x.id===teEditingVisitId); teDb.visits[idx]={...teDb.visits[idx],...data}; }
-  else { const newId='v_'+Date.now(); teDb.visits.push({id:newId,...data}); teCurrentVisitId=newId; }
-  teSaveDb(); teSyncToSheets({type:'visit',id:teCurrentVisitId,...data});
+  const firmaData = teSigHasContent ? document.getElementById('te-sigCanvas').toDataURL() : null;
+
+  // Datos SIN fotos ni firma para guardar en localStorage (evita que se llene)
+  const dataLocal = {
+    clientId: teCurrentClientId,
+    fecha: document.getElementById('te-v-fecha').value,
+    tipo: document.getElementById('te-v-tipo').value,
+    detalle: document.getElementById('te-v-detalle').value,
+    observacion: document.getElementById('te-v-observacion').value,
+    responsabilidad: document.getElementById('te-v-responsabilidad').checked,
+    modoPago: pagoSel ? pagoSel.value : '',
+    costoServicio: document.getElementById('te-v-costo').value,
+    fotos_count: teVisitPhotos.length,
+    tiene_firma: firmaData ? 'Si' : 'No'
+  };
+
+  // Datos completos para enviar al Excel (incluye fotos y firma)
+  const dataSync = { ...dataLocal, fotos: [...teVisitPhotos], firma: firmaData };
+
+  let visitId;
+  if(teEditingVisitId){
+    visitId = teEditingVisitId;
+    const idx = teDb.visits.findIndex(x=>x.id===teEditingVisitId);
+    teDb.visits[idx] = {...teDb.visits[idx], ...dataLocal};
+  } else {
+    visitId = 'v_' + Date.now();
+    teDb.visits.push({id: visitId, ...dataLocal});
+    teCurrentVisitId = visitId;
+  }
+
+  // Guardar en localStorage de forma segura
+  try {
+    teSaveDb();
+  } catch(e) {
+    // localStorage lleno — limpiar fotos antiguas y reintentar
+    teDb.visits = teDb.visits.map(v => ({...v, fotos:[], tiene_firma: v.tiene_firma||'No'}));
+    try { teSaveDb(); } catch(e2) { console.error('localStorage lleno:', e2); }
+  }
+
+  // Enviar al Excel con todos los datos
+  teSyncToSheets({type:'visit', id: visitId, ...dataSync});
+
   document.getElementById('te-post-save-btns').style.display='block';
   document.getElementById('te-btn-cancelar').style.display='none';
   showToast('✅ Visita guardada');
@@ -1112,10 +1150,48 @@ function ljSaveVisit(){
   const btnG=document.getElementById('lj-btn-guardar-visita');
   btnG.disabled=true; btnG.textContent='✅ Visita guardada';
   const pagoSel=document.querySelector('input[name="lj-v-modopago"]:checked');
-  const data={clientId:ljCurrentClientId,fecha:document.getElementById('lj-v-fecha').value,tipo:document.getElementById('lj-v-tipo').value,detalle:document.getElementById('lj-v-detalle').value,observacion:document.getElementById('lj-v-observacion').value,responsabilidad:document.getElementById('lj-v-responsabilidad').checked,modoPago:pagoSel?pagoSel.value:'',costoServicio:document.getElementById('lj-v-costo').value,fotos:[...ljVisitPhotos],firma:ljSigHasContent?document.getElementById('lj-sigCanvas').toDataURL():null};
-  if(ljEditingVisitId){ const idx=ljDb.visits.findIndex(x=>x.id===ljEditingVisitId); ljDb.visits[idx]={...ljDb.visits[idx],...data}; }
-  else { const newId='v_'+Date.now(); ljDb.visits.push({id:newId,...data}); ljCurrentVisitId=newId; }
-  ljSaveDb(); ljSyncToSheets({type:'visit',id:ljCurrentVisitId,...data});
+  const firmaData = ljSigHasContent ? document.getElementById('lj-sigCanvas').toDataURL() : null;
+
+  // Datos SIN fotos ni firma para guardar en localStorage (evita que se llene)
+  const dataLocal = {
+    clientId: ljCurrentClientId,
+    fecha: document.getElementById('lj-v-fecha').value,
+    tipo: document.getElementById('lj-v-tipo').value,
+    detalle: document.getElementById('lj-v-detalle').value,
+    observacion: document.getElementById('lj-v-observacion').value,
+    responsabilidad: document.getElementById('lj-v-responsabilidad').checked,
+    modoPago: pagoSel ? pagoSel.value : '',
+    costoServicio: document.getElementById('lj-v-costo').value,
+    fotos_count: ljVisitPhotos.length,
+    tiene_firma: firmaData ? 'Si' : 'No'
+  };
+
+  // Datos completos para enviar al Excel
+  const dataSync = { ...dataLocal, fotos: [...ljVisitPhotos], firma: firmaData };
+
+  let visitId;
+  if(ljEditingVisitId){
+    visitId = ljEditingVisitId;
+    const idx = ljDb.visits.findIndex(x=>x.id===ljEditingVisitId);
+    ljDb.visits[idx] = {...ljDb.visits[idx], ...dataLocal};
+  } else {
+    visitId = 'v_' + Date.now();
+    ljDb.visits.push({id: visitId, ...dataLocal});
+    ljCurrentVisitId = visitId;
+  }
+
+  // Guardar en localStorage de forma segura
+  try {
+    ljSaveDb();
+  } catch(e) {
+    // localStorage lleno — limpiar datos pesados y reintentar
+    ljDb.visits = ljDb.visits.map(v => ({...v, fotos:[], tiene_firma: v.tiene_firma||'No'}));
+    try { ljSaveDb(); } catch(e2) { console.error('localStorage lleno:', e2); }
+  }
+
+  // Enviar al Excel con todos los datos
+  ljSyncToSheets({type:'visit', id: visitId, ...dataSync});
+
   document.getElementById('lj-post-save-btns').style.display='block';
   document.getElementById('lj-btn-cancelar').style.display='none';
   showToast('✅ Visita guardada');
