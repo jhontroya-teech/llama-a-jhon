@@ -827,17 +827,19 @@ function teAddPhotos(input){
       fetch(TE_SHEET_URL,{method:'POST',headers:{'Content-Type':'application/x-www-form-urlencoded'},body:params.toString()})
         .then(r=>r.text())
         .then(txt=>{
-          const res=JSON.parse(txt);
+          let res;
+          try{ res=JSON.parse(txt); }catch(parseErr){ alert('ERROR AL SUBIR FOTO (respuesta no es JSON):\n\n'+txt.substring(0,500)); res={status:'error',msg:'respuesta no es JSON'}; }
           const idx=teVisitPhotos.findIndex(p=>p.id===tempId);
           if(idx>-1){
             if(res.status==='ok'){ teVisitPhotos[idx]={id:tempId, preview:e.target.result, link:res.link, uploading:false}; }
-            else { teVisitPhotos[idx].uploading=false; teVisitPhotos[idx].error=true; }
+            else { teVisitPhotos[idx].uploading=false; teVisitPhotos[idx].error=true; if(res.msg) alert('ERROR AL SUBIR FOTO:\n\n'+res.msg); }
           }
           teRenderPhotoGrid();
         })
-        .catch(()=>{
+        .catch((fetchErr)=>{
           const idx=teVisitPhotos.findIndex(p=>p.id===tempId);
           if(idx>-1){ teVisitPhotos[idx].uploading=false; teVisitPhotos[idx].error=true; }
+          alert('ERROR DE RED AL SUBIR FOTO:\n\n'+fetchErr);
           teRenderPhotoGrid();
         });
     };
@@ -1202,17 +1204,19 @@ function ljAddPhotos(input){
       fetch(LJ_SHEET_URL,{method:'POST',headers:{'Content-Type':'application/x-www-form-urlencoded'},body:params.toString()})
         .then(r=>r.text())
         .then(txt=>{
-          const res=JSON.parse(txt);
+          let res;
+          try{ res=JSON.parse(txt); }catch(parseErr){ alert('ERROR AL SUBIR FOTO (respuesta no es JSON):\n\n'+txt.substring(0,500)); res={status:'error',msg:'respuesta no es JSON'}; }
           const idx=ljVisitPhotos.findIndex(p=>p.id===tempId);
           if(idx>-1){
             if(res.status==='ok'){ ljVisitPhotos[idx]={id:tempId, preview:e.target.result, link:res.link, uploading:false}; }
-            else { ljVisitPhotos[idx].uploading=false; ljVisitPhotos[idx].error=true; }
+            else { ljVisitPhotos[idx].uploading=false; ljVisitPhotos[idx].error=true; if(res.msg) alert('ERROR AL SUBIR FOTO:\n\n'+res.msg); }
           }
           ljRenderPhotoGrid();
         })
-        .catch(()=>{
+        .catch((fetchErr)=>{
           const idx=ljVisitPhotos.findIndex(p=>p.id===tempId);
           if(idx>-1){ ljVisitPhotos[idx].uploading=false; ljVisitPhotos[idx].error=true; }
+          alert('ERROR DE RED AL SUBIR FOTO:\n\n'+fetchErr);
           ljRenderPhotoGrid();
         });
     };
