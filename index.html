@@ -814,34 +814,8 @@ function teAddPhotos(input){
     const r=new FileReader();
     r.onload=e=>{
       const tempId='temp_'+Date.now()+Math.random();
-      teVisitPhotos.push({id:tempId, preview:e.target.result, link:null, uploading:true});
+      teVisitPhotos.push({id:tempId, preview:e.target.result, link:null, uploading:false});
       teRenderPhotoGrid();
-      const cliente=teDb.clients.find(x=>x.id===teCurrentClientId);
-      const nombreCliente=cliente?cliente.nombre.replace(/[^a-zA-Z0-9]/g,'_'):'cliente';
-      const visitaId=teCurrentVisitId||teEditingVisitId||('v_'+Date.now());
-      const params=new URLSearchParams();
-      params.append('action','uploadPhoto');
-      params.append('foto', e.target.result);
-      params.append('cliente', nombreCliente);
-      params.append('visitaId', visitaId);
-      fetch(TE_SHEET_URL,{method:'POST',headers:{'Content-Type':'application/x-www-form-urlencoded'},body:params.toString()})
-        .then(r=>r.text())
-        .then(txt=>{
-          let res;
-          try{ res=JSON.parse(txt); }catch(parseErr){ alert('ERROR AL SUBIR FOTO (respuesta no es JSON):\n\n'+txt.substring(0,500)); res={status:'error',msg:'respuesta no es JSON'}; }
-          const idx=teVisitPhotos.findIndex(p=>p.id===tempId);
-          if(idx>-1){
-            if(res.status==='ok'){ teVisitPhotos[idx]={id:tempId, preview:e.target.result, link:res.link, uploading:false}; }
-            else { teVisitPhotos[idx].uploading=false; teVisitPhotos[idx].error=true; if(res.msg) alert('ERROR AL SUBIR FOTO:\n\n'+res.msg); }
-          }
-          teRenderPhotoGrid();
-        })
-        .catch((fetchErr)=>{
-          const idx=teVisitPhotos.findIndex(p=>p.id===tempId);
-          if(idx>-1){ teVisitPhotos[idx].uploading=false; teVisitPhotos[idx].error=true; }
-          alert('ERROR DE RED AL SUBIR FOTO:\n\n'+fetchErr);
-          teRenderPhotoGrid();
-        });
     };
     r.readAsDataURL(f);
   });
@@ -904,17 +878,18 @@ function teSaveVisit(){
   document.getElementById('te-post-save-btns').style.display='block';
   document.getElementById('te-btn-cancelar').style.display='none';
   showToast('✅ Visita guardada');
+  teAutoGenerarYSubirPDF(visitId);
 }
 
 function teOpenVisit(id){
   teCurrentVisitId=id; const v=teDb.visits.find(x=>x.id===id); if(!v) return;
-  const fotosLinksArr = v.fotosLinks ? (Array.isArray(v.fotosLinks)?v.fotosLinks:String(v.fotosLinks).split(',').filter(Boolean)) : [];
   const fotosViejas = v.fotos||[];
-  const fHtml=(fotosViejas.length?fotosViejas:fotosLinksArr).map(p=>`<img src="${p}" style="width:100%;border-radius:10px;margin-bottom:8px;" loading="lazy">`).join('');
+  const fHtml=fotosViejas.length?fotosViejas.map(p=>`<img src="${p}" style="width:100%;border-radius:10px;margin-bottom:8px;" loading="lazy">`).join(''):'';
   const sHtml=v.firma?`<div class="section-title">Firma del cliente</div><img src="${v.firma}" class="sig-preview">`:'';
   const respHtml=v.responsabilidad?`<div class="detail-row"><span class="detail-label">Responsabilidad</span><span class="detail-value" style="color:#0a6e4a;">✅ Aceptada</span></div>`:'';
   const pagoHtml=(v.modoPago||v.costoServicio)?`<div class="detail-row"><span class="detail-label">Modo de pago</span><span class="detail-value">${v.modoPago||'—'}</span></div><div class="detail-row"><span class="detail-label">Costo</span><span class="detail-value" style="color:#0a6e4a;font-weight:700;">${v.costoServicio?'$'+parseFloat(v.costoServicio).toFixed(2):'—'}</span></div>`:'';
-  document.getElementById('te-visit-detail-content').innerHTML=`<div class="info-card"><div class="detail-row"><span class="detail-label">Servicio</span><span class="detail-value" style="font-weight:700;">${v.tipo}</span></div><div class="detail-row"><span class="detail-label">Fecha</span><span class="detail-value">${v.fecha}</span></div>${respHtml}${pagoHtml}<div class="section-title" style="margin-top:12px;">Diagnóstico</div><p style="font-size:14px;background:#f9f9f9;padding:8px;border-radius:6px;white-space:pre-wrap;">${v.detalle||'Sin detalles'}</p><div class="section-title" style="margin-top:12px;">Trabajo realizado</div><p style="font-size:14px;background:#f9f9f9;padding:8px;border-radius:6px;white-space:pre-wrap;">${v.observacion||'Sin observaciones'}</p>${fHtml?'<div class="section-title">Evidencias fotográficas</div>'+fHtml:''}${sHtml}</div>`;
+  const pdfHtml = v.link_reporte ? `<a href="${v.link_reporte}" target="_blank" rel="noopener" style="display:flex;align-items:center;justify-content:center;gap:8px;width:100%;padding:12px;background:#0a6e4a;color:#fff;border-radius:10px;font-size:14px;font-weight:600;text-decoration:none;margin-top:14px;"><i class="ti ti-file-type-pdf"></i> Ver reporte PDF <i class="ti ti-external-link" style="font-size:14px;"></i></a><p style="font-size:11px;color:#999;text-align:center;margin:6px 0 0;">Incluye fotos y firma del cliente · Guardado en Drive</p>` : (fHtml?'':'<p style="font-size:12px;color:#999;text-align:center;margin-top:14px;">El reporte se está guardando en Drive...</p>');
+  document.getElementById('te-visit-detail-content').innerHTML=`<div class="info-card"><div class="detail-row"><span class="detail-label">Servicio</span><span class="detail-value" style="font-weight:700;">${v.tipo}</span></div><div class="detail-row"><span class="detail-label">Fecha</span><span class="detail-value">${v.fecha}</span></div>${respHtml}${pagoHtml}<div class="section-title" style="margin-top:12px;">Diagnóstico</div><p style="font-size:14px;background:#f9f9f9;padding:8px;border-radius:6px;white-space:pre-wrap;">${v.detalle||'Sin detalles'}</p><div class="section-title" style="margin-top:12px;">Trabajo realizado</div><p style="font-size:14px;background:#f9f9f9;padding:8px;border-radius:6px;white-space:pre-wrap;">${v.observacion||'Sin observaciones'}</p>${fHtml?'<div class="section-title">Evidencias fotográficas</div>'+fHtml:''}${sHtml}${pdfHtml}<button onclick="teGoScreen('te-screen-home')" style="display:flex;align-items:center;justify-content:center;gap:8px;width:100%;padding:12px;background:#fff;color:#333;border:1px solid #ddd;border-radius:10px;font-size:14px;font-weight:600;margin-top:10px;cursor:pointer;"><i class="ti ti-home"></i> Inicio</button></div>`;
   teGoScreen('te-screen-visit-detail');
 }
 
@@ -925,11 +900,7 @@ function teDeleteVisit(){
   }
 }
 
-async function teGenerarPDF(){
-  const v=teDb.visits.find(x=>x.id===teCurrentVisitId);
-  const c=teDb.clients.find(x=>x.id===teCurrentClientId);
-  if(!v||!c){ showToast('No se encontró la visita'); return; }
-  showToast('Generando PDF...');
+function teBuildPDF(v, c){
   const {jsPDF}=window.jspdf;
   const pdf=new jsPDF({unit:'mm',format:'a4'});
   const W=210,M=15; let y=15;
@@ -953,8 +924,51 @@ async function teGenerarPDF(){
   pdf.setDrawColor(200,200,200);pdf.line(M,y,W-M,y);y+=6;
   pdf.setFontSize(8);pdf.setTextColor(150,150,150);pdf.setFont('helvetica','italic');
   pdf.text('Reporte generado por Thermoelectric - Servicio Técnico',M,y);
+  return pdf;
+}
+
+async function teUploadPDF(pdf, v, c){
+  try{
+    const pdfDataUri = pdf.output('datauristring');
+    const params = new URLSearchParams();
+    params.append('action','uploadPDF');
+    params.append('pdf', pdfDataUri);
+    params.append('cliente', c.nombre.replace(/[^a-zA-Z0-9]/g,'_'));
+    params.append('visitaId', v.id);
+    const txt = await fetch(TE_SHEET_URL,{method:'POST',headers:{'Content-Type':'application/x-www-form-urlencoded'},body:params.toString()}).then(r=>r.text());
+    let res; try{ res=JSON.parse(txt); }catch(e){ res={status:'error'}; }
+    if(res.status==='ok'){
+      v.link_reporte = res.link;
+      teSaveDb();
+      teSyncToSheets({type:'visit', id: v.id, link_reporte: res.link});
+      return true;
+    }
+    return false;
+  }catch(err){
+    return false;
+  }
+}
+
+async function teAutoGenerarYSubirPDF(visitId){
+  const v=teDb.visits.find(x=>x.id===visitId);
+  const c=v?teDb.clients.find(x=>x.id===v.clientId):null;
+  if(!v||!c) return;
+  showToast('Guardando reporte en Drive...');
+  const pdf=teBuildPDF(v,c);
+  const ok=await teUploadPDF(pdf, v, c);
+  showToast(ok?'✅ Reporte guardado en Drive':'⚠️ No se pudo subir el reporte a Drive');
+}
+
+async function teGenerarPDF(){
+  const v=teDb.visits.find(x=>x.id===teCurrentVisitId);
+  const c=teDb.clients.find(x=>x.id===teCurrentClientId);
+  if(!v||!c){ showToast('No se encontró la visita'); return; }
+  showToast('Generando PDF...');
+  const pdf=teBuildPDF(v,c);
   pdf.save(`Reporte_${c.nombre.replace(/\s+/g,'_')}_${v.fecha}.pdf`);
-  showToast('✅ PDF descargado');
+  showToast('✅ PDF descargado, subiendo a Drive...');
+  const ok=await teUploadPDF(pdf, v, c);
+  showToast(ok?'✅ PDF guardado en Drive':'⚠️ PDF descargado, pero no se pudo subir a Drive');
 }
 
 teUpdateStats(); teRenderClients();
@@ -1195,34 +1209,8 @@ function ljAddPhotos(input){
     const r=new FileReader();
     r.onload=e=>{
       const tempId='temp_'+Date.now()+Math.random();
-      ljVisitPhotos.push({id:tempId, preview:e.target.result, link:null, uploading:true});
+      ljVisitPhotos.push({id:tempId, preview:e.target.result, link:null, uploading:false});
       ljRenderPhotoGrid();
-      const cliente=ljDb.clients.find(x=>x.id===ljCurrentClientId);
-      const nombreCliente=cliente?cliente.nombre.replace(/[^a-zA-Z0-9]/g,'_'):'cliente';
-      const visitaId=ljCurrentVisitId||ljEditingVisitId||('v_'+Date.now());
-      const params=new URLSearchParams();
-      params.append('action','uploadPhoto');
-      params.append('foto', e.target.result);
-      params.append('cliente', nombreCliente);
-      params.append('visitaId', visitaId);
-      fetch(LJ_SHEET_URL,{method:'POST',headers:{'Content-Type':'application/x-www-form-urlencoded'},body:params.toString()})
-        .then(r=>r.text())
-        .then(txt=>{
-          let res;
-          try{ res=JSON.parse(txt); }catch(parseErr){ alert('ERROR AL SUBIR FOTO (respuesta no es JSON):\n\n'+txt.substring(0,500)); res={status:'error',msg:'respuesta no es JSON'}; }
-          const idx=ljVisitPhotos.findIndex(p=>p.id===tempId);
-          if(idx>-1){
-            if(res.status==='ok'){ ljVisitPhotos[idx]={id:tempId, preview:e.target.result, link:res.link, uploading:false}; }
-            else { ljVisitPhotos[idx].uploading=false; ljVisitPhotos[idx].error=true; if(res.msg) alert('ERROR AL SUBIR FOTO:\n\n'+res.msg); }
-          }
-          ljRenderPhotoGrid();
-        })
-        .catch((fetchErr)=>{
-          const idx=ljVisitPhotos.findIndex(p=>p.id===tempId);
-          if(idx>-1){ ljVisitPhotos[idx].uploading=false; ljVisitPhotos[idx].error=true; }
-          alert('ERROR DE RED AL SUBIR FOTO:\n\n'+fetchErr);
-          ljRenderPhotoGrid();
-        });
     };
     r.readAsDataURL(f);
   });
@@ -1282,17 +1270,18 @@ function ljSaveVisit(){
   document.getElementById('lj-post-save-btns').style.display='block';
   document.getElementById('lj-btn-cancelar').style.display='none';
   showToast('✅ Visita guardada');
+  ljAutoGenerarYSubirPDF(visitId);
 }
 
 function ljOpenVisit(id){
   ljCurrentVisitId=id; const v=ljDb.visits.find(x=>x.id===id); if(!v) return;
-  const fotosLinksArr = v.fotosLinks ? (Array.isArray(v.fotosLinks)?v.fotosLinks:String(v.fotosLinks).split(',').filter(Boolean)) : [];
   const fotosViejas = v.fotos||[];
-  const fHtml=(fotosViejas.length?fotosViejas:fotosLinksArr).map(p=>`<img src="${p}" style="width:100%;border-radius:10px;margin-bottom:8px;" loading="lazy">`).join('');
+  const fHtml=fotosViejas.length?fotosViejas.map(p=>`<img src="${p}" style="width:100%;border-radius:10px;margin-bottom:8px;" loading="lazy">`).join(''):'';
   const sHtml=v.firma?`<div class="section-title">Firma del cliente</div><img src="${v.firma}" class="sig-preview">`:'';
   const respHtml=v.responsabilidad?`<div class="detail-row"><span class="detail-label">Responsabilidad</span><span class="detail-value" style="color:#1a7a4a;">✅ Aceptada</span></div>`:'';
   const pagoHtml=(v.modoPago||v.costoServicio)?`<div class="detail-row"><span class="detail-label">Modo de pago</span><span class="detail-value">${v.modoPago||'—'}</span></div><div class="detail-row"><span class="detail-label">Costo</span><span class="detail-value" style="color:#1a7a4a;font-weight:700;">${v.costoServicio?'$'+parseFloat(v.costoServicio).toFixed(2):'—'}</span></div>`:'';
-  document.getElementById('lj-visit-detail-content').innerHTML=`<div class="info-card"><div class="detail-row"><span class="detail-label">Servicio</span><span class="detail-value" style="font-weight:700;">${v.tipo}</span></div><div class="detail-row"><span class="detail-label">Fecha</span><span class="detail-value">${v.fecha}</span></div>${respHtml}${pagoHtml}<div class="section-title" style="margin-top:12px;">Diagnóstico</div><p style="font-size:14px;background:#f9f9f9;padding:8px;border-radius:6px;white-space:pre-wrap;">${v.detalle||'Sin detalles'}</p><div class="section-title" style="margin-top:12px;">Trabajo realizado</div><p style="font-size:14px;background:#f9f9f9;padding:8px;border-radius:6px;white-space:pre-wrap;">${v.observacion||'Sin observaciones'}</p>${fHtml?'<div class="section-title">Evidencias fotográficas</div>'+fHtml:''}${sHtml}</div>`;
+  const pdfHtml = v.link_reporte ? `<a href="${v.link_reporte}" target="_blank" rel="noopener" style="display:flex;align-items:center;justify-content:center;gap:8px;width:100%;padding:12px;background:#1a4a9a;color:#fff;border-radius:10px;font-size:14px;font-weight:600;text-decoration:none;margin-top:14px;"><i class="ti ti-file-type-pdf"></i> Ver reporte PDF <i class="ti ti-external-link" style="font-size:14px;"></i></a><p style="font-size:11px;color:#999;text-align:center;margin:6px 0 0;">Incluye fotos y firma del cliente · Guardado en Drive</p>` : (fHtml?'':'<p style="font-size:12px;color:#999;text-align:center;margin-top:14px;">El reporte se está guardando en Drive...</p>');
+  document.getElementById('lj-visit-detail-content').innerHTML=`<div class="info-card"><div class="detail-row"><span class="detail-label">Servicio</span><span class="detail-value" style="font-weight:700;">${v.tipo}</span></div><div class="detail-row"><span class="detail-label">Fecha</span><span class="detail-value">${v.fecha}</span></div>${respHtml}${pagoHtml}<div class="section-title" style="margin-top:12px;">Diagnóstico</div><p style="font-size:14px;background:#f9f9f9;padding:8px;border-radius:6px;white-space:pre-wrap;">${v.detalle||'Sin detalles'}</p><div class="section-title" style="margin-top:12px;">Trabajo realizado</div><p style="font-size:14px;background:#f9f9f9;padding:8px;border-radius:6px;white-space:pre-wrap;">${v.observacion||'Sin observaciones'}</p>${fHtml?'<div class="section-title">Evidencias fotográficas</div>'+fHtml:''}${sHtml}${pdfHtml}<button onclick="ljGoScreen('lj-screen-home')" style="display:flex;align-items:center;justify-content:center;gap:8px;width:100%;padding:12px;background:#fff;color:#333;border:1px solid #ddd;border-radius:10px;font-size:14px;font-weight:600;margin-top:10px;cursor:pointer;"><i class="ti ti-home"></i> Inicio</button></div>`;
   ljGoScreen('lj-screen-visit-detail');
 }
 
@@ -1303,11 +1292,7 @@ function ljDeleteVisit(){
   }
 }
 
-async function ljGenerarPDF(){
-  const v=ljDb.visits.find(x=>x.id===ljCurrentVisitId);
-  const c=ljDb.clients.find(x=>x.id===ljCurrentClientId);
-  if(!v||!c){ showToast('No se encontró la visita'); return; }
-  showToast('Generando PDF...');
+function ljBuildPDF(v, c){
   const {jsPDF}=window.jspdf;
   const pdf=new jsPDF({unit:'mm',format:'a4'});
   const W=210,M=15; let y=15;
@@ -1331,8 +1316,51 @@ async function ljGenerarPDF(){
   pdf.setDrawColor(200,200,200);pdf.line(M,y,W-M,y);y+=6;
   pdf.setFontSize(8);pdf.setTextColor(150,150,150);pdf.setFont('helvetica','italic');
   pdf.text('Reporte generado por Llama a Jhon - Servicio Técnico',M,y);
+  return pdf;
+}
+
+async function ljUploadPDF(pdf, v, c){
+  try{
+    const pdfDataUri = pdf.output('datauristring');
+    const params = new URLSearchParams();
+    params.append('action','uploadPDF');
+    params.append('pdf', pdfDataUri);
+    params.append('cliente', c.nombre.replace(/[^a-zA-Z0-9]/g,'_'));
+    params.append('visitaId', v.id);
+    const txt = await fetch(LJ_SHEET_URL,{method:'POST',headers:{'Content-Type':'application/x-www-form-urlencoded'},body:params.toString()}).then(r=>r.text());
+    let res; try{ res=JSON.parse(txt); }catch(e){ res={status:'error'}; }
+    if(res.status==='ok'){
+      v.link_reporte = res.link;
+      ljSaveDb();
+      ljSyncToSheets({type:'visit', id: v.id, link_reporte: res.link});
+      return true;
+    }
+    return false;
+  }catch(err){
+    return false;
+  }
+}
+
+async function ljAutoGenerarYSubirPDF(visitId){
+  const v=ljDb.visits.find(x=>x.id===visitId);
+  const c=v?ljDb.clients.find(x=>x.id===v.clientId):null;
+  if(!v||!c) return;
+  showToast('Guardando reporte en Drive...');
+  const pdf=ljBuildPDF(v,c);
+  const ok=await ljUploadPDF(pdf, v, c);
+  showToast(ok?'✅ Reporte guardado en Drive':'⚠️ No se pudo subir el reporte a Drive');
+}
+
+async function ljGenerarPDF(){
+  const v=ljDb.visits.find(x=>x.id===ljCurrentVisitId);
+  const c=ljDb.clients.find(x=>x.id===ljCurrentClientId);
+  if(!v||!c){ showToast('No se encontró la visita'); return; }
+  showToast('Generando PDF...');
+  const pdf=ljBuildPDF(v,c);
   pdf.save(`Reporte_${c.nombre.replace(/\s+/g,'_')}_${v.fecha}.pdf`);
-  showToast('✅ PDF descargado');
+  showToast('✅ PDF descargado, subiendo a Drive...');
+  const ok=await ljUploadPDF(pdf, v, c);
+  showToast(ok?'✅ PDF guardado en Drive':'⚠️ PDF descargado, pero no se pudo subir a Drive');
 }
 
 ljUpdateStats(); ljRenderClients();
