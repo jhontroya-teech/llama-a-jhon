@@ -336,9 +336,12 @@ canvas.sigCanvas{display:block;touch-action:none;cursor:crosshair;width:100%;hei
       <button class="btn-switch-user" onclick="switchUser()"><i class="ti ti-user-circle"></i> Cambiar usuario</button>
     </div>
     <div id="te-visit-detail-content"></div>
-    <button class="btn-secondary" style="margin-top:1rem" onclick="teEditVisit()"><i class="ti ti-edit"></i> Editar</button>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:1rem;">
+      <button class="btn-secondary" style="margin-top:0" onclick="teEditVisit()"><i class="ti ti-edit"></i> Editar</button>
+      <button class="btn-pdf-thermo" style="margin-top:0" onclick="teGenerarPDF()"><i class="ti ti-file-type-pdf"></i> PDF</button>
+    </div>
+    <button class="btn-home-shared" onclick="teGoScreen('te-screen-home')"><i class="ti ti-home"></i> Inicio</button>
     <button class="btn-danger" onclick="teDeleteVisit()" style="margin-top:10px;"><i class="ti ti-trash"></i> Eliminar visita</button>
-    <button class="btn-home-shared" onclick="teGoScreen('te-screen-home')" style="margin-top:10px;"><i class="ti ti-home"></i> Inicio</button>
   </div>
 
 </div><!-- /app-thermo -->
@@ -479,9 +482,12 @@ canvas.sigCanvas{display:block;touch-action:none;cursor:crosshair;width:100%;hei
       <button class="btn-switch-user" onclick="switchUser()"><i class="ti ti-user-circle"></i> Cambiar usuario</button>
     </div>
     <div id="lj-visit-detail-content"></div>
-    <button class="btn-secondary" style="margin-top:1rem" onclick="ljEditVisit()"><i class="ti ti-edit"></i> Editar</button>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:1rem;">
+      <button class="btn-secondary" style="margin-top:0" onclick="ljEditVisit()"><i class="ti ti-edit"></i> Editar</button>
+      <button class="btn-pdf-jhon" style="margin-top:0" onclick="ljGenerarPDF()"><i class="ti ti-file-type-pdf"></i> PDF</button>
+    </div>
+    <button class="btn-home-shared" onclick="ljGoScreen('lj-screen-home')"><i class="ti ti-home"></i> Inicio</button>
     <button class="btn-danger" onclick="ljDeleteVisit()" style="margin-top:10px;"><i class="ti ti-trash"></i> Eliminar visita</button>
-    <button class="btn-home-shared" onclick="ljGoScreen('lj-screen-home')" style="margin-top:10px;"><i class="ti ti-home"></i> Inicio</button>
   </div>
 
 </div><!-- /app-jhon -->
@@ -883,7 +889,7 @@ function teOpenVisit(id){
   const respHtml=v.responsabilidad?`<div class="detail-row"><span class="detail-label">Responsabilidad</span><span class="detail-value" style="color:#0a6e4a;">✅ Aceptada</span></div>`:'';
   const pagoHtml=(v.modoPago||v.costoServicio)?`<div class="detail-row"><span class="detail-label">Modo de pago</span><span class="detail-value">${v.modoPago||'—'}</span></div><div class="detail-row"><span class="detail-label">Costo</span><span class="detail-value" style="color:#0a6e4a;font-weight:700;">${v.costoServicio?'$'+parseFloat(v.costoServicio).toFixed(2):'—'}</span></div>`:'';
   const pdfHtml = v.link_reporte ? `<a href="${v.link_reporte}" target="_blank" rel="noopener" style="display:flex;align-items:center;justify-content:center;gap:8px;width:100%;padding:12px;background:#0a6e4a;color:#fff;border-radius:10px;font-size:14px;font-weight:600;text-decoration:none;margin-top:14px;"><i class="ti ti-file-type-pdf"></i> Ver reporte PDF <i class="ti ti-external-link" style="font-size:14px;"></i></a><p style="font-size:11px;color:#999;text-align:center;margin:6px 0 0;">Incluye fotos y firma del cliente · Guardado en Drive</p>` : (fHtml?'':'<p style="font-size:12px;color:#999;text-align:center;margin-top:14px;">El reporte se está guardando en Drive...</p>');
-  document.getElementById('te-visit-detail-content').innerHTML=`<div class="info-card"><div class="detail-row"><span class="detail-label">Servicio</span><span class="detail-value" style="font-weight:700;">${v.tipo}</span></div><div class="detail-row"><span class="detail-label">Fecha</span><span class="detail-value">${v.fecha}</span></div>${respHtml}${pagoHtml}<div class="section-title" style="margin-top:12px;">Diagnóstico</div><p style="font-size:14px;background:#f9f9f9;padding:8px;border-radius:6px;white-space:pre-wrap;">${v.detalle||'Sin detalles'}</p><div class="section-title" style="margin-top:12px;">Trabajo realizado</div><p style="font-size:14px;background:#f9f9f9;padding:8px;border-radius:6px;white-space:pre-wrap;">${v.observacion||'Sin observaciones'}</p>${fHtml?'<div class="section-title">Evidencias fotográficas</div>'+fHtml:''}${sHtml}${pdfHtml}</div>`;
+  document.getElementById('te-visit-detail-content').innerHTML=`<div class="info-card"><div class="detail-row"><span class="detail-label">Servicio</span><span class="detail-value" style="font-weight:700;">${v.tipo}</span></div><div class="detail-row"><span class="detail-label">Fecha</span><span class="detail-value">${v.fecha}</span></div>${respHtml}${pagoHtml}<div class="section-title" style="margin-top:12px;">Diagnóstico</div><p style="font-size:14px;background:#f9f9f9;padding:8px;border-radius:6px;white-space:pre-wrap;">${v.detalle||'Sin detalles'}</p><div class="section-title" style="margin-top:12px;">Trabajo realizado</div><p style="font-size:14px;background:#f9f9f9;padding:8px;border-radius:6px;white-space:pre-wrap;">${v.observacion||'Sin observaciones'}</p>${fHtml?'<div class="section-title">Evidencias fotográficas</div>'+fHtml:''}${sHtml}${pdfHtml}<button onclick="teGoScreen('te-screen-home')" style="display:flex;align-items:center;justify-content:center;gap:8px;width:100%;padding:12px;background:#fff;color:#333;border:1px solid #ddd;border-radius:10px;font-size:14px;font-weight:600;margin-top:10px;cursor:pointer;"><i class="ti ti-home"></i> Inicio</button></div>`;
   teGoScreen('te-screen-visit-detail');
 }
 
@@ -1275,7 +1281,7 @@ function ljOpenVisit(id){
   const respHtml=v.responsabilidad?`<div class="detail-row"><span class="detail-label">Responsabilidad</span><span class="detail-value" style="color:#1a7a4a;">✅ Aceptada</span></div>`:'';
   const pagoHtml=(v.modoPago||v.costoServicio)?`<div class="detail-row"><span class="detail-label">Modo de pago</span><span class="detail-value">${v.modoPago||'—'}</span></div><div class="detail-row"><span class="detail-label">Costo</span><span class="detail-value" style="color:#1a7a4a;font-weight:700;">${v.costoServicio?'$'+parseFloat(v.costoServicio).toFixed(2):'—'}</span></div>`:'';
   const pdfHtml = v.link_reporte ? `<a href="${v.link_reporte}" target="_blank" rel="noopener" style="display:flex;align-items:center;justify-content:center;gap:8px;width:100%;padding:12px;background:#1a4a9a;color:#fff;border-radius:10px;font-size:14px;font-weight:600;text-decoration:none;margin-top:14px;"><i class="ti ti-file-type-pdf"></i> Ver reporte PDF <i class="ti ti-external-link" style="font-size:14px;"></i></a><p style="font-size:11px;color:#999;text-align:center;margin:6px 0 0;">Incluye fotos y firma del cliente · Guardado en Drive</p>` : (fHtml?'':'<p style="font-size:12px;color:#999;text-align:center;margin-top:14px;">El reporte se está guardando en Drive...</p>');
-  document.getElementById('lj-visit-detail-content').innerHTML=`<div class="info-card"><div class="detail-row"><span class="detail-label">Servicio</span><span class="detail-value" style="font-weight:700;">${v.tipo}</span></div><div class="detail-row"><span class="detail-label">Fecha</span><span class="detail-value">${v.fecha}</span></div>${respHtml}${pagoHtml}<div class="section-title" style="margin-top:12px;">Diagnóstico</div><p style="font-size:14px;background:#f9f9f9;padding:8px;border-radius:6px;white-space:pre-wrap;">${v.detalle||'Sin detalles'}</p><div class="section-title" style="margin-top:12px;">Trabajo realizado</div><p style="font-size:14px;background:#f9f9f9;padding:8px;border-radius:6px;white-space:pre-wrap;">${v.observacion||'Sin observaciones'}</p>${fHtml?'<div class="section-title">Evidencias fotográficas</div>'+fHtml:''}${sHtml}${pdfHtml}</div>`;
+  document.getElementById('lj-visit-detail-content').innerHTML=`<div class="info-card"><div class="detail-row"><span class="detail-label">Servicio</span><span class="detail-value" style="font-weight:700;">${v.tipo}</span></div><div class="detail-row"><span class="detail-label">Fecha</span><span class="detail-value">${v.fecha}</span></div>${respHtml}${pagoHtml}<div class="section-title" style="margin-top:12px;">Diagnóstico</div><p style="font-size:14px;background:#f9f9f9;padding:8px;border-radius:6px;white-space:pre-wrap;">${v.detalle||'Sin detalles'}</p><div class="section-title" style="margin-top:12px;">Trabajo realizado</div><p style="font-size:14px;background:#f9f9f9;padding:8px;border-radius:6px;white-space:pre-wrap;">${v.observacion||'Sin observaciones'}</p>${fHtml?'<div class="section-title">Evidencias fotográficas</div>'+fHtml:''}${sHtml}${pdfHtml}<button onclick="ljGoScreen('lj-screen-home')" style="display:flex;align-items:center;justify-content:center;gap:8px;width:100%;padding:12px;background:#fff;color:#333;border:1px solid #ddd;border-radius:10px;font-size:14px;font-weight:600;margin-top:10px;cursor:pointer;"><i class="ti ti-home"></i> Inicio</button></div>`;
   ljGoScreen('lj-screen-visit-detail');
 }
 
