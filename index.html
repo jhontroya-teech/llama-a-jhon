@@ -790,7 +790,9 @@ function teEditVisit(){
   btnG.disabled=false; btnG.textContent='Guardar visita';
   document.getElementById('te-post-save-btns').style.display='none';
   document.getElementById('te-btn-cancelar').style.display='';
-  teVisitPhotos=(v.fotosLinks?(Array.isArray(v.fotosLinks)?v.fotosLinks:String(v.fotosLinks).split(',').filter(Boolean)):[]).map(link=>({id:'existing_'+Math.random(),preview:link,link:link,uploading:false}));
+const teFotosLinksExist=(v.fotosLinks?(Array.isArray(v.fotosLinks)?v.fotosLinks:String(v.fotosLinks).split(',').filter(Boolean)):[]);
+const teFotosBase64Exist=v.fotos||[];
+teVisitPhotos=teFotosLinksExist.map((link,i)=>({id:'existing_'+Math.random(),preview:teFotosBase64Exist[i]||link,link:link,uploading:false}));
   teRenderPhotoGrid(); teGoScreen('te-screen-new-visit');
 }
 
@@ -1083,7 +1085,9 @@ function ljUpdateStats(){
 
 function ljRenderClients(){
   const q=document.getElementById('lj-search-input').value.toLowerCase();
-  const list=document.getElementById('lj-client-list');
+  const ljFotosLinksExist=(v.fotosLinks?(Array.isArray(v.fotosLinks)?v.fotosLinks:String(v.fotosLinks).split(',').filter(Boolean)):[]);
+const ljFotosBase64Exist=v.fotos||[];
+ljVisitPhotos=ljFotosLinksExist.map((link,i)=>({id:'existing_'+Math.random(),preview:ljFotosBase64Exist[i]||link,link:link,uploading:false}));
   const filtered=ljDb.clients.filter(c=>c.nombre.toLowerCase().includes(q)||(c.direccion||'').toLowerCase().includes(q));
   if(!filtered.length){ list.innerHTML=`<div class="empty-state"><i class="ti ti-users"></i><p>Sin resultados</p></div>`; return; }
   list.innerHTML=filtered.map(c=>{
