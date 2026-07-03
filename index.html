@@ -975,13 +975,25 @@ async function teUploadPDF(pdf, v, c){
 }
 
 async function teAutoGenerarYSubirPDF(visitId){
-  const v=teDb.visits.find(x=>String(x.id)===String(visitId));
-  const c=v?teDb.clients.find(x=>String(x.id)===String(v.clientId)):null;
-  if(!v||!c) return;
-  showToast('Guardando reporte en Drive...');
-  const pdf=teBuildPDF(v,c);
-  const ok=await teUploadPDF(pdf, v, c);
-  showToast(ok?'✅ Reporte guardado en Drive':'⚠️ No se pudo subir el reporte a Drive');
+  try{
+    const v=teDb.visits.find(x=>String(x.id)===String(visitId));
+    const c=v?teDb.clients.find(x=>String(x.id)===String(v.clientId)):null;
+    if(!v||!c){
+      console.error('TE PDF: no se encontró la visita o el cliente', {visitId, encontroVisita:!!v, encontroCliente:!!c});
+      showToast('⚠️ No se pudo generar el reporte (visita/cliente no encontrado)');
+      return;
+    }
+    showToast('Guardando reporte en Drive...');
+    const pdf=teBuildPDF(v,c);
+    const ok=await teUploadPDF(pdf, v, c);
+    showToast(ok?'✅ Reporte guardado en Drive':'⚠️ No se pudo subir el reporte a Drive');
+  }catch(err){
+    // Antes, si algo fallaba aquí (ej: jsPDF, addImage con una foto corrupta),
+    // el error se perdía como "unhandled promise rejection" y no se veía NINGÚN
+    // mensaje en pantalla. Ahora se atrapa y se avisa siempre.
+    console.error('TE PDF error:', err);
+    showToast('⚠️ Error generando el reporte: '+(err && err.message ? err.message : 'ver consola'));
+  }
 }
 
 async function teGenerarPDF(){
@@ -1385,13 +1397,22 @@ async function ljUploadPDF(pdf, v, c){
 }
 
 async function ljAutoGenerarYSubirPDF(visitId){
-  const v=ljDb.visits.find(x=>String(x.id)===String(visitId));
-  const c=v?ljDb.clients.find(x=>String(x.id)===String(v.clientId)):null;
-  if(!v||!c) return;
-  showToast('Guardando reporte en Drive...');
-  const pdf=ljBuildPDF(v,c);
-  const ok=await ljUploadPDF(pdf, v, c);
-  showToast(ok?'✅ Reporte guardado en Drive':'⚠️ No se pudo subir el reporte a Drive');
+  try{
+    const v=ljDb.visits.find(x=>String(x.id)===String(visitId));
+    const c=v?ljDb.clients.find(x=>String(x.id)===String(v.clientId)):null;
+    if(!v||!c){
+      console.error('LJ PDF: no se encontró la visita o el cliente', {visitId, encontroVisita:!!v, encontroCliente:!!c});
+      showToast('⚠️ No se pudo generar el reporte (visita/cliente no encontrado)');
+      return;
+    }
+    showToast('Guardando reporte en Drive...');
+    const pdf=ljBuildPDF(v,c);
+    const ok=await ljUploadPDF(pdf, v, c);
+    showToast(ok?'✅ Reporte guardado en Drive':'⚠️ No se pudo subir el reporte a Drive');
+  }catch(err){
+    console.error('LJ PDF error:', err);
+    showToast('⚠️ Error generando el reporte: '+(err && err.message ? err.message : 'ver consola'));
+  }
 }
 
 async function ljGenerarPDF(){
