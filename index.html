@@ -713,7 +713,7 @@ function teRenderClients(){
   const filtered=teDb.clients.filter(c=>c.nombre.toLowerCase().includes(q)||(c.direccion||'').toLowerCase().includes(q));
   if(!filtered.length){ list.innerHTML=`<div class="empty-state"><i class="ti ti-users"></i><p>Sin resultados</p></div>`; return; }
   list.innerHTML=filtered.map(c=>{
-    const visits=teDb.visits.filter(v=>v.clientId===c.id);
+    const visits=teDb.visits.filter(v=>String(v.clientId)===String(c.id));
     return `<div class="client-card" onclick="teOpenClient('${c.id}')">
       <div class="client-name">${c.nombre}</div>
       <div class="client-meta"><i class="ti ti-map-pin"></i> ${c.direccion||'Sin dirección'}</div>
@@ -726,7 +726,7 @@ function teRenderClients(){
 function teOpenClient(id){ teCurrentClientId=id; teGoScreen('te-screen-client-detail'); }
 
 function teRenderClientDetail(){
-  const c=teDb.clients.find(x=>x.id===teCurrentClientId); if(!c) return;
+  const c=teDb.clients.find(x=>String(x.id)===String(teCurrentClientId)); if(!c) return;
   document.getElementById('te-client-detail-name').textContent=c.nombre;
   document.getElementById('te-client-detail-info').innerHTML=`
     <div class="detail-row"><span class="detail-label">Teléfono</span><span class="detail-value">${c.telefono||'—'}</span></div>
@@ -734,7 +734,7 @@ function teRenderClientDetail(){
     <div class="detail-row"><span class="detail-label">Tipo</span><span class="detail-value">${c.tipo||'—'}</span></div>
     <div class="detail-row"><span class="detail-label">Marca</span><span class="detail-value">${c.marca||'—'}</span></div>
     <div class="detail-row"><span class="detail-label">BTU</span><span class="detail-value">${c.btu||'—'}</span></div>`;
-  const visits=teDb.visits.filter(v=>v.clientId===teCurrentClientId);
+  const visits=teDb.visits.filter(v=>String(v.clientId)===String(teCurrentClientId));
   const vlist=document.getElementById('te-visit-list');
   if(!visits.length){ vlist.innerHTML=`<div class="empty-state"><p>Sin visitas registradas</p></div>`; return; }
   vlist.innerHTML=visits.map(v=>`<div class="visit-card" onclick="teOpenVisit('${v.id}')">
@@ -752,7 +752,7 @@ function teGoNewClient(){
 }
 
 function teEditClient(){
-  const c=teDb.clients.find(x=>x.id===teCurrentClientId); if(!c) return;
+  const c=teDb.clients.find(x=>String(x.id)===String(teCurrentClientId)); if(!c) return;
   teEditingClientId=c.id;
   document.getElementById('te-new-client-title').textContent="Editar cliente";
   document.getElementById('te-c-nombre').value=c.nombre;
@@ -768,7 +768,7 @@ function teSaveClient(){
   const nombre=document.getElementById('te-c-nombre').value.trim(); if(!nombre) return;
   const data={nombre,telefono:document.getElementById('te-c-telefono').value.trim(),direccion:document.getElementById('te-c-direccion').value.trim(),tipo:document.getElementById('te-c-tipo').value,marca:document.getElementById('te-c-marca').value.trim(),btu:document.getElementById('te-c-btu').value.trim()};
   if(teEditingClientId){
-    const idx=teDb.clients.findIndex(x=>x.id===teEditingClientId);
+    const idx=teDb.clients.findIndex(x=>String(x.id)===String(teEditingClientId));
     teDb.clients[idx]={...teDb.clients[idx],...data};
     showToast("Cliente actualizado");
   } else {
@@ -797,7 +797,7 @@ function teGoNewVisit(){
 }
 
 function teEditVisit(){
-  const v=teDb.visits.find(x=>x.id===teCurrentVisitId); if(!v) return;
+  const v=teDb.visits.find(x=>String(x.id)===String(teCurrentVisitId)); if(!v) return;
   teEditingVisitId=v.id;
   document.getElementById('te-new-visit-title').textContent="Editar visita";
   document.getElementById('te-v-fecha').value=v.fecha;
@@ -887,7 +887,7 @@ function teSaveVisit(){
   let visitId;
   if(teEditingVisitId){
     visitId = teEditingVisitId;
-    const idx = teDb.visits.findIndex(x=>x.id===teEditingVisitId);
+    const idx = teDb.visits.findIndex(x=>String(x.id)===String(teEditingVisitId));
     teDb.visits[idx] = {...teDb.visits[idx], ...dataLocal};
   } else {
     visitId = 'v_' + Date.now();
@@ -907,7 +907,7 @@ function teSaveVisit(){
 }
 
 function teOpenVisit(id){
-  teCurrentVisitId=id; const v=teDb.visits.find(x=>x.id===id); if(!v) return;
+  teCurrentVisitId=id; const v=teDb.visits.find(x=>String(x.id)===String(id)); if(!v) return;
   const fotosViejas = v.fotos||[];
   const fHtml=fotosViejas.length?fotosViejas.map(p=>`<img src="${p}" style="width:100%;border-radius:10px;margin-bottom:8px;" loading="lazy">`).join(''):'';
   const sHtml=v.firma?`<div class="section-title">Firma del cliente</div><img src="${v.firma}" class="sig-preview">`:'';
@@ -975,8 +975,8 @@ async function teUploadPDF(pdf, v, c){
 }
 
 async function teAutoGenerarYSubirPDF(visitId){
-  const v=teDb.visits.find(x=>x.id===visitId);
-  const c=v?teDb.clients.find(x=>x.id===v.clientId):null;
+  const v=teDb.visits.find(x=>String(x.id)===String(visitId));
+  const c=v?teDb.clients.find(x=>String(x.id)===String(v.clientId)):null;
   if(!v||!c) return;
   showToast('Guardando reporte en Drive...');
   const pdf=teBuildPDF(v,c);
@@ -985,8 +985,8 @@ async function teAutoGenerarYSubirPDF(visitId){
 }
 
 async function teGenerarPDF(){
-  const v=teDb.visits.find(x=>x.id===teCurrentVisitId);
-  const c=teDb.clients.find(x=>x.id===teCurrentClientId);
+  const v=teDb.visits.find(x=>String(x.id)===String(teCurrentVisitId));
+  const c=teDb.clients.find(x=>String(x.id)===String(teCurrentClientId));
   if(!v||!c){ showToast('No se encontró la visita'); return; }
   showToast('Generando PDF...');
   const pdf=teBuildPDF(v,c);
@@ -1126,7 +1126,7 @@ function ljRenderClients(){
   const filtered=ljDb.clients.filter(c=>c.nombre.toLowerCase().includes(q)||(c.direccion||'').toLowerCase().includes(q));
   if(!filtered.length){ list.innerHTML=`<div class="empty-state"><i class="ti ti-users"></i><p>Sin resultados</p></div>`; return; }
   list.innerHTML=filtered.map(c=>{
-    const visits=ljDb.visits.filter(v=>v.clientId===c.id);
+    const visits=ljDb.visits.filter(v=>String(v.clientId)===String(c.id));
     return `<div class="client-card" onclick="ljOpenClient('${c.id}')">
       <div class="client-name">${c.nombre}</div>
       <div class="client-meta"><i class="ti ti-map-pin"></i> ${c.direccion||'Sin dirección'}</div>
@@ -1139,7 +1139,7 @@ function ljRenderClients(){
 function ljOpenClient(id){ ljCurrentClientId=id; ljGoScreen('lj-screen-client-detail'); }
 
 function ljRenderClientDetail(){
-  const c=ljDb.clients.find(x=>x.id===ljCurrentClientId); if(!c) return;
+  const c=ljDb.clients.find(x=>String(x.id)===String(ljCurrentClientId)); if(!c) return;
   document.getElementById('lj-client-detail-name').textContent=c.nombre;
   document.getElementById('lj-client-detail-info').innerHTML=`
     <div class="detail-row"><span class="detail-label">Teléfono</span><span class="detail-value">${c.telefono||'—'}</span></div>
@@ -1147,7 +1147,7 @@ function ljRenderClientDetail(){
     <div class="detail-row"><span class="detail-label">Tipo</span><span class="detail-value">${c.tipo||'—'}</span></div>
     <div class="detail-row"><span class="detail-label">Marca</span><span class="detail-value">${c.marca||'—'}</span></div>
     <div class="detail-row"><span class="detail-label">BTU</span><span class="detail-value">${c.btu||'—'}</span></div>`;
-  const visits=ljDb.visits.filter(v=>v.clientId===ljCurrentClientId);
+  const visits=ljDb.visits.filter(v=>String(v.clientId)===String(ljCurrentClientId));
   const vlist=document.getElementById('lj-visit-list');
   if(!visits.length){ vlist.innerHTML=`<div class="empty-state"><p>Sin visitas registradas</p></div>`; return; }
   vlist.innerHTML=visits.map(v=>`<div class="visit-card" onclick="ljOpenVisit('${v.id}')">
@@ -1165,7 +1165,7 @@ function ljGoNewClient(){
 }
 
 function ljEditClient(){
-  const c=ljDb.clients.find(x=>x.id===ljCurrentClientId); if(!c) return;
+  const c=ljDb.clients.find(x=>String(x.id)===String(ljCurrentClientId)); if(!c) return;
   ljEditingClientId=c.id;
   document.getElementById('lj-new-client-title').textContent="Editar cliente";
   document.getElementById('lj-c-nombre').value=c.nombre;
@@ -1181,7 +1181,7 @@ function ljSaveClient(){
   const nombre=document.getElementById('lj-c-nombre').value.trim(); if(!nombre) return;
   const data={nombre,telefono:document.getElementById('lj-c-telefono').value.trim(),direccion:document.getElementById('lj-c-direccion').value.trim(),tipo:document.getElementById('lj-c-tipo').value,marca:document.getElementById('lj-c-marca').value.trim(),btu:document.getElementById('lj-c-btu').value.trim()};
   if(ljEditingClientId){
-    const idx=ljDb.clients.findIndex(x=>x.id===ljEditingClientId);
+    const idx=ljDb.clients.findIndex(x=>String(x.id)===String(ljEditingClientId));
     ljDb.clients[idx]={...ljDb.clients[idx],...data};
     showToast("Cliente actualizado");
   } else {
@@ -1210,7 +1210,7 @@ function ljGoNewVisit(){
 }
 
 function ljEditVisit(){
-  const v=ljDb.visits.find(x=>x.id===ljCurrentVisitId); if(!v) return;
+  const v=ljDb.visits.find(x=>String(x.id)===String(ljCurrentVisitId)); if(!v) return;
   ljEditingVisitId=v.id;
   document.getElementById('lj-new-visit-title').textContent="Editar visita";
   document.getElementById('lj-v-fecha').value=v.fecha;
@@ -1297,7 +1297,7 @@ function ljSaveVisit(){
   let visitId;
   if(ljEditingVisitId){
     visitId = ljEditingVisitId;
-    const idx = ljDb.visits.findIndex(x=>x.id===ljEditingVisitId);
+    const idx = ljDb.visits.findIndex(x=>String(x.id)===String(ljEditingVisitId));
     ljDb.visits[idx] = {...ljDb.visits[idx], ...dataLocal};
   } else {
     visitId = 'v_' + Date.now();
@@ -1317,7 +1317,7 @@ function ljSaveVisit(){
 }
 
 function ljOpenVisit(id){
-  ljCurrentVisitId=id; const v=ljDb.visits.find(x=>x.id===id); if(!v) return;
+  ljCurrentVisitId=id; const v=ljDb.visits.find(x=>String(x.id)===String(id)); if(!v) return;
   const fotosViejas = v.fotos||[];
   const fHtml=fotosViejas.length?fotosViejas.map(p=>`<img src="${p}" style="width:100%;border-radius:10px;margin-bottom:8px;" loading="lazy">`).join(''):'';
   const sHtml=v.firma?`<div class="section-title">Firma del cliente</div><img src="${v.firma}" class="sig-preview">`:'';
@@ -1385,8 +1385,8 @@ async function ljUploadPDF(pdf, v, c){
 }
 
 async function ljAutoGenerarYSubirPDF(visitId){
-  const v=ljDb.visits.find(x=>x.id===visitId);
-  const c=v?ljDb.clients.find(x=>x.id===v.clientId):null;
+  const v=ljDb.visits.find(x=>String(x.id)===String(visitId));
+  const c=v?ljDb.clients.find(x=>String(x.id)===String(v.clientId)):null;
   if(!v||!c) return;
   showToast('Guardando reporte en Drive...');
   const pdf=ljBuildPDF(v,c);
@@ -1395,8 +1395,8 @@ async function ljAutoGenerarYSubirPDF(visitId){
 }
 
 async function ljGenerarPDF(){
-  const v=ljDb.visits.find(x=>x.id===ljCurrentVisitId);
-  const c=ljDb.clients.find(x=>x.id===ljCurrentClientId);
+  const v=ljDb.visits.find(x=>String(x.id)===String(ljCurrentVisitId));
+  const c=ljDb.clients.find(x=>String(x.id)===String(ljCurrentClientId));
   if(!v||!c){ showToast('No se encontró la visita'); return; }
   showToast('Generando PDF...');
   const pdf=ljBuildPDF(v,c);
@@ -1486,7 +1486,7 @@ function teRenderDayPanel(d){
       <span class="cal-day-total" style="color:${color}">$${total.toFixed(2)}</span>
     </div>`;
   visits.forEach(v=>{
-    const c=teDb.clients.find(x=>x.id===v.clientId);
+    const c=teDb.clients.find(x=>String(x.id)===String(v.clientId));
     html+=`<div class="cal-visit-item" onclick="teOpenVisitFromCal('${v.id}','${v.clientId}')">
       <div class="cal-visit-name">${c?c.nombre:'Cliente'}</div>
       <div class="cal-visit-meta">
@@ -1582,7 +1582,7 @@ function ljRenderDayPanel(d){
       <span class="cal-day-total" style="color:${color}">$${total.toFixed(2)}</span>
     </div>`;
   visits.forEach(v=>{
-    const c=ljDb.clients.find(x=>x.id===v.clientId);
+    const c=ljDb.clients.find(x=>String(x.id)===String(v.clientId));
     html+=`<div class="cal-visit-item" onclick="ljOpenVisitFromCal('${v.id}','${v.clientId}')">
       <div class="cal-visit-name">${c?c.nombre:'Cliente'}</div>
       <div class="cal-visit-meta">
