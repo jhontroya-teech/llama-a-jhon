@@ -602,9 +602,30 @@ function teFetchData(){
     .then(r=>r.json())
     .then(data=>{
       if(data && data.clients){
-        const serverVisits = data.visits  || [];
-        const localVisits  = teDb.visits  || [];
-        const mergedVisits = serverVisits.length > 0 ? serverVisits : localVisits;
+        // Merge por id (NO reemplazo total): antes, si el servidor traía visitas,
+        // se pisaba toda teDb.visits con lo del servidor. Eso borraba:
+        //  1) visitas guardadas hace poco en este teléfono que todavía no llegaban
+        //     al Sheet (condición de carrera al sincronizar justo después de guardar), y
+        //  2) las fotos y la firma en base64, que SOLO existen en localStorage
+        //     (el Sheet nunca las guarda, solo fotos_count y link_reporte).
+        const serverVisits = data.visits || [];
+        const localVisits  = teDb.visits || [];
+        const localById = {};
+        localVisits.forEach(v=>{ localById[v.id] = v; });
+
+        const mergedById = {};
+        serverVisits.forEach(sv=>{
+          const lv = localById[sv.id];
+          // Se toman los datos del servidor (fuente de verdad para campos compartidos)
+          // pero se preservan fotos/firma/fotosLinks locales si el servidor no los trae.
+          mergedById[sv.id] = lv ? { ...sv, fotos: (lv.fotos && lv.fotos.length ? lv.fotos : sv.fotos), firma: lv.firma || sv.firma, fotosLinks: (lv.fotosLinks && lv.fotosLinks.length ? lv.fotosLinks : sv.fotosLinks) } : sv;
+        });
+        // Cualquier visita local que aún no exista en el servidor se conserva tal cual
+        localVisits.forEach(lv=>{
+          if(!mergedById[lv.id]) mergedById[lv.id] = lv;
+        });
+
+        const mergedVisits = Object.values(mergedById);
         teDb = { clients: data.clients, visits: mergedVisits };
         teSaveDb(); teRenderClients();
         if(ind) ind.innerHTML=`<i class="ti ti-cloud-check" style="color:#0a6e4a"></i> Sincronizado con Excel`;
@@ -996,14 +1017,28 @@ function ljFetchData(){
     .then(r=>r.json())
     .then(data=>{
       if(data && data.clients){
-        // Merge seguro: si el servidor no devuelve visits o los devuelve vacíos,
-        // conservar los que ya tenemos en local para no perder datos
+        // Merge por id (NO reemplazo total): antes, si el servidor traía visitas,
+        // se pisaba toda ljDb.visits con lo del servidor. Eso borraba:
+        //  1) visitas guardadas hace poco en este teléfono que todavía no llegaban
+        //     al Sheet (condición de carrera al sincronizar justo después de guardar), y
+        //  2) las fotos y la firma en base64, que SOLO existen en localStorage
+        //     (el Sheet nunca las guarda, solo fotos_count y link_reporte).
         const serverClients = data.clients || [];
         const serverVisits  = data.visits  || [];
         const localVisits   = ljDb.visits  || [];
+        const localById = {};
+        localVisits.forEach(v=>{ localById[v.id] = v; });
 
-        // Usar visits del servidor si tiene datos; si no, conservar los locales
-        const mergedVisits = serverVisits.length > 0 ? serverVisits : localVisits;
+        const mergedById = {};
+        serverVisits.forEach(sv=>{
+          const lv = localById[sv.id];
+          mergedById[sv.id] = lv ? { ...sv, fotos: (lv.fotos && lv.fotos.length ? lv.fotos : sv.fotos), firma: lv.firma || sv.firma, fotosLinks: (lv.fotosLinks && lv.fotosLinks.length ? lv.fotosLinks : sv.fotosLinks) } : sv;
+        });
+        localVisits.forEach(lv=>{
+          if(!mergedById[lv.id]) mergedById[lv.id] = lv;
+        });
+
+        const mergedVisits = Object.values(mergedById);
 
         ljDb = { clients: serverClients, visits: mergedVisits };
         ljSaveDb();
