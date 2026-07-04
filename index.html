@@ -7,7 +7,7 @@
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.19.0/dist/tabler-icons.min.css">
 <style>
 *{box-sizing:border-box;margin:0;padding:0;}
-body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:#f5f5f5;color:#1a1a1a;max-width:430px;margin:0 auto;min-height:100vh;}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:#F1FBF6;color:#1a1a1a;max-width:430px;margin:0 auto;min-height:100vh;}
 
 /* ── PANTALLA DE SELECCIÓN ── */
 #select-screen{
@@ -23,14 +23,14 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
   border:2px solid transparent;box-shadow:0 2px 16px rgba(0,0,0,0.07);transition:transform 0.15s,box-shadow 0.15s,border-color 0.15s;}
 .select-card:active{transform:scale(0.97);}
 .select-card.thermo:hover{border-color:#0a6e4a;}
-.select-card.jhon:hover{border-color:#1a4a9a;}
+.select-card.jhon:hover{border-color:#0a6e4a;}
 .select-icon{width:72px;height:72px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:32px;margin:0 auto 14px;}
 .select-icon.thermo{background:#e6f9f0;color:#0a6e4a;}
-.select-icon.jhon{background:#e6f0ff;color:#1a4a9a;}
+.select-icon.jhon{background:#E7F8EE;color:#0a6e4a;}
 .select-card-name{font-size:15px;font-weight:700;color:#1a1a1a;margin-bottom:16px;}
 .select-btn{width:100%;padding:10px;border:none;border-radius:10px;font-size:14px;font-weight:600;cursor:pointer;color:#fff;}
 .select-btn.thermo{background:#0a6e4a;}
-.select-btn.jhon{background:#1a4a9a;}
+.select-btn.jhon{background:#0a6e4a;}
 
 /* ── LOGIN ── */
 #login-screen{
@@ -40,17 +40,17 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
 }
 #login-screen.active{display:flex !important;}
 #login-screen.mode-thermo{background:#0a6e4a;}
-#login-screen.mode-jhon{background:#1a1a1a;}
+#login-screen.mode-jhon{background:#0a6e4a;}
 .login-box{background:#fff;padding:30px;border-radius:14px;text-align:center;width:85%;max-width:350px;}
 .login-box h2{margin-bottom:5px;font-weight:700;}
 .login-box h2.thermo{color:#0a6e4a;}
-.login-box h2.jhon{color:#1a1a1a;}
+.login-box h2.jhon{color:#0a6e4a;}
 .login-box p{font-size:13px;color:#888;margin-bottom:25px;}
 .login-box input{width:100%;padding:12px;margin-bottom:15px;border:1px solid #ddd;border-radius:10px;font-size:15px;font-family:inherit;outline:none;}
 .login-box input:last-of-type{margin-bottom:20px;}
 .login-btn{width:100%;padding:13px;color:#fff;border:none;border-radius:10px;font-weight:600;font-size:15px;cursor:pointer;}
 .login-btn.thermo{background:#0a6e4a;}
-.login-btn.jhon{background:#1a1a1a;}
+.login-btn.jhon{background:#0a6e4a;}
 .login-back{margin-top:14px;background:none;border:none;color:#aaa;font-size:13px;cursor:pointer;font-family:inherit;}
 #login-alert{margin-top:15px;padding:10px;border-radius:8px;font-size:14px;font-weight:600;display:none;}
 
@@ -61,23 +61,23 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
 /* ── SHARED APP STYLES ── */
 .screen{display:none;padding:1rem;padding-bottom:5rem;}
 .screen.active{display:block;}
-.header{display:flex;align-items:center;gap:10px;background:#fff;margin:-1rem -1rem 1.5rem;padding:1rem;position:sticky;top:0;z-index:10;border-bottom:1px solid #e5e5e5;}
-.header h1{font-size:18px;font-weight:600;color:#1a1a1a;flex:1;}
+.header{display:flex;align-items:center;gap:10px;background:#F1FBF6;margin:-1rem -1rem 1.5rem;padding:1rem;position:sticky;top:0;z-index:10;border-bottom:1px solid #DCF2E5;}
+.header h1{font-size:18px;font-weight:800;color:#0a6e4a;flex:1;}
 .back-btn{background:none;border:none;cursor:pointer;color:#666;font-size:22px;padding:0;display:flex;align-items:center;}
 .section-title{font-size:12px;color:#888;font-weight:600;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:8px;margin-top:1.25rem;}
 .section-title:first-child{margin-top:0;}
 input,textarea,select{width:100%;padding:11px 14px;border:1px solid #ddd;border-radius:10px;font-size:15px;color:#1a1a1a;background:#fff;font-family:inherit;margin-bottom:10px;outline:none;-webkit-appearance:none;appearance:none;}
-input:focus,textarea:focus,select:focus{border-color:#1a1a1a;}
+input:focus,textarea:focus,select:focus{border-color:#34C38F;}
 textarea{min-height:85px;resize:vertical;}
-.btn-primary{width:100%;padding:13px;background:#1a1a1a;color:#fff;border:none;border-radius:10px;font-size:15px;font-weight:600;cursor:pointer;margin-top:8px;font-family:inherit;}
-.btn-primary:disabled{background:#999;cursor:not-allowed;}
-.btn-secondary{width:100%;padding:13px;background:#fff;color:#1a1a1a;border:1px solid #ddd;border-radius:10px;font-size:15px;cursor:pointer;margin-top:8px;font-family:inherit;}
+.btn-primary{width:100%;padding:13px;background:#34C38F;color:#04342C;border:none;border-radius:10px;font-size:15px;font-weight:700;cursor:pointer;margin-top:8px;font-family:inherit;}
+.btn-primary:disabled{background:#bfe8d6;color:#5c8f79;cursor:not-allowed;}
+.btn-secondary{width:100%;padding:13px;background:#fff;color:#1a1a1a;border:1px solid #DCF2E5;border-radius:10px;font-size:15px;cursor:pointer;margin-top:8px;font-family:inherit;}
 .btn-danger{width:100%;padding:13px;background:#fff;color:#e53e3e;border:1px solid #e53e3e;border-radius:10px;font-size:15px;cursor:pointer;margin-top:8px;font-family:inherit;}
-.client-card{background:#fff;border:1px solid #e5e5e5;border-radius:14px;padding:14px 16px;margin-bottom:10px;cursor:pointer;}
+.client-card{background:#fff;border:none;border-left:3px solid #34C38F;border-radius:10px;padding:14px 16px;margin-bottom:10px;cursor:pointer;box-shadow:0 1px 4px rgba(10,110,74,0.06);}
 .client-name{font-size:16px;font-weight:600;color:#1a1a1a;}
 .client-meta{font-size:13px;color:#888;margin-top:3px;}
-.badge{display:inline-block;font-size:11px;font-weight:600;padding:3px 10px;border-radius:20px;background:#f0f0f0;color:#555;margin-top:6px;margin-right:4px;}
-.fab{position:fixed;bottom:1.5rem;right:1.5rem;width:56px;height:56px;border-radius:50%;background:#1a1a1a;color:#fff;border:none;font-size:30px;cursor:pointer;display:flex;align-items:center;justify-content:center;box-shadow:0 4px 16px rgba(0,0,0,0.25);z-index:20;}
+.badge{display:inline-block;font-size:11px;font-weight:600;padding:3px 10px;border-radius:20px;background:#E7F8EE;color:#0a6e4a;margin-top:6px;margin-right:4px;}
+.fab{position:fixed;bottom:1.5rem;right:1.5rem;width:56px;height:56px;border-radius:50%;background:#34C38F;color:#04342C;border:none;font-size:30px;cursor:pointer;display:flex;align-items:center;justify-content:center;box-shadow:0 4px 16px rgba(52,195,143,0.4);z-index:20;}
 .canvas-wrap{border:1px solid #ddd;border-radius:10px;margin-bottom:8px;background:#fff;overflow:hidden;}
 canvas.sigCanvas{display:block;touch-action:none;cursor:crosshair;width:100%;height:160px;}
 .clear-sig{background:none;border:none;color:#888;font-size:13px;cursor:pointer;padding:4px 0;font-family:inherit;display:flex;align-items:center;gap:4px;}
@@ -95,16 +95,16 @@ canvas.sigCanvas{display:block;touch-action:none;cursor:crosshair;width:100%;hei
 .search-wrap input{padding-left:38px;margin-bottom:0;}
 .search-wrap i{position:absolute;left:11px;top:50%;transform:translateY(-50%);color:#aaa;font-size:18px;}
 .stats{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:1.5rem;}
-.stat-card{background:#fff;border-radius:14px;padding:14px;text-align:center;border:1px solid #e5e5e5;}
-.stat-num{font-size:28px;font-weight:700;color:#1a1a1a;}
+.stat-card{background:#fff;border-radius:12px;padding:14px;text-align:center;border:none;border-top:3px solid #34C38F;box-shadow:0 1px 4px rgba(10,110,74,0.06);}
+.stat-num{font-size:28px;font-weight:700;color:#0a6e4a;}
 .stat-label{font-size:12px;color:#888;margin-top:2px;}
-.visit-card{background:#fff;border:1px solid #e5e5e5;border-radius:12px;padding:12px 14px;margin-bottom:8px;cursor:pointer;}
+.visit-card{background:#fff;border:none;border-left:3px solid #34C38F;border-radius:10px;padding:12px 14px;margin-bottom:8px;cursor:pointer;box-shadow:0 1px 4px rgba(10,110,74,0.06);}
 .visit-tipo{font-size:15px;font-weight:600;color:#1a1a1a;margin-top:2px;}
 .visit-fecha{font-size:13px;color:#888;}
-.toast{position:fixed;bottom:5.5rem;left:50%;transform:translateX(-50%);background:#1a1a1a;color:#fff;padding:10px 22px;border-radius:22px;font-size:13px;font-weight:500;opacity:0;transition:opacity 0.3s;pointer-events:none;z-index:100;white-space:nowrap;}
+.toast{position:fixed;bottom:5.5rem;left:50%;transform:translateX(-50%);background:#04342C;color:#fff;padding:10px 22px;border-radius:22px;font-size:13px;font-weight:500;opacity:0;transition:opacity 0.3s;pointer-events:none;z-index:100;white-space:nowrap;}
 .toast.show{opacity:1;}
 .app-logo{width:36px;height:36px;border-radius:10px;display:flex;align-items:center;justify-content:center;color:#fff;font-size:20px;flex-shrink:0;}
-.info-card{background:#fff;border:1px solid #e5e5e5;border-radius:14px;padding:14px 16px;margin-bottom:1rem;}
+.info-card{background:#fff;border:none;border-left:3px solid #34C38F;border-radius:12px;padding:14px 16px;margin-bottom:1rem;box-shadow:0 1px 4px rgba(10,110,74,0.06);}
 .sync-indicator{font-size:11px;color:#888;display:flex;align-items:center;gap:4px;font-weight:500;justify-content:center;margin-bottom:10px;}
 .sync-spin{animation:spin 1s linear infinite;}
 @keyframes spin{0%{transform:rotate(0deg);}100%{transform:rotate(360deg);}}
@@ -122,12 +122,12 @@ canvas.sigCanvas{display:block;touch-action:none;cursor:crosshair;width:100%;hei
 .btn-switch-user{display:flex;align-items:center;gap:6px;padding:7px 13px;background:#fff;border:1.5px solid #e5e5e5;border-radius:20px;font-size:13px;font-weight:600;cursor:pointer;color:#1a1a1a;white-space:nowrap;}
 .btn-switch-user i{font-size:16px;}
 /* ── PESTAÑAS ── */
-.tabs{display:flex;background:#fff;border-bottom:1px solid #e5e5e5;margin:-1.5rem -1rem 1rem;}
+.tabs{display:flex;background:#F1FBF6;border-bottom:1px solid #DCF2E5;margin:-1.5rem -1rem 1rem;}
 .tab-btn{flex:1;padding:12px 0;border:none;background:none;font-size:14px;font-weight:500;color:#888;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px;border-bottom:2px solid transparent;font-family:inherit;}
 .tab-btn.active-thermo{color:#0a6e4a;border-bottom-color:#0a6e4a;}
-.tab-btn.active-jhon{color:#1a4a9a;border-bottom-color:#1a4a9a;}
+.tab-btn.active-jhon{color:#0a6e4a;border-bottom-color:#0a6e4a;}
 /* ── CALENDARIO ── */
-.cal-wrap{background:#fff;border:1px solid #e5e5e5;border-radius:14px;padding:14px;margin-bottom:1rem;}
+.cal-wrap{background:#fff;border:none;border-top:3px solid #34C38F;border-radius:12px;padding:14px;margin-bottom:1rem;box-shadow:0 1px 4px rgba(10,110,74,0.06);}
 .cal-nav{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;}
 .cal-nav button{background:none;border:none;cursor:pointer;color:#888;font-size:20px;padding:4px 8px;border-radius:8px;}
 .cal-nav span{font-size:15px;font-weight:600;color:#1a1a1a;}
@@ -140,11 +140,11 @@ canvas.sigCanvas{display:block;touch-action:none;cursor:crosshair;width:100%;hei
 .cal-day.empty:hover{background:none;}
 .cal-day-selected-thermo{background:#0a6e4a !important;color:#fff !important;}
 .cal-day-selected-thermo.has-visits::after{background:#a3d9c0 !important;}
-.cal-day-selected-jhon{background:#1a4a9a !important;color:#fff !important;}
-.cal-day-selected-jhon.has-visits::after{background:#a3bfef !important;}
+.cal-day-selected-jhon{background:#0a6e4a !important;color:#fff !important;}
+.cal-day-selected-jhon.has-visits::after{background:#a3d9c0 !important;}
 .cal-has-thermo::after{background:#0a6e4a;}
-.cal-has-jhon::after{background:#1a4a9a;}
-.cal-day-summary{background:#fff;border:1px solid #e5e5e5;border-radius:14px;padding:14px;margin-bottom:1rem;}
+.cal-has-jhon::after{background:#0a6e4a;}
+.cal-day-summary{background:#fff;border:none;border-left:3px solid #34C38F;border-radius:12px;padding:14px;margin-bottom:1rem;box-shadow:0 1px 4px rgba(10,110,74,0.06);}
 .cal-day-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;}
 .cal-day-title{font-size:14px;font-weight:600;color:#1a1a1a;}
 .cal-day-total{font-size:13px;font-weight:700;}
@@ -156,8 +156,8 @@ canvas.sigCanvas{display:block;touch-action:none;cursor:crosshair;width:100%;hei
 .cal-visit-costo{font-size:12px;font-weight:600;}
 .cal-empty{text-align:center;padding:2rem 1rem;color:#aaa;font-size:14px;}
 /* Botones PDF y Home por app */
-.btn-pdf-thermo{width:100%;padding:13px;background:#0a6e4a;color:#fff;border:none;border-radius:10px;font-size:15px;font-weight:600;cursor:pointer;margin-top:8px;font-family:inherit;display:flex;align-items:center;justify-content:center;gap:8px;}
-.btn-pdf-jhon{width:100%;padding:13px;background:#1a4a9a;color:#fff;border:none;border-radius:10px;font-size:15px;font-weight:600;cursor:pointer;margin-top:8px;font-family:inherit;display:flex;align-items:center;justify-content:center;gap:8px;}
+.btn-pdf-thermo{width:100%;padding:13px;background:#34C38F;color:#04342C;border:none;border-radius:10px;font-size:15px;font-weight:700;cursor:pointer;margin-top:8px;font-family:inherit;display:flex;align-items:center;justify-content:center;gap:8px;}
+.btn-pdf-jhon{width:100%;padding:13px;background:#34C38F;color:#04342C;border:none;border-radius:10px;font-size:15px;font-weight:700;cursor:pointer;margin-top:8px;font-family:inherit;display:flex;align-items:center;justify-content:center;gap:8px;}
 .btn-home-shared{width:100%;padding:13px;background:#fff;color:#1a1a1a;border:1px solid #ddd;border-radius:10px;font-size:15px;font-weight:600;cursor:pointer;margin-top:8px;font-family:inherit;display:flex;align-items:center;justify-content:center;gap:8px;}
 </style>
 </head>
@@ -354,9 +354,9 @@ canvas.sigCanvas{display:block;touch-action:none;cursor:crosshair;width:100%;hei
   <!-- INICIO -->
   <div id="lj-screen-home" class="screen active">
     <div class="header">
-      <div class="app-logo" style="background:#1a1a1a;"><i class="ti ti-tool"></i></div>
+      <div class="app-logo" style="background:#34C38F;color:#04342C;"><i class="ti ti-tool"></i></div>
       <h1>Llama a Jhon</h1>
-      <i class="ti ti-refresh" id="lj-manual-sync-btn" style="font-size:20px;color:#1a4a9a;cursor:pointer;margin-right:8px;" onclick="ljFetchData()"></i>
+      <i class="ti ti-refresh" id="lj-manual-sync-btn" style="font-size:20px;color:#0a6e4a;cursor:pointer;margin-right:8px;" onclick="ljFetchData()"></i>
       <button class="btn-switch-user" onclick="switchUser()"><i class="ti ti-user-circle"></i> Cambiar usuario</button>
     </div>
     <div class="tabs">
@@ -1076,7 +1076,7 @@ function ljFetchData(){
         ljDb = { clients: serverClients, visits: mergedVisits };
         ljSaveDb();
         ljRenderClients();
-        if(ind) ind.innerHTML=`<i class="ti ti-cloud-check" style="color:#1a4a9a"></i> Sincronizado con Excel`;
+        if(ind) ind.innerHTML=`<i class="ti ti-cloud-check" style="color:#0a6e4a"></i> Sincronizado con Excel`;
       }
     })
     .catch(()=>{ if(ind) ind.innerHTML=`<i class="ti ti-cloud-off" style="color:#e53e3e"></i> Modo local (Sin internet)`; })
@@ -1124,7 +1124,7 @@ function ljSyncToSheets(data){
     try {
       const res = JSON.parse(txt);
       if(res.status === 'ok'){
-        if(ind) ind.innerHTML=`<i class="ti ti-cloud-check" style="color:#1a4a9a"></i> Guardado en Excel ✓`;
+        if(ind) ind.innerHTML=`<i class="ti ti-cloud-check" style="color:#0a6e4a"></i> Guardado en Excel ✓`;
       } else {
         throw new Error(res.msg||'error');
       }
@@ -1163,7 +1163,7 @@ function ljRenderClients(){
     return `<div class="client-card" onclick="ljOpenClient('${c.id}')">
       <div class="client-name">${c.nombre}</div>
       <div class="client-meta"><i class="ti ti-map-pin"></i> ${c.direccion||'Sin dirección'}</div>
-      <span class="badge" style="background:#e6f0ff;color:#1a4a9a;">${c.tipo||'Sin tipo'}</span>
+      <span class="badge" style="background:#E7F8EE;color:#0a6e4a;">${c.tipo||'Sin tipo'}</span>
       <span class="badge">${visits.length} visitas</span>
     </div>`;
   }).join('');
@@ -1377,7 +1377,7 @@ function ljOpenVisit(id){
   const sHtml=v.firma?`<div class="section-title">Firma del cliente</div><img src="${v.firma}" class="sig-preview">`:'';
   const respHtml=v.responsabilidad?`<div class="detail-row"><span class="detail-label">Responsabilidad</span><span class="detail-value" style="color:#1a7a4a;">✅ Aceptada</span></div>`:'';
   const pagoHtml=(v.modoPago||v.costoServicio)?`<div class="detail-row"><span class="detail-label">Modo de pago</span><span class="detail-value">${v.modoPago||'—'}</span></div><div class="detail-row"><span class="detail-label">Costo</span><span class="detail-value" style="color:#1a7a4a;font-weight:700;">${v.costoServicio?'$'+parseFloat(v.costoServicio).toFixed(2):'—'}</span></div>`:'';
-  const pdfHtml = v.link_reporte ? `<a href="${v.link_reporte}" target="_blank" rel="noopener" style="display:flex;align-items:center;justify-content:center;gap:8px;width:100%;padding:12px;background:#1a4a9a;color:#fff;border-radius:10px;font-size:14px;font-weight:600;text-decoration:none;margin-top:14px;"><i class="ti ti-file-type-pdf"></i> Ver reporte PDF <i class="ti ti-external-link" style="font-size:14px;"></i></a><p style="font-size:11px;color:#999;text-align:center;margin:6px 0 0;">Incluye fotos y firma del cliente · Guardado en Drive</p>` : (fHtml?'':'<p style="font-size:12px;color:#999;text-align:center;margin-top:14px;">El reporte se está guardando en Drive...</p>');
+  const pdfHtml = v.link_reporte ? `<a href="${v.link_reporte}" target="_blank" rel="noopener" style="display:flex;align-items:center;justify-content:center;gap:8px;width:100%;padding:12px;background:#0a6e4a;color:#fff;border-radius:10px;font-size:14px;font-weight:600;text-decoration:none;margin-top:14px;"><i class="ti ti-file-type-pdf"></i> Ver reporte PDF <i class="ti ti-external-link" style="font-size:14px;"></i></a><p style="font-size:11px;color:#999;text-align:center;margin:6px 0 0;">Incluye fotos y firma del cliente · Guardado en Drive</p>` : (fHtml?'':'<p style="font-size:12px;color:#999;text-align:center;margin-top:14px;">El reporte se está guardando en Drive...</p>');
   document.getElementById('lj-visit-detail-content').innerHTML=`<div class="info-card"><div class="detail-row"><span class="detail-label">Servicio</span><span class="detail-value" style="font-weight:700;">${v.tipo}</span></div><div class="detail-row"><span class="detail-label">Fecha</span><span class="detail-value">${v.fecha}</span></div>${respHtml}${pagoHtml}<div class="section-title" style="margin-top:12px;">Diagnóstico</div><p style="font-size:14px;background:#f9f9f9;padding:8px;border-radius:6px;white-space:pre-wrap;">${v.detalle||'Sin detalles'}</p><div class="section-title" style="margin-top:12px;">Trabajo realizado</div><p style="font-size:14px;background:#f9f9f9;padding:8px;border-radius:6px;white-space:pre-wrap;">${v.observacion||'Sin observaciones'}</p>${fHtml?'<div class="section-title">Evidencias fotográficas</div>'+fHtml:''}${sHtml}${pdfHtml}<button onclick="ljGoScreen('lj-screen-home')" style="display:flex;align-items:center;justify-content:center;gap:8px;width:100%;padding:12px;background:#fff;color:#333;border:1px solid #ddd;border-radius:10px;font-size:14px;font-weight:600;margin-top:10px;cursor:pointer;"><i class="ti ti-home"></i> Inicio</button></div>`;
   ljGoScreen('lj-screen-visit-detail');
 }
@@ -1638,7 +1638,7 @@ function ljRenderDayPanel(d){
     return;
   }
   const total=visits.reduce((s,v)=>s+(parseFloat(v.costoServicio)||0),0);
-  const color='#1a4a9a';
+  const color='#0a6e4a';
   let html=`<div class="cal-day-summary">
     <div class="cal-day-header">
       <span class="cal-day-title">${d} de ${MESES[ljCalMonth]} — ${visits.length} servicio${visits.length>1?'s':''}</span>
