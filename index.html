@@ -779,10 +779,19 @@ function teSaveClient(){
   teGoScreen('te-screen-client-detail');
 }
 
+// Fecha local segura: toISOString() usa UTC y desfasa el día en la noche
+// (ej: en Ecuador, después de las 7pm, toISOString() ya marca el día siguiente).
+function teFechaLocalHoy(){
+  const d = new Date();
+  const y = d.getFullYear();
+  const m = String(d.getMonth()+1).padStart(2,'0');
+  const day = String(d.getDate()).padStart(2,'0');
+  return `${y}-${m}-${day}`;
+}
 function teGoNewVisit(){
   teEditingVisitId=null;
   document.getElementById('te-new-visit-title').textContent="Nueva visita";
-  document.getElementById('te-v-fecha').value=new Date().toISOString().split('T')[0];
+  document.getElementById('te-v-fecha').value=teFechaLocalHoy();
   document.getElementById('te-v-tipo').value='';
   document.getElementById('te-v-detalle').value='';
   document.getElementById('te-v-observacion').value='';
@@ -1225,10 +1234,18 @@ function ljSaveClient(){
   ljGoScreen('lj-screen-client-detail');
 }
 
+// Fecha local segura: toISOString() usa UTC y desfasa el día en la noche.
+function ljFechaLocalHoy(){
+  const d = new Date();
+  const y = d.getFullYear();
+  const m = String(d.getMonth()+1).padStart(2,'0');
+  const day = String(d.getDate()).padStart(2,'0');
+  return `${y}-${m}-${day}`;
+}
 function ljGoNewVisit(){
   ljEditingVisitId=null;
   document.getElementById('lj-new-visit-title').textContent="Nueva visita";
-  document.getElementById('lj-v-fecha').value=new Date().toISOString().split('T')[0];
+  document.getElementById('lj-v-fecha').value=ljFechaLocalHoy();
   document.getElementById('lj-v-tipo').value='';
   document.getElementById('lj-v-detalle').value='';
   document.getElementById('lj-v-observacion').value='';
