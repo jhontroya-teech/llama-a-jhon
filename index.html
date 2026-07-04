@@ -591,7 +591,43 @@ let teDb = JSON.parse(localStorage.getItem('te_db') || '{"clients":[],"visits":[
 let teCurrentClientId=null, teCurrentVisitId=null, teEditingClientId=null, teEditingVisitId=null;
 let teVisitPhotos=[], teSigCtx, teSigDrawing=false, teSigHasContent=false;
 
-function teSaveDb(){ localStorage.setItem('te_db', JSON.stringify(teDb)); teUpdateStats(); }
+// Quita el base64 de fotos/firma de una visita SOLO si ya tiene su
+// reporte PDF subido a Drive (link_reporte) — el PDF ya contiene esas
+// fotos y la firma, así que no hace falta seguir cargando el
+// localStorage con esos datos pesados una vez que están respaldados.
+function teSlimVisit(v, aggressive){
+  if(!aggressive && !v.link_reporte) return v; // aún no hay respaldo en Drive, no tocar
+  const slim = {...v};
+  if(slim.fotos && slim.fotos.length) slim.fotos = [];
+  if(slim.firma) slim.firma = null;
+  return slim;
+}
+
+function teSaveDb(){
+  try{
+    localStorage.setItem('te_db', JSON.stringify(teDb));
+  }catch(err){
+    console.warn('TE localStorage lleno, liberando espacio de visitas ya respaldadas en Drive:', err);
+    // 1er intento: solo quitar base64 de visitas que YA tienen su PDF en Drive
+    teDb.visits = teDb.visits.map(v=>teSlimVisit(v,false));
+    try{
+      localStorage.setItem('te_db', JSON.stringify(teDb));
+      showToast('🧹 Se liberó espacio (fotos ya respaldadas en Drive)');
+    }catch(err2){
+      // 2do intento, más agresivo: quitar base64 de TODAS las visitas
+      console.warn('TE aún sin espacio, limpieza agresiva:', err2);
+      teDb.visits = teDb.visits.map(v=>teSlimVisit(v,true));
+      try{
+        localStorage.setItem('te_db', JSON.stringify(teDb));
+        showToast('🧹 Espacio local lleno: se liberaron fotos antiguas del celular (siguen en Drive)');
+      }catch(err3){
+        console.error('TE no se pudo guardar localmente ni liberando espacio:', err3);
+        showToast('⚠️ Almacenamiento del celular lleno, no se pudo guardar localmente');
+      }
+    }
+  }
+  teUpdateStats();
+}
 
 function teFetchData(){
   const ind = document.getElementById('te-sync-status');
@@ -1048,7 +1084,37 @@ let ljDb = JSON.parse(localStorage.getItem('lj_db') || '{"clients":[],"visits":[
 let ljCurrentClientId=null, ljCurrentVisitId=null, ljEditingClientId=null, ljEditingVisitId=null;
 let ljVisitPhotos=[], ljSigCtx, ljSigDrawing=false, ljSigHasContent=false;
 
-function ljSaveDb(){ localStorage.setItem('lj_db', JSON.stringify(ljDb)); ljUpdateStats(); }
+function ljSlimVisit(v, aggressive){
+  if(!aggressive && !v.link_reporte) return v;
+  const slim = {...v};
+  if(slim.fotos && slim.fotos.length) slim.fotos = [];
+  if(slim.firma) slim.firma = null;
+  return slim;
+}
+
+function ljSaveDb(){
+  try{
+    localStorage.setItem('lj_db', JSON.stringify(ljDb));
+  }catch(err){
+    console.warn('LJ localStorage lleno, liberando espacio de visitas ya respaldadas en Drive:', err);
+    ljDb.visits = ljDb.visits.map(v=>ljSlimVisit(v,false));
+    try{
+      localStorage.setItem('lj_db', JSON.stringify(ljDb));
+      showToast('🧹 Se liberó espacio (fotos ya respaldadas en Drive)');
+    }catch(err2){
+      console.warn('LJ aún sin espacio, limpieza agresiva:', err2);
+      ljDb.visits = ljDb.visits.map(v=>ljSlimVisit(v,true));
+      try{
+        localStorage.setItem('lj_db', JSON.stringify(ljDb));
+        showToast('🧹 Espacio local lleno: se liberaron fotos antiguas del celular (siguen en Drive)');
+      }catch(err3){
+        console.error('LJ no se pudo guardar localmente ni liberando espacio:', err3);
+        showToast('⚠️ Almacenamiento del celular lleno, no se pudo guardar localmente');
+      }
+    }
+  }
+  ljUpdateStats();
+}
 
 function ljFetchData(){
   const ind=document.getElementById('lj-sync-status');
