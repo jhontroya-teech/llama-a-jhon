@@ -879,12 +879,47 @@ function teInitSig(){
 }
 
 function teClearSig(){ if(teSigCtx){ teSigCtx.clearRect(0,0,380,160); teSigHasContent=false; } }
+// Redimensiona y comprime la foto antes de guardarla: una foto de cámara
+// puede pesar 3-8MB sin comprimir, y eso solo era suficiente para llenar
+// TODO el localStorage con una sola visita nueva. Bajarla a máx 1280px de
+// lado y calidad 0.7 la deja lista para el PDF y la vista previa, pesando
+// una fracción de lo original.
+function teResizeImage(dataUrl, maxDim, quality){
+  return new Promise((resolve)=>{
+    const img = new Image();
+    img.onload = ()=>{
+      let w = img.width, h = img.height;
+      if(w > maxDim || h > maxDim){
+        if(w > h){ h = Math.round(h * maxDim / w); w = maxDim; }
+        else { w = Math.round(w * maxDim / h); h = maxDim; }
+      }
+      const canvas = document.createElement('canvas');
+      canvas.width = w; canvas.height = h;
+      const ctx = canvas.getContext('2d');
+      ctx.drawImage(img, 0, 0, w, h);
+      resolve(canvas.toDataURL('image/jpeg', quality));
+    };
+    img.onerror = ()=>resolve(dataUrl); // si algo falla, se usa la original como respaldo
+    img.src = dataUrl;
+  });
+}
+
 function teAddPhotos(input){
   Array.from(input.files).forEach(f=>{
     const r=new FileReader();
-    r.onload=e=>{
+    r.onload=async e=>{
       const tempId='temp_'+Date.now()+Math.random();
-      teVisitPhotos.push({id:tempId, preview:e.target.result, link:null, uploading:false});
+      teVisitPhotos.push({id:tempId, preview:null, link:null, uploading:true});
+      teRenderPhotoGrid();
+      try{
+        const comprimida = await teResizeImage(e.target.result, 1280, 0.7);
+        const idx = teVisitPhotos.findIndex(p=>p.id===tempId);
+        if(idx>-1){ teVisitPhotos[idx].preview = comprimida; teVisitPhotos[idx].uploading = false; }
+      }catch(err){
+        console.error('TE error comprimiendo foto:', err);
+        const idx = teVisitPhotos.findIndex(p=>p.id===tempId);
+        if(idx>-1){ teVisitPhotos[idx].preview = e.target.result; teVisitPhotos[idx].uploading = false; }
+      }
       teRenderPhotoGrid();
     };
     r.readAsDataURL(f);
@@ -1363,12 +1398,42 @@ function ljInitSig(){
 }
 
 function ljClearSig(){ if(ljSigCtx){ ljSigCtx.clearRect(0,0,380,160); ljSigHasContent=false; } }
+function ljResizeImage(dataUrl, maxDim, quality){
+  return new Promise((resolve)=>{
+    const img = new Image();
+    img.onload = ()=>{
+      let w = img.width, h = img.height;
+      if(w > maxDim || h > maxDim){
+        if(w > h){ h = Math.round(h * maxDim / w); w = maxDim; }
+        else { w = Math.round(w * maxDim / h); h = maxDim; }
+      }
+      const canvas = document.createElement('canvas');
+      canvas.width = w; canvas.height = h;
+      const ctx = canvas.getContext('2d');
+      ctx.drawImage(img, 0, 0, w, h);
+      resolve(canvas.toDataURL('image/jpeg', quality));
+    };
+    img.onerror = ()=>resolve(dataUrl);
+    img.src = dataUrl;
+  });
+}
+
 function ljAddPhotos(input){
   Array.from(input.files).forEach(f=>{
     const r=new FileReader();
-    r.onload=e=>{
+    r.onload=async e=>{
       const tempId='temp_'+Date.now()+Math.random();
-      ljVisitPhotos.push({id:tempId, preview:e.target.result, link:null, uploading:false});
+      ljVisitPhotos.push({id:tempId, preview:null, link:null, uploading:true});
+      ljRenderPhotoGrid();
+      try{
+        const comprimida = await ljResizeImage(e.target.result, 1280, 0.7);
+        const idx = ljVisitPhotos.findIndex(p=>p.id===tempId);
+        if(idx>-1){ ljVisitPhotos[idx].preview = comprimida; ljVisitPhotos[idx].uploading = false; }
+      }catch(err){
+        console.error('LJ error comprimiendo foto:', err);
+        const idx = ljVisitPhotos.findIndex(p=>p.id===tempId);
+        if(idx>-1){ ljVisitPhotos[idx].preview = e.target.result; ljVisitPhotos[idx].uploading = false; }
+      }
       ljRenderPhotoGrid();
     };
     r.readAsDataURL(f);
