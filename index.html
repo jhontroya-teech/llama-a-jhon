@@ -144,6 +144,8 @@ canvas.sigCanvas{display:block;touch-action:none;cursor:crosshair;width:100%;hei
 .cal-day-selected-jhon.has-visits::after{background:#a3d9c0 !important;}
 .cal-has-thermo::after{background:#0a6e4a;}
 .cal-has-jhon::after{background:#0a6e4a;}
+.cal-day.has-mantenimiento::before{content:'';position:absolute;top:2px;right:5px;width:5px;height:5px;border-radius:50%;background:#e6a23c;}
+.cal-day-selected-jhon.has-mantenimiento::before{background:#ffe3ab !important;}
 .cal-day-summary{background:#fff;border:none;border-left:3px solid #34C38F;border-radius:12px;padding:14px;margin-bottom:1rem;box-shadow:0 1px 4px rgba(10,110,74,0.06);}
 .cal-day-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;}
 .cal-day-title{font-size:14px;font-weight:600;color:#1a1a1a;}
@@ -1825,11 +1827,20 @@ function ljInitCal(){
 function ljCalPrev(){ ljCalMonth--; if(ljCalMonth<0){ljCalMonth=11;ljCalYear--;} ljCalSelDay=null; ljRenderCal(); }
 function ljCalNext(){ ljCalMonth++; if(ljCalMonth>11){ljCalMonth=0;ljCalYear++;} ljCalSelDay=null; ljRenderCal(); }
 
+// Convierte "2026-07-04" o "2026-07-04T05:00:00.000Z" (o cualquier variante)
+// en un Date correcto en hora local, sin desfasar el día.
+function ljParseFechaSegura(fechaStr){
+  const soloFecha = String(fechaStr).split('T')[0];
+  const partes = soloFecha.split('-');
+  if(partes.length < 3) return new Date(fechaStr);
+  return new Date(parseInt(partes[0],10), parseInt(partes[1],10)-1, parseInt(partes[2],10), 12, 0, 0);
+}
+
 function ljVisitDaysInMonth(y,m){
   const days={};
   ljDb.visits.forEach(v=>{
     if(!v.fecha) return;
-    const d=new Date(v.fecha+'T12:00:00');
+    const d=ljParseFechaSegura(v.fecha);
     if(d.getFullYear()===y&&d.getMonth()===m){
       const day=d.getDate();
       if(!days[day]) days[day]=[];
@@ -1839,10 +1850,28 @@ function ljVisitDaysInMonth(y,m){
   return days;
 }
 
+// Nuevo: días del mes que tienen un "próximo mantenimiento" programado
+// (calculado automáticamente al guardar una visita de Limpieza / Mantenimiento
+// preventivo). Se marca en la Agenda con un punto de otro color.
+function ljMantenimientosEnMes(y,m){
+  const days={};
+  (ljDb.clients||[]).forEach(c=>{
+    if(!c.proximoMantenimiento) return;
+    const d=ljParseFechaSegura(c.proximoMantenimiento);
+    if(d.getFullYear()===y&&d.getMonth()===m){
+      const day=d.getDate();
+      if(!days[day]) days[day]=[];
+      days[day].push(c);
+    }
+  });
+  return days;
+}
+
 function ljRenderCal(){
   if(ljCalYear===undefined) ljInitCal();
   document.getElementById('lj-cal-title').textContent=MESES[ljCalMonth]+' '+ljCalYear;
   const daysMap=ljVisitDaysInMonth(ljCalYear,ljCalMonth);
+  const mantMap=ljMantenimientosEnMes(ljCalYear,ljCalMonth);
   const firstDay=new Date(ljCalYear,ljCalMonth,1).getDay();
   const offset=firstDay===0?6:firstDay-1;
   const total=new Date(ljCalYear,ljCalMonth+1,0).getDate();
@@ -1850,8 +1879,9 @@ function ljRenderCal(){
   for(let i=0;i<offset;i++) html+=`<div class="cal-day empty"></div>`;
   for(let d=1;d<=total;d++){
     const hasV=daysMap[d]?'has-visits cal-has-jhon':'';
+    const hasM=mantMap[d]?'has-mantenimiento':'';
     const isSel=ljCalSelDay===d?'cal-day-selected-jhon':'';
-    html+=`<div class="cal-day ${hasV} ${isSel}" onclick="ljSelectDay(${d})">${d}</div>`;
+    html+=`<div class="cal-day ${hasV} ${hasM} ${isSel}" onclick="ljSelectDay(${d})">${d}</div>`;
   }
   document.getElementById('lj-cal-grid').innerHTML=html;
   if(ljCalSelDay) ljRenderDayPanel(ljCalSelDay);
@@ -1866,8 +1896,11 @@ function ljSelectDay(d){
 function ljRenderDayPanel(d){
   const daysMap=ljVisitDaysInMonth(ljCalYear,ljCalMonth);
   const visits=daysMap[d]||[];
+  const mantMap=ljMantenimientosEnMes(ljCalYear,ljCalMonth);
+  const mantenimientos=mantMap[d]||[];
   const panel=document.getElementById('lj-cal-day-panel');
-  if(!visits.length){
+
+  if(!visits.length && !mantenimientos.length){
     panel.innerHTML=`<div class="cal-day-summary"><div class="cal-day-header"><span class="cal-day-title">${d} de ${MESES[ljCalMonth]}</span></div><div class="cal-empty">Sin servicios ese día</div></div>`;
     return;
   }
@@ -1875,9 +1908,19 @@ function ljRenderDayPanel(d){
   const color='#0a6e4a';
   let html=`<div class="cal-day-summary">
     <div class="cal-day-header">
-      <span class="cal-day-title">${d} de ${MESES[ljCalMonth]} — ${visits.length} servicio${visits.length>1?'s':''}</span>
-      <span class="cal-day-total" style="color:${color}">$${total.toFixed(2)}</span>
+      <span class="cal-day-title">${d} de ${MESES[ljCalMonth]}${visits.length?' — '+visits.length+' servicio'+(visits.length>1?'s':''):''}</span>
+      ${visits.length?`<span class="cal-day-total" style="color:${color}">$${total.toFixed(2)}</span>`:''}
     </div>`;
+
+  mantenimientos.forEach(c=>{
+    html+=`<div class="cal-visit-item" style="border-left:3px solid #e6a23c;" onclick="ljOpenClient('${c.id}')">
+      <div class="cal-visit-name"><i class="ti ti-bell" style="font-size:14px;color:#e6a23c;margin-right:4px;"></i>${c.nombre}</div>
+      <div class="cal-visit-meta">
+        <span class="cal-visit-tipo" style="color:#e6a23c;">Próximo mantenimiento</span>
+      </div>
+    </div>`;
+  });
+
   visits.forEach(v=>{
     const c=ljDb.clients.find(x=>String(x.id)===String(v.clientId));
     html+=`<div class="cal-visit-item" onclick="ljOpenVisitFromCal('${v.id}','${v.clientId}')">
@@ -1919,7 +1962,7 @@ function ljCalcularAlertasLocal(){
   const alertas = [];
   (ljDb.clients||[]).forEach(c=>{
     if(!c.proximoMantenimiento) return;
-    const fecha = new Date(c.proximoMantenimiento); fecha.setHours(0,0,0,0);
+    const fecha = ljParseFechaSegura(c.proximoMantenimiento); fecha.setHours(0,0,0,0);
     const dias = Math.round((fecha - hoy) / (1000*60*60*24));
     if(dias >= 0 && dias <= diasAviso){
       alertas.push({ clienteId: c.id, nombre: c.nombre, fecha: c.proximoMantenimiento, dias: dias });
