@@ -355,20 +355,23 @@ canvas.sigCanvas{display:block;touch-action:none;cursor:crosshair;width:100%;hei
 
   <!-- INICIO -->
   <div id="lj-screen-home" class="screen active">
-    <div class="header">
+    <div class="header" style="flex-wrap:wrap;">
       <div class="app-logo" style="background:#34C38F;color:#04342C;"><i class="ti ti-tool"></i></div>
-      <h1>Llama a Jhon</h1>
-      <div style="position:relative;display:inline-block;margin-right:8px;">
-        <i class="ti ti-bell" id="lj-bell-btn" style="font-size:20px;color:#0a6e4a;cursor:pointer;" onclick="ljToggleAlertPanel()"></i>
-        <span id="lj-bell-badge" style="display:none;position:absolute;top:-6px;right:-8px;background:#e53e3e;color:#fff;font-size:10px;font-weight:700;border-radius:50%;width:16px;height:16px;align-items:center;justify-content:center;"></span>
-        <div id="lj-alert-panel" style="display:none;position:absolute;top:28px;right:-10px;background:#fff;border-radius:12px;box-shadow:0 4px 20px rgba(0,0,0,0.15);width:260px;max-height:320px;overflow-y:auto;z-index:500;">
-          <div style="padding:10px 14px;font-weight:700;font-size:13px;border-bottom:1px solid #eee;color:#1a1a1a;">Alertas de mantenimiento</div>
-          <div id="lj-alert-list"></div>
-        </div>
-      </div>
-      <i class="ti ti-settings" id="lj-config-btn" style="font-size:20px;color:#0a6e4a;cursor:pointer;margin-right:8px;" onclick="ljGoScreen('lj-screen-config')"></i>
-      <i class="ti ti-refresh" id="lj-manual-sync-btn" style="font-size:20px;color:#0a6e4a;cursor:pointer;margin-right:8px;" onclick="ljFetchData()"></i>
+      <h1 style="flex:1;">Llama a Jhon</h1>
       <button class="btn-switch-user" onclick="switchUser()"><i class="ti ti-user-circle"></i> Cambiar usuario</button>
+
+      <div style="width:100%;display:flex;justify-content:flex-end;align-items:center;gap:14px;margin-top:2px;">
+        <div style="position:relative;display:inline-block;">
+          <i class="ti ti-bell" id="lj-bell-btn" style="font-size:20px;color:#0a6e4a;cursor:pointer;" onclick="ljToggleAlertPanel()"></i>
+          <span id="lj-bell-badge" style="display:none;position:absolute;top:-6px;right:-8px;background:#e53e3e;color:#fff;font-size:10px;font-weight:700;border-radius:50%;width:16px;height:16px;align-items:center;justify-content:center;"></span>
+          <div id="lj-alert-panel" style="display:none;position:absolute;top:28px;right:-10px;background:#fff;border-radius:12px;box-shadow:0 4px 20px rgba(0,0,0,0.15);width:260px;max-height:320px;overflow-y:auto;z-index:500;">
+            <div style="padding:10px 14px;font-weight:700;font-size:13px;border-bottom:1px solid #eee;color:#1a1a1a;">Alertas de mantenimiento</div>
+            <div id="lj-alert-list"></div>
+          </div>
+        </div>
+        <i class="ti ti-settings" id="lj-config-btn" style="font-size:20px;color:#0a6e4a;cursor:pointer;" onclick="ljGoScreen('lj-screen-config')"></i>
+        <i class="ti ti-refresh" id="lj-manual-sync-btn" style="font-size:20px;color:#0a6e4a;cursor:pointer;" onclick="ljFetchData()"></i>
+      </div>
     </div>
     <div class="tabs">
       <button class="tab-btn active-jhon" id="lj-tab-clientes" onclick="ljSetTab('clientes')"><i class="ti ti-users"></i> Clientes</button>
@@ -529,7 +532,10 @@ canvas.sigCanvas{display:block;touch-action:none;cursor:crosshair;width:100%;hei
       <input type="checkbox" id="lj-cfg-email">
       <label for="lj-cfg-email">Gmail</label>
     </div>
-    <input type="email" id="lj-cfg-email-destino" placeholder="Tu correo donde quieres recibir los avisos">
+    <div style="display:flex;gap:8px;">
+      <input type="email" id="lj-cfg-email-destino" placeholder="Tu correo donde quieres recibir los avisos" style="flex:1;">
+      <button type="button" class="btn-secondary" style="white-space:nowrap;padding:0 14px;" onclick="ljProbarEmail()">Probar</button>
+    </div>
     <div class="checkbox-resp" style="align-items:center;">
       <input type="checkbox" id="lj-cfg-telegram">
       <label for="lj-cfg-telegram">Telegram</label>
@@ -2052,6 +2058,34 @@ function ljCargarConfig(){
       // y solo se sobreescribe si el usuario escribe uno nuevo.
     })
     .catch(()=> showToast('⚠️ No se pudo cargar la configuración (sin internet)'));
+}
+
+function ljProbarEmail(){
+  const email = document.getElementById('lj-cfg-email-destino').value.trim();
+  if(!email){ showToast('⚠️ Escribe primero un correo'); return; }
+
+  const btn = event.target;
+  const textoOriginal = btn.textContent;
+  btn.textContent = 'Enviando...';
+  btn.disabled = true;
+
+  const params = new URLSearchParams();
+  params.append('type', 'probarEmail');
+  params.append('email', email);
+
+  fetch(LJ_SHEET_URL, { method:'POST', headers:{'Content-Type':'application/x-www-form-urlencoded'}, body: params.toString() })
+    .then(r=>r.json())
+    .then(resp=>{
+      btn.textContent = textoOriginal;
+      btn.disabled = false;
+      if(resp.ok) showToast('📧 Correo de prueba enviado, revisa tu bandeja');
+      else showToast('⚠️ ' + (resp.msg || 'No se pudo enviar'));
+    })
+    .catch(()=>{
+      btn.textContent = textoOriginal;
+      btn.disabled = false;
+      showToast('⚠️ Sin conexión, no se pudo enviar');
+    });
 }
 
 function ljGuardarConfig(){
