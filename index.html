@@ -365,7 +365,10 @@ canvas.sigCanvas{display:block;touch-action:none;cursor:crosshair;width:100%;hei
           <i class="ti ti-bell" id="lj-bell-btn" style="font-size:20px;color:#0a6e4a;cursor:pointer;" onclick="ljToggleAlertPanel()"></i>
           <span id="lj-bell-badge" style="display:none;position:absolute;top:-6px;right:-8px;background:#e53e3e;color:#fff;font-size:10px;font-weight:700;border-radius:50%;width:16px;height:16px;align-items:center;justify-content:center;"></span>
           <div id="lj-alert-panel" style="display:none;position:absolute;top:28px;right:-10px;background:#fff;border-radius:12px;box-shadow:0 4px 20px rgba(0,0,0,0.15);width:260px;max-height:320px;overflow-y:auto;z-index:500;">
-            <div style="padding:10px 14px;font-weight:700;font-size:13px;border-bottom:1px solid #eee;color:#1a1a1a;">Alertas de mantenimiento</div>
+            <div style="padding:10px 14px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid #eee;">
+              <span style="font-weight:700;font-size:13px;color:#1a1a1a;">Alertas de mantenimiento</span>
+              <button onclick="ljLimpiarAlertas()" style="border:none;background:none;color:#0a6e4a;font-size:12px;font-weight:600;cursor:pointer;padding:0;font-family:inherit;">Limpiar</button>
+            </div>
             <div id="lj-alert-list"></div>
           </div>
         </div>
@@ -1958,18 +1961,50 @@ function ljFormatFecha(fechaStr){
   return `${partes[2].substring(0,2)}/${partes[1]}/${partes[0]}`;
 }
 
+// Persistencia local de qué alertas ya se vieron (clic) o se limpiaron (botón "Limpiar").
+// La key de cada alerta combina cliente + fecha de mantenimiento, así que si esa fecha
+// cambia (por una nueva visita de mantenimiento) se trata como una alerta nueva otra vez.
+function ljGetAlertasLeidas(){
+  try { return JSON.parse(localStorage.getItem('lj_alertas_leidas') || '[]'); }
+  catch(e){ return []; }
+}
+function ljGetAlertasLimpiadas(){
+  try { return JSON.parse(localStorage.getItem('lj_alertas_limpiadas') || '[]'); }
+  catch(e){ return []; }
+}
+function ljMarcarAlertaLeida(key){
+  const leidas = ljGetAlertasLeidas();
+  if(!leidas.includes(key)){
+    leidas.push(key);
+    localStorage.setItem('lj_alertas_leidas', JSON.stringify(leidas));
+  }
+}
+function ljLimpiarAlertas(){
+  const actuales = ljCalcularAlertasLocal().map(a=>a.key);
+  if(!actuales.length) return;
+  const limpiadas = ljGetAlertasLimpiadas();
+  actuales.forEach(k=>{ if(!limpiadas.includes(k)) limpiadas.push(k); });
+  localStorage.setItem('lj_alertas_limpiadas', JSON.stringify(limpiadas));
+  ljRenderAlertBell();
+}
+
 // Calcula, a partir de ljDb.clients (ya sincronizado), qué clientes tienen
 // mantenimiento pendiente dentro de los próximos N días (config local) o vencido hoy.
 function ljCalcularAlertasLocal(){
   const diasAviso = parseInt(localStorage.getItem('lj_dias_aviso') || '5', 10);
   const hoy = new Date(); hoy.setHours(0,0,0,0);
+  const limpiadas = ljGetAlertasLimpiadas();
   const alertas = [];
   (ljDb.clients||[]).forEach(c=>{
     if(!c.proximoMantenimiento) return;
     const fecha = ljParseFechaSegura(c.proximoMantenimiento); fecha.setHours(0,0,0,0);
     const dias = Math.round((fecha - hoy) / (1000*60*60*24));
-    if(dias >= 0 && dias <= diasAviso){
-      alertas.push({ clienteId: c.id, nombre: c.nombre, fecha: c.proximoMantenimiento, dias: dias });
+    // Antes "dias >= 0" excluía mantenimientos ya vencidos (fecha pasada), típico al
+    // registrar clientes antiguos tarde. Ahora se siguen mostrando como vencidos.
+    if(dias <= diasAviso){
+      const key = c.id + '_' + c.proximoMantenimiento;
+      if(limpiadas.includes(key)) return;
+      alertas.push({ clienteId: c.id, nombre: c.nombre, fecha: c.proximoMantenimiento, dias: dias, key: key });
     }
   });
   alertas.sort((a,b)=>a.dias-b.dias);
@@ -1982,9 +2017,12 @@ function ljRenderAlertBell(){
   const lista = document.getElementById('lj-alert-list');
   if(!badge || !lista) return;
 
-  if(alertas.length){
+  const leidas = ljGetAlertasLeidas();
+  const noLeidas = alertas.filter(a=>!leidas.includes(a.key)).length;
+
+  if(noLeidas){
     badge.style.display = 'flex';
-    badge.textContent = alertas.length > 9 ? '9+' : alertas.length;
+    badge.textContent = noLeidas > 9 ? '9+' : noLeidas;
   } else {
     badge.style.display = 'none';
   }
@@ -1993,14 +2031,23 @@ function ljRenderAlertBell(){
     lista.innerHTML = `<div style="padding:16px;text-align:center;color:#aaa;font-size:13px;">Sin alertas pendientes</div>`;
     return;
   }
-  lista.innerHTML = alertas.map(a=>`
-    <div onclick="ljAbrirAlerta('${a.clienteId}')" style="padding:10px 14px;border-bottom:1px solid #f2f2f2;cursor:pointer;">
-      <div style="font-size:13.5px;font-weight:600;color:#1a1a1a;">${a.nombre}</div>
-      <div style="font-size:12px;color:${a.dias===0?'#e53e3e':'#e6a23c'};">
-        ${a.dias===0 ? 'Hoy le toca limpieza' : 'Limpieza en '+a.dias+' día(s)'} · ${ljFormatFecha(a.fecha)}
+  // Nuevas (no leídas): negrita y con fondo de color según urgencia.
+  // Vistas (ya leídas por clic): sin negrita, sin fondo, se quedan en la lista igual.
+  lista.innerHTML = alertas.map(a=>{
+    const leida = leidas.includes(a.key);
+    const urgente = a.dias <= 0;
+    const bg = leida ? 'transparent' : (urgente ? '#fdecea' : '#fff8e6');
+    const colorTexto = leida ? '#aaa' : (urgente ? '#e53e3e' : '#e6a23c');
+    const pesoNombre = leida ? 400 : 700;
+    return `
+    <div onclick="ljAbrirAlerta('${a.clienteId}','${a.key}')" style="padding:10px 14px;border-bottom:1px solid #f2f2f2;cursor:pointer;background:${bg};">
+      <div style="font-size:13.5px;font-weight:${pesoNombre};color:${leida?'#888':'#1a1a1a'};">${a.nombre}</div>
+      <div style="font-size:12px;color:${colorTexto};">
+        ${a.dias===0 ? 'Hoy le toca limpieza' : a.dias<0 ? 'Vencido hace '+Math.abs(a.dias)+' día(s)' : 'Limpieza en '+a.dias+' día(s)'} · ${ljFormatFecha(a.fecha)}
       </div>
     </div>
-  `).join('');
+  `;
+  }).join('');
 }
 
 function ljToggleAlertPanel(){
@@ -2008,8 +2055,10 @@ function ljToggleAlertPanel(){
   panel.style.display = panel.style.display === 'block' ? 'none' : 'block';
 }
 
-function ljAbrirAlerta(clienteId){
+function ljAbrirAlerta(clienteId, key){
+  if(key) ljMarcarAlertaLeida(key);
   document.getElementById('lj-alert-panel').style.display = 'none';
+  ljRenderAlertBell();
   ljOpenClient(clienteId);
 }
 
