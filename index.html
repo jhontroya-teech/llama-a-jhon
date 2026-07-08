@@ -532,10 +532,8 @@ canvas.sigCanvas{display:block;touch-action:none;cursor:crosshair;width:100%;hei
       <input type="checkbox" id="lj-cfg-email">
       <label for="lj-cfg-email">Gmail</label>
     </div>
-    <div style="display:flex;gap:8px;">
-      <input type="email" id="lj-cfg-email-destino" placeholder="Tu correo donde quieres recibir los avisos" style="flex:1;">
-      <button type="button" class="btn-secondary" style="white-space:nowrap;padding:0 14px;" onclick="ljProbarEmail()">Probar</button>
-    </div>
+    <input type="email" id="lj-cfg-email-destino" placeholder="Tu correo donde quieres recibir los avisos" style="margin-bottom:8px;">
+    <button type="button" class="btn-secondary" id="lj-btn-probar-email" style="margin-top:0;" onclick="ljProbarEmail(this)"><i class="ti ti-send"></i> Probar (enviar correo de prueba)</button>
     <div class="checkbox-resp" style="align-items:center;">
       <input type="checkbox" id="lj-cfg-telegram">
       <label for="lj-cfg-telegram">Telegram</label>
@@ -2060,13 +2058,12 @@ function ljCargarConfig(){
     .catch(()=> showToast('⚠️ No se pudo cargar la configuración (sin internet)'));
 }
 
-function ljProbarEmail(){
+function ljProbarEmail(btn){
   const email = document.getElementById('lj-cfg-email-destino').value.trim();
   if(!email){ showToast('⚠️ Escribe primero un correo'); return; }
 
-  const btn = event.target;
-  const textoOriginal = btn.textContent;
-  btn.textContent = 'Enviando...';
+  const textoOriginal = btn.innerHTML;
+  btn.innerHTML = 'Enviando...';
   btn.disabled = true;
 
   const params = new URLSearchParams();
@@ -2076,13 +2073,13 @@ function ljProbarEmail(){
   fetch(LJ_SHEET_URL, { method:'POST', headers:{'Content-Type':'application/x-www-form-urlencoded'}, body: params.toString() })
     .then(r=>r.json())
     .then(resp=>{
-      btn.textContent = textoOriginal;
+      btn.innerHTML = textoOriginal;
       btn.disabled = false;
       if(resp.ok) showToast('📧 Correo de prueba enviado, revisa tu bandeja');
       else showToast('⚠️ ' + (resp.msg || 'No se pudo enviar'));
     })
     .catch(()=>{
-      btn.textContent = textoOriginal;
+      btn.innerHTML = textoOriginal;
       btn.disabled = false;
       showToast('⚠️ Sin conexión, no se pudo enviar');
     });
