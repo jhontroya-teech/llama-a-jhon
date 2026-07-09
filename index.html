@@ -1140,6 +1140,19 @@ function teSaveVisit(){
   const btnG=document.getElementById('te-btn-guardar-visita');
   const stillUploading = teVisitPhotos.some(p=>p.uploading);
   if(stillUploading){ showToast('⏳ Espera, aún se están subiendo las fotos'); return; }
+
+  // Misma protección que en Llama a Jhon: evita regenerar y sobrescribir
+  // el PDF sin fotos cuando el celular ya liberó espacio automáticamente.
+  if(teEditingVisitId){
+    const original = teDb.visits.find(x=>String(x.id)===String(teEditingVisitId));
+    const teniaFotosAntes = original && (parseInt(original.fotos_count,10) > 0 || (original.fotosLinks && original.fotosLinks.length));
+    const fotosPerdidas = teniaFotosAntes && teVisitPhotos.length === 0;
+    if(fotosPerdidas){
+      const continuar = confirm('⚠️ Las fotos originales de esta visita ya no están guardadas en este celular (se liberó espacio automáticamente al llenarse la memoria).\n\nSi continúas, el PDF se generará de nuevo SIN esas fotos y reemplazará el reporte anterior (que sí las tenía).\n\n¿Guardar de todas formas?');
+      if(!continuar){ return; }
+    }
+  }
+
   btnG.disabled=true; btnG.textContent='✅ Visita guardada';
 
   // Todo el guardado va envuelto en try/catch: antes, si algo fallaba aquí
@@ -1892,7 +1905,7 @@ function ljInitSig(){
 
 function ljClearSig(){ if(ljSigCtx){ ljSigCtx.clearRect(0,0,380,160); ljSigHasContent=false; } }
 function ljResizeImage(dataUrl, maxDim, quality){
-  return new Promise((resolve)=>{
+  return new Promise((resolve, reject)=>{
     const img = new Image();
     img.onload = ()=>{
       let w = img.width, h = img.height;
@@ -1906,7 +1919,14 @@ function ljResizeImage(dataUrl, maxDim, quality){
       ctx.drawImage(img, 0, 0, w, h);
       resolve(canvas.toDataURL('image/jpeg', quality));
     };
-    img.onerror = ()=>resolve(dataUrl);
+    // Antes esto resolvía igual (con la imagen original sin procesar) cuando
+    // el navegador no podía leer la foto, por ejemplo formato HEIC de iPhone
+    // elegido desde la galería. Eso hacía que la miniatura se viera bien en
+    // el celular (porque Safari SÍ sabe mostrar HEIC), pero luego el PDF
+    // (que usa una librería aparte, sin ese soporte) la descartaba en
+    // silencio. Ahora se rechaza explícitamente para poder avisar al
+    // técnico de inmediato, al momento de tomar la foto.
+    img.onerror = ()=>reject(new Error('Formato de imagen no compatible (ej. HEIC)'));
     img.src = dataUrl;
   });
 }
@@ -1923,9 +1943,10 @@ function ljAddPhotos(input){
         const idx = ljVisitPhotos.findIndex(p=>p.id===tempId);
         if(idx>-1){ ljVisitPhotos[idx].preview = comprimida; ljVisitPhotos[idx].uploading = false; }
       }catch(err){
-        console.error('LJ error comprimiendo foto:', err);
+        console.error('LJ error procesando foto:', err);
         const idx = ljVisitPhotos.findIndex(p=>p.id===tempId);
-        if(idx>-1){ ljVisitPhotos[idx].preview = e.target.result; ljVisitPhotos[idx].uploading = false; }
+        if(idx>-1){ ljVisitPhotos[idx].error = true; ljVisitPhotos[idx].uploading = false; }
+        showToast('⚠️ Una foto no se pudo procesar (formato no compatible). Tómala de nuevo con la cámara, no desde la galería.');
       }
       ljRenderPhotoGrid();
     };
@@ -1944,6 +1965,22 @@ function ljSaveVisit(){
   const btnG=document.getElementById('lj-btn-guardar-visita');
   const stillUploading = ljVisitPhotos.some(p=>p.uploading);
   if(stillUploading){ showToast('⏳ Espera, aún se están subiendo las fotos'); return; }
+
+  // Protección contra pérdida silenciosa de fotos: si esta visita ya tenía
+  // fotos y un PDF generado, pero el celular liberó espacio automáticamente
+  // (ljSlimVisit) y esas fotos base64 ya no están cargadas en pantalla,
+  // guardar ahora regeneraría el PDF SIN fotos y reemplazaría el link del
+  // reporte bueno. Antes esto pasaba en silencio; ahora se avisa primero.
+  if(ljEditingVisitId){
+    const original = ljDb.visits.find(x=>String(x.id)===String(ljEditingVisitId));
+    const teniaFotosAntes = original && (parseInt(original.fotos_count,10) > 0 || (original.fotosLinks && original.fotosLinks.length));
+    const fotosPerdidas = teniaFotosAntes && ljVisitPhotos.length === 0;
+    if(fotosPerdidas){
+      const continuar = confirm('⚠️ Las fotos originales de esta visita ya no están guardadas en este celular (se liberó espacio automáticamente al llenarse la memoria).\n\nSi continúas, el PDF se generará de nuevo SIN esas fotos y reemplazará el reporte anterior (que sí las tenía).\n\n¿Guardar de todas formas?');
+      if(!continuar){ return; }
+    }
+  }
+
   btnG.disabled=true; btnG.textContent='✅ Visita guardada';
 
   // Todo el guardado va envuelto en try/catch: antes, si algo fallaba aquí
@@ -2048,7 +2085,29 @@ function ljBuildPDF(v, c){
   sec('Servicio'); fil('Tipo',v.tipo); fil('Fecha',v.fecha); fil('Responsabilidad',v.responsabilidad?'✓ Aceptada':'No aplica'); fil('Modo de pago',v.modoPago||'—'); fil('Costo',v.costoServicio?'$'+parseFloat(v.costoServicio).toFixed(2):'—'); y+=4;
   blq('Diagnóstico / Estado inicial',v.detalle); blq('Trabajo realizado',v.observacion);
   const fotos=v.fotos||[];
-  if(fotos.length){ sec('Evidencias fotográficas'); let xi=M; for(let i=0;i<Math.min(fotos.length,6);i++){try{const iW=55,iH=42;if(xi+iW>W-M){xi=M;y+=iH+5;}if(y+iH>270){pdf.addPage();y=15;xi=M;}pdf.addImage(fotos[i],'JPEG',xi,y,iW,iH,undefined,'MEDIUM');xi+=iW+5;}catch(e){}} y+=47;}
+  let ljFotosFallidas=0;
+  if(fotos.length){
+    sec('Evidencias fotográficas'); let xi=M;
+    for(let i=0;i<Math.min(fotos.length,6);i++){
+      try{
+        const iW=55,iH=42;
+        if(xi+iW>W-M){xi=M;y+=iH+5;}
+        if(y+iH>270){pdf.addPage();y=15;xi=M;}
+        pdf.addImage(fotos[i],'JPEG',xi,y,iW,iH,undefined,'MEDIUM');
+        xi+=iW+5;
+      }catch(e){
+        // Antes esto se ignoraba en silencio (catch vacio) y la foto
+        // simplemente desaparecia del PDF sin ningun aviso. La causa mas
+        // comun es que el celular guardo la foto en un formato que la
+        // libreria del PDF no puede leer (ej: HEIC de iPhone al elegir
+        // fotos desde la galeria en vez de la camara).
+        console.error('LJ PDF: no se pudo incluir la foto '+i+':', e);
+        ljFotosFallidas++;
+      }
+    }
+    y+=47;
+  }
+  pdf._ljFotosFallidas = ljFotosFallidas;
   if(v.firma){if(y+45>270){pdf.addPage();y=15;}sec('Firma del cliente');try{pdf.addImage(v.firma,'PNG',M,y,80,30,undefined,'MEDIUM');y+=35;}catch(e){}}
   if(y+12>270){pdf.addPage();y=15;}
   pdf.setDrawColor(200,200,200);pdf.line(M,y,W-M,y);y+=6;
@@ -2090,6 +2149,9 @@ async function ljAutoGenerarYSubirPDF(visitId){
     }
     showToast('Guardando reporte en Drive...');
     const pdf=ljBuildPDF(v,c);
+    if(pdf._ljFotosFallidas){
+      showToast('⚠️ '+pdf._ljFotosFallidas+' foto(s) no se pudieron incluir en el PDF (formato no compatible). Vuelve a tomarlas con la cámara, no desde la galería.');
+    }
     const ok=await ljUploadPDF(pdf, v, c);
     showToast(ok?'✅ Reporte guardado en Drive':'⚠️ No se pudo subir el reporte a Drive');
   }catch(err){
@@ -2104,6 +2166,9 @@ async function ljGenerarPDF(){
   if(!v||!c){ showToast('No se encontró la visita'); return; }
   showToast('Generando PDF...');
   const pdf=ljBuildPDF(v,c);
+  if(pdf._ljFotosFallidas){
+    showToast('⚠️ '+pdf._ljFotosFallidas+' foto(s) no se pudieron incluir en el PDF (formato no compatible). Vuelve a tomarlas con la cámara, no desde la galería.');
+  }
   pdf.save(`Reporte_${c.nombre.replace(/\s+/g,'_')}_${v.fecha}.pdf`);
   showToast('✅ PDF descargado, subiendo a Drive...');
   const ok=await ljUploadPDF(pdf, v, c);
