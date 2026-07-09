@@ -79,6 +79,8 @@ textarea{min-height:85px;resize:vertical;}
 .client-meta{font-size:13px;color:#888;margin-top:3px;}
 .badge{display:inline-block;font-size:11px;font-weight:600;padding:3px 10px;border-radius:20px;background:#E7F8EE;color:#0a6e4a;margin-top:6px;margin-right:4px;}
 .fab{position:fixed;bottom:1.5rem;right:1.5rem;width:56px;height:56px;border-radius:50%;background:#34C38F;color:#04342C;border:none;font-size:30px;cursor:pointer;display:flex;align-items:center;justify-content:center;box-shadow:0 4px 16px rgba(52,195,143,0.4);z-index:20;}
+.fab-back{position:fixed;bottom:1.5rem;left:1.5rem;width:52px;height:52px;border-radius:50%;background:#fff;color:#0a6e4a;border:1.5px solid #0a6e4a;font-size:22px;cursor:pointer;display:flex;align-items:center;justify-content:center;box-shadow:0 4px 16px rgba(10,110,74,0.2);z-index:20;}
+.fab-back:active{transform:scale(0.94);}
 .canvas-wrap{border:1px solid #ddd;border-radius:10px;margin-bottom:8px;background:#fff;overflow:hidden;}
 canvas.sigCanvas{display:block;touch-action:none;cursor:crosshair;width:100%;height:160px;}
 .clear-sig{background:none;border:none;color:#888;font-size:13px;cursor:pointer;padding:4px 0;font-family:inherit;display:flex;align-items:center;gap:4px;}
@@ -186,6 +188,7 @@ canvas.sigCanvas{display:block;touch-action:none;cursor:crosshair;width:100%;hei
 <body>
 
 <div id="toast-global" class="toast"></div>
+<button id="fab-back-global" class="fab-back" onclick="ljFabBackClick()" style="display:none;" aria-label="Volver a la pantalla anterior"><i class="ti ti-arrow-left"></i></button>
 
 <!-- ══════════════════════════════════════
      PANTALLA DE SELECCIÓN DE USUARIO
@@ -752,6 +755,7 @@ document.getElementById('login-user').addEventListener('keydown', e => { if(e.ke
 function backToSelect(){
   document.getElementById('login-screen').style.display = 'none';
   document.getElementById('select-screen').style.display = 'flex';
+  ljActualizarBotonAtras();
 }
 
 function launchApp(app){
@@ -760,6 +764,7 @@ function launchApp(app){
   document.getElementById('app-' + app).classList.add('active');
   if(app === 'thermo') teFetchData();
   else ljFetchData();
+  ljActualizarBotonAtras();
 }
 
 function switchUser(){
@@ -768,12 +773,29 @@ function switchUser(){
   document.getElementById('app-jhon').classList.remove('active');
   document.getElementById('login-screen').style.display = 'none';
   document.getElementById('select-screen').style.display = 'flex';
+  ljActualizarBotonAtras();
 }
 
 function showToast(msg){
   const t = document.getElementById('toast-global');
   t.textContent = msg; t.classList.add('show');
   setTimeout(() => t.classList.remove('show'), 2500);
+}
+
+// Botón flotante de "atrás" (esquina opuesta al "+"): en el celular, deslizar
+// de izquierda a derecha saca de la app por completo en vez de retroceder
+// una pantalla. Este botón hace lo mismo que el botón "atrás" del header de
+// cada pantalla, para tener una forma de retroceder que no cierre la app.
+// Se recalcula cada vez que se cambia de pantalla (llamado desde
+// ljGoScreen/teGoScreen y al entrar/salir de una app).
+function ljFabBackClick(){
+  const backBtn = document.querySelector('#app-thermo.active .screen.active .back-btn, #app-jhon.active .screen.active .back-btn');
+  if(backBtn) backBtn.click();
+}
+function ljActualizarBotonAtras(){
+  const btn = document.getElementById('fab-back-global');
+  const backBtn = document.querySelector('#app-thermo.active .screen.active .back-btn, #app-jhon.active .screen.active .back-btn');
+  btn.style.display = backBtn ? 'flex' : 'none';
 }
 
 // Auto-login si ya hay sesión
@@ -939,6 +961,7 @@ function teGoScreen(id){
   if(id==='te-screen-home'){ teUpdateStats(); teRenderClients(); if(teCalYear!==undefined) teRenderCal(); }
   if(id==='te-screen-client-detail') teRenderClientDetail();
   if(id==='te-screen-new-visit') teInitSig();
+  ljActualizarBotonAtras();
 }
 
 function teUpdateStats(){
@@ -1482,6 +1505,7 @@ function ljGoScreen(id){
   if(id==='lj-screen-new-visit') ljInitSig();
   if(id==='lj-screen-config') ljCargarConfig();
   if(id==='lj-screen-institucion-aires') ljRenderInstitucionAires();
+  ljActualizarBotonAtras();
 }
 
 function ljUpdateStats(){
