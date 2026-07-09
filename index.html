@@ -496,6 +496,22 @@ canvas.sigCanvas{display:block;touch-action:none;cursor:crosshair;width:100%;hei
       <button class="btn-switch-user" onclick="switchUser()"><i class="ti ti-user-circle"></i> Cambiar usuario</button>
     </div>
     <div id="lj-institucion-aires-list"></div>
+    <button class="lj-add-aire-btn" onclick="ljAbrirModalAireExistente()"><i class="ti ti-plus"></i> Agregar aire</button>
+    <button class="btn-primary" onclick="ljAbrirModalReporte()"><i class="ti ti-file-download"></i> Generar reporte</button>
+  </div>
+
+  <!-- MODAL: GENERAR REPORTE (rango de fechas, cliente especial) -->
+  <div id="lj-overlay-reporte" class="lj-overlay">
+    <div class="lj-overlay-box">
+      <div class="lj-overlay-title" style="text-align:left;margin-bottom:2px;">Generar reporte</div>
+      <p style="font-size:12px;color:#888;margin:0 0 14px;">Elige el rango de fechas del reporte.</p>
+      <p style="font-size:12px;color:#888;margin:0 0 4px;">Fecha de inicio</p>
+      <input type="date" id="lj-reporte-desde">
+      <p style="font-size:12px;color:#888;margin:0 0 4px;">Fecha de término</p>
+      <input type="date" id="lj-reporte-hasta">
+      <button class="btn-primary" onclick="ljGenerarReporteInstitucion()"><i class="ti ti-download"></i> Descargar Excel</button>
+      <button class="btn-secondary" onclick="ljCerrarModalReporte()">Cancelar</button>
+    </div>
   </div>
 
   <!-- NUEVO / EDITAR CLIENTE -->
@@ -1572,6 +1588,7 @@ function ljSaveClient(){
 // ══════════════════════════════════════════════════════════
 let ljInstAiresTemp = [];
 let ljCurrentInstitucionId = null;
+let ljAireModalMode = 'nueva'; // 'nueva' = institución en creación · 'existente' = ya guardada
 
 function ljAbrirSelectorTipoCliente(){
   document.getElementById('lj-overlay-tipo-cliente').classList.add('active');
@@ -1596,6 +1613,15 @@ function ljGoNewInstitucion(){
 }
 
 function ljAbrirModalAire(){
+  ljAireModalMode = 'nueva';
+  ['lj-aire-lugar','lj-aire-marca','lj-aire-codigo','lj-aire-ubicacion'].forEach(id=>document.getElementById(id).value='');
+  document.getElementById('lj-aire-tipo').value='';
+  document.getElementById('lj-aire-btu').value='';
+  document.getElementById('lj-overlay-aire').classList.add('active');
+}
+// Agregar un aire a una institución que YA existe (desde su pantalla "Ver aires")
+function ljAbrirModalAireExistente(){
+  ljAireModalMode = 'existente';
   ['lj-aire-lugar','lj-aire-marca','lj-aire-codigo','lj-aire-ubicacion'].forEach(id=>document.getElementById(id).value='');
   document.getElementById('lj-aire-tipo').value='';
   document.getElementById('lj-aire-btu').value='';
@@ -1608,14 +1634,46 @@ function ljCerrarModalAire(){
 function ljGuardarAireEnLista(){
   const lugar=document.getElementById('lj-aire-lugar').value.trim();
   if(!lugar){ showToast('⚠️ Escribe el nombre del lugar'); return; }
-  ljInstAiresTemp.push({
+  const aire={
     lugar,
     tipo: document.getElementById('lj-aire-tipo').value,
     marca: document.getElementById('lj-aire-marca').value.trim(),
     btu: document.getElementById('lj-aire-btu').value,
     codigoAire: document.getElementById('lj-aire-codigo').value.trim(),
     ubicacion: document.getElementById('lj-aire-ubicacion').value.trim()
-  });
+  };
+
+  if(ljAireModalMode==='existente'){
+    // Institución ya guardada: crea el aire directo, con los mismos datos
+    // de institución/encargado/teléfono/dirección que ya tienen sus otros aires.
+    const aires = ljDb.clients.filter(c=>c.tipoCliente==='especial' && c.institucionId===ljCurrentInstitucionId);
+    const base = aires[0] || {};
+    const newId='c_'+Date.now();
+    const data={
+      nombre: (base.institucionNombre||'')+' - '+aire.lugar,
+      telefono: base.telefono||'',
+      direccion: base.direccion||'',
+      tipo: aire.tipo,
+      marca: aire.marca,
+      btu: aire.btu,
+      tipoCliente: 'especial',
+      institucionId: ljCurrentInstitucionId,
+      institucionNombre: base.institucionNombre||'',
+      encargado: base.encargado||'',
+      lugar: aire.lugar,
+      codigoAire: aire.codigoAire,
+      ubicacion: aire.ubicacion
+    };
+    ljDb.clients.push({id:newId,...data});
+    ljSyncToSheets({type:'client',id:newId,...data});
+    ljSaveDb();
+    showToast('✅ Aire agregado');
+    ljCerrarModalAire();
+    ljRenderInstitucionAires();
+    return;
+  }
+
+  ljInstAiresTemp.push(aire);
   ljCerrarModalAire();
   ljRenderAiresTempList();
 }
@@ -1690,6 +1748,51 @@ function ljRenderInstitucionAires(){
       <span class="badge">${visits.length} visitas</span>
     </div>`;
   }).join('');
+}
+
+// ---- Reporte Excel por rango de fechas (una institución) ----
+
+function ljAbrirModalReporte(){
+  const hoy = ljFechaLocalHoy();
+  const inicioMes = hoy.slice(0,8)+'01';
+  document.getElementById('lj-reporte-desde').value = inicioMes;
+  document.getElementById('lj-reporte-hasta').value = hoy;
+  document.getElementById('lj-overlay-reporte').classList.add('active');
+}
+function ljCerrarModalReporte(){
+  document.getElementById('lj-overlay-reporte').classList.remove('active');
+}
+
+function ljGenerarReporteInstitucion(){
+  if(typeof XLSX === 'undefined'){ showToast('⚠️ No se pudo cargar el exportador'); return; }
+  const desde=document.getElementById('lj-reporte-desde').value;
+  const hasta=document.getElementById('lj-reporte-hasta').value;
+  if(!desde || !hasta){ showToast('⚠️ Elige ambas fechas'); return; }
+  if(desde > hasta){ showToast('⚠️ La fecha de inicio debe ser antes que la de término'); return; }
+
+  const aires = ljDb.clients.filter(c=>c.tipoCliente==='especial' && c.institucionId===ljCurrentInstitucionId);
+  const airesIds = aires.map(a=>String(a.id));
+  const nombreInst = aires.length ? aires[0].institucionNombre : 'Institucion';
+
+  const filas = ljDb.visits
+    .filter(v=>airesIds.includes(String(v.clientId)) && v.fecha >= desde && v.fecha <= hasta)
+    .map(v=>{
+      const aire=aires.find(a=>String(a.id)===String(v.clientId));
+      return {
+        Aire: aire ? (aire.lugar||aire.nombre) : v.clientId,
+        Ubicacion: aire ? aire.ubicacion : '',
+        Fecha: v.fecha, Tipo: v.tipo, Detalle: v.detalle, Observacion: v.observacion,
+        'Modo de pago': v.modoPago, Costo: v.costoServicio
+      };
+    });
+
+  if(!filas.length){ showToast('⚠️ No hay visitas en ese rango de fechas'); return; }
+
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(filas), 'Reporte');
+  XLSX.writeFile(wb, `${nombreInst.replace(/[^a-zA-Z0-9_-]/g,'_')}_${desde}_a_${hasta}.xlsx`);
+  showToast('📥 Excel descargado');
+  ljCerrarModalReporte();
 }
 
 // Fecha local segura: toISOString() usa UTC y desfasa el día en la noche.
