@@ -161,6 +161,25 @@ canvas.sigCanvas{display:block;touch-action:none;cursor:crosshair;width:100%;hei
 .btn-pdf-thermo{width:100%;padding:13px;background:#34C38F;color:#04342C;border:none;border-radius:10px;font-size:15px;font-weight:700;cursor:pointer;margin-top:8px;font-family:inherit;display:flex;align-items:center;justify-content:center;gap:8px;}
 .btn-pdf-jhon{width:100%;padding:13px;background:#34C38F;color:#04342C;border:none;border-radius:10px;font-size:15px;font-weight:700;cursor:pointer;margin-top:8px;font-family:inherit;display:flex;align-items:center;justify-content:center;gap:8px;}
 .btn-home-shared{width:100%;padding:13px;background:#fff;color:#1a1a1a;border:1px solid #ddd;border-radius:10px;font-size:15px;font-weight:600;cursor:pointer;margin-top:8px;font-family:inherit;display:flex;align-items:center;justify-content:center;gap:8px;}
+/* ── SELECTOR TIPO DE CLIENTE (Cliente normal / Cliente especial) ── */
+.lj-overlay{position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.45);z-index:500;display:none;justify-content:center;align-items:center;padding:1.5rem;}
+.lj-overlay.active{display:flex;}
+.lj-overlay-box{background:#fff;border-radius:16px;padding:22px 20px;width:100%;max-width:380px;}
+.lj-overlay-title{font-size:16px;font-weight:700;color:#1a1a1a;margin-bottom:4px;text-align:center;}
+.lj-overlay-sub{font-size:13px;color:#888;text-align:center;margin-bottom:18px;}
+.lj-tipo-cards{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
+.lj-tipo-card{background:#F1FBF6;border:2px solid transparent;border-radius:14px;padding:18px 10px;text-align:center;cursor:pointer;}
+.lj-tipo-card:active{transform:scale(0.97);}
+.lj-tipo-card i{font-size:30px;color:#0a6e4a;margin-bottom:8px;display:block;}
+.lj-tipo-card span{font-size:13px;font-weight:600;color:#1a1a1a;}
+.lj-overlay-cancel{width:100%;padding:10px;background:none;border:none;color:#aaa;font-size:13px;cursor:pointer;margin-top:16px;font-family:inherit;}
+/* ── AIRES (cliente especial) ── */
+.lj-aire-row{display:flex;align-items:center;justify-content:space-between;background:#F1FBF6;border-radius:10px;padding:10px 12px;margin-bottom:8px;}
+.lj-aire-row-name{font-size:14px;font-weight:600;color:#1a1a1a;}
+.lj-aire-row-meta{font-size:12px;color:#888;margin-top:2px;}
+.lj-aire-row-del{background:none;border:none;color:#e53e3e;font-size:18px;cursor:pointer;padding:4px;}
+.lj-add-aire-btn{width:100%;padding:11px;background:#fff;color:#0a6e4a;border:1.5px dashed #34C38F;border-radius:10px;font-size:14px;font-weight:600;cursor:pointer;margin-top:6px;font-family:inherit;display:flex;align-items:center;justify-content:center;gap:6px;}
+.lj-aire-modal-box{background:#fff;border-radius:16px;padding:20px;width:100%;max-width:400px;max-height:85vh;overflow-y:auto;}
 </style>
 </head>
 <body>
@@ -403,7 +422,80 @@ canvas.sigCanvas{display:block;touch-action:none;cursor:crosshair;width:100%;hei
       </div>
       <div id="lj-cal-day-panel"></div>
     </div>
-    <button class="fab" onclick="ljGoNewClient()"><i class="ti ti-plus"></i></button>
+    <button class="fab" onclick="ljAbrirSelectorTipoCliente()"><i class="ti ti-plus"></i></button>
+  </div>
+
+  <!-- SELECTOR: CLIENTE NORMAL O ESPECIAL -->
+  <div id="lj-overlay-tipo-cliente" class="lj-overlay">
+    <div class="lj-overlay-box">
+      <div class="lj-overlay-title">Agregar cliente</div>
+      <div class="lj-overlay-sub">¿Qué tipo de cliente es?</div>
+      <div class="lj-tipo-cards">
+        <div class="lj-tipo-card" onclick="ljElegirTipoNormal()">
+          <i class="ti ti-user"></i>
+          <span>Cliente normal</span>
+        </div>
+        <div class="lj-tipo-card" onclick="ljElegirTipoEspecial()">
+          <i class="ti ti-building-hospital"></i>
+          <span>Cliente especial</span>
+        </div>
+      </div>
+      <button class="lj-overlay-cancel" onclick="ljCerrarSelectorTipoCliente()">Cancelar</button>
+    </div>
+  </div>
+
+  <!-- MODAL: AGREGAR AIRE (cliente especial) -->
+  <div id="lj-overlay-aire" class="lj-overlay">
+    <div class="lj-aire-modal-box">
+      <div class="lj-overlay-title" style="text-align:left;margin-bottom:14px;">Agregar aire</div>
+      <input type="text" id="lj-aire-lugar" placeholder="Nombre del lugar (ej. Sala post parto)">
+      <select id="lj-aire-tipo">
+        <option value="">Tipo de aire acondicionado</option>
+        <option>Split</option><option>Central</option><option>Ventana</option>
+        <option>Mini split</option><option>Cassette</option><option>Otro</option>
+      </select>
+      <input type="text" id="lj-aire-marca" placeholder="Marca (ej. TCL)">
+      <select id="lj-aire-btu">
+        <option value="">BTU / capacidad</option>
+        <option value="12,000 BTU">12,000 BTU</option>
+        <option value="18,000 BTU">18,000 BTU</option>
+        <option value="24,000 BTU">24,000 BTU</option>
+        <option value="36,000 BTU">36,000 BTU</option>
+      </select>
+      <input type="text" id="lj-aire-codigo" placeholder="Código de aire">
+      <input type="text" id="lj-aire-ubicacion" placeholder="Ubicación (ej. Torre 1)">
+      <button class="btn-primary" onclick="ljGuardarAireEnLista()">Guardar aire</button>
+      <button class="btn-secondary" onclick="ljCerrarModalAire()">Cancelar</button>
+    </div>
+  </div>
+
+  <!-- NUEVA INSTITUCIÓN (cliente especial) -->
+  <div id="lj-screen-new-institucion" class="screen">
+    <div class="header">
+      <button class="back-btn" onclick="ljGoScreen('lj-screen-home')"><i class="ti ti-arrow-left"></i></button>
+      <h1>Cliente especial</h1>
+      <button class="btn-switch-user" onclick="switchUser()"><i class="ti ti-user-circle"></i> Cambiar usuario</button>
+    </div>
+    <div class="section-title">Datos</div>
+    <input type="text" id="lj-inst-nombre" placeholder="Nombre institución">
+    <input type="text" id="lj-inst-encargado" placeholder="Nombre del encargado">
+    <input type="tel" id="lj-inst-numero" placeholder="Número">
+    <input type="text" id="lj-inst-direccion" placeholder="Dirección">
+    <div class="section-title">Aires</div>
+    <div id="lj-inst-aires-list"></div>
+    <button class="lj-add-aire-btn" onclick="ljAbrirModalAire()"><i class="ti ti-plus"></i> Agregar aire</button>
+    <button class="btn-primary" onclick="ljGuardarInstitucion()">Guardar cliente</button>
+    <button class="btn-secondary" onclick="ljGoScreen('lj-screen-home')">Cancelar</button>
+  </div>
+
+  <!-- LISTA DE AIRES DE UNA INSTITUCIÓN -->
+  <div id="lj-screen-institucion-aires" class="screen">
+    <div class="header">
+      <button class="back-btn" onclick="ljGoScreen('lj-screen-home')"><i class="ti ti-arrow-left"></i></button>
+      <h1 id="lj-institucion-aires-title">Institución</h1>
+      <button class="btn-switch-user" onclick="switchUser()"><i class="ti ti-user-circle"></i> Cambiar usuario</button>
+    </div>
+    <div id="lj-institucion-aires-list"></div>
   </div>
 
   <!-- NUEVO / EDITAR CLIENTE -->
@@ -1300,6 +1392,13 @@ function ljSyncToSheets(data){
     params.append('tipo', data.tipo||'');
     params.append('marca', data.marca||'');
     params.append('btu', data.btu||'');
+    params.append('tipoCliente', data.tipoCliente||'');
+    params.append('institucionId', data.institucionId||'');
+    params.append('institucionNombre', data.institucionNombre||'');
+    params.append('encargado', data.encargado||'');
+    params.append('lugar', data.lugar||'');
+    params.append('codigoAire', data.codigoAire||'');
+    params.append('ubicacion', data.ubicacion||'');
   }
   if(data.type==='visit'){
     params.append('clientId', data.clientId||'');
@@ -1350,6 +1449,7 @@ function ljGoScreen(id){
   if(id==='lj-screen-client-detail') ljRenderClientDetail();
   if(id==='lj-screen-new-visit') ljInitSig();
   if(id==='lj-screen-config') ljCargarConfig();
+  if(id==='lj-screen-institucion-aires') ljRenderInstitucionAires();
 }
 
 function ljUpdateStats(){
@@ -1360,9 +1460,24 @@ function ljUpdateStats(){
 function ljRenderClients(){
   const q=document.getElementById('lj-search-input').value.toLowerCase();
   const list=document.getElementById('lj-client-list');
-  const filtered=ljDb.clients.filter(c=>c.nombre.toLowerCase().includes(q)||(c.direccion||'').toLowerCase().includes(q));
-  if(!filtered.length){ list.innerHTML=`<div class="empty-state"><i class="ti ti-users"></i><p>Sin resultados</p></div>`; return; }
-  list.innerHTML=filtered.map(c=>{
+
+  // Clientes normales: se muestran igual que siempre.
+  const normales=ljDb.clients.filter(c=>c.tipoCliente!=='especial');
+  // Clientes especiales: se agrupan por institución (una tarjeta por institución, no por aire).
+  const especiales=ljDb.clients.filter(c=>c.tipoCliente==='especial');
+  const institucionesMap={};
+  especiales.forEach(a=>{
+    if(!institucionesMap[a.institucionId]) institucionesMap[a.institucionId]={institucionId:a.institucionId,institucionNombre:a.institucionNombre,direccion:a.direccion,aires:[]};
+    institucionesMap[a.institucionId].aires.push(a);
+  });
+  const instituciones=Object.values(institucionesMap);
+
+  const filteredNormales=normales.filter(c=>c.nombre.toLowerCase().includes(q)||(c.direccion||'').toLowerCase().includes(q));
+  const filteredInstituciones=instituciones.filter(i=>(i.institucionNombre||'').toLowerCase().includes(q)||(i.direccion||'').toLowerCase().includes(q));
+
+  if(!filteredNormales.length && !filteredInstituciones.length){ list.innerHTML=`<div class="empty-state"><i class="ti ti-users"></i><p>Sin resultados</p></div>`; return; }
+
+  const htmlNormales=filteredNormales.map(c=>{
     const visits=ljDb.visits.filter(v=>String(v.clientId)===String(c.id));
     return `<div class="client-card" onclick="ljOpenClient('${c.id}')">
       <div class="client-name">${c.nombre}</div>
@@ -1371,6 +1486,22 @@ function ljRenderClients(){
       <span class="badge">${visits.length} visitas</span>
     </div>`;
   }).join('');
+
+  const htmlInstituciones=filteredInstituciones.map(i=>{
+    return `<div class="client-card" onclick="ljAbrirInstitucion('${i.institucionId}')">
+      <div class="client-name">${i.institucionNombre}</div>
+      <div class="client-meta"><i class="ti ti-map-pin"></i> ${i.direccion||'Sin dirección'}</div>
+      <span class="badge" style="background:#E7F8EE;color:#0a6e4a;">Institución</span>
+      <span class="badge">Ver aires (${i.aires.length})</span>
+    </div>`;
+  }).join('');
+
+  list.innerHTML = htmlInstituciones + htmlNormales;
+}
+
+function ljAbrirInstitucion(institucionId){
+  ljCurrentInstitucionId=institucionId;
+  ljGoScreen('lj-screen-institucion-aires');
 }
 
 function ljOpenClient(id){ ljCurrentClientId=id; ljGoScreen('lj-screen-client-detail'); }
@@ -1378,7 +1509,13 @@ function ljOpenClient(id){ ljCurrentClientId=id; ljGoScreen('lj-screen-client-de
 function ljRenderClientDetail(){
   const c=ljDb.clients.find(x=>String(x.id)===String(ljCurrentClientId)); if(!c) return;
   document.getElementById('lj-client-detail-name').textContent=c.nombre;
+  const filasEspecial = c.tipoCliente==='especial' ? `
+    <div class="detail-row"><span class="detail-label">Institución</span><span class="detail-value">${c.institucionNombre||'—'}</span></div>
+    <div class="detail-row"><span class="detail-label">Encargado</span><span class="detail-value">${c.encargado||'—'}</span></div>
+    <div class="detail-row"><span class="detail-label">Código de aire</span><span class="detail-value">${c.codigoAire||'—'}</span></div>
+    <div class="detail-row"><span class="detail-label">Ubicación</span><span class="detail-value">${c.ubicacion||'—'}</span></div>` : '';
   document.getElementById('lj-client-detail-info').innerHTML=`
+    ${filasEspecial}
     <div class="detail-row"><span class="detail-label">Teléfono</span><span class="detail-value">${c.telefono||'—'}</span></div>
     <div class="detail-row"><span class="detail-label">Dirección</span><span class="detail-value">${c.direccion||'—'}</span></div>
     <div class="detail-row"><span class="detail-label">Tipo</span><span class="detail-value">${c.tipo||'—'}</span></div>
@@ -1428,6 +1565,131 @@ function ljSaveClient(){
   }
   ljSaveDb(); ljSyncToSheets({type:'client',id:ljCurrentClientId,...data});
   ljGoScreen('lj-screen-client-detail');
+}
+
+// ══════════════════════════════════════════════════════════
+//  CLIENTE ESPECIAL (institución con varios aires)
+// ══════════════════════════════════════════════════════════
+let ljInstAiresTemp = [];
+let ljCurrentInstitucionId = null;
+
+function ljAbrirSelectorTipoCliente(){
+  document.getElementById('lj-overlay-tipo-cliente').classList.add('active');
+}
+function ljCerrarSelectorTipoCliente(){
+  document.getElementById('lj-overlay-tipo-cliente').classList.remove('active');
+}
+function ljElegirTipoNormal(){
+  ljCerrarSelectorTipoCliente();
+  ljGoNewClient();
+}
+function ljElegirTipoEspecial(){
+  ljCerrarSelectorTipoCliente();
+  ljGoNewInstitucion();
+}
+
+function ljGoNewInstitucion(){
+  ljInstAiresTemp = [];
+  ['lj-inst-nombre','lj-inst-encargado','lj-inst-numero','lj-inst-direccion'].forEach(id=>document.getElementById(id).value='');
+  ljRenderAiresTempList();
+  ljGoScreen('lj-screen-new-institucion');
+}
+
+function ljAbrirModalAire(){
+  ['lj-aire-lugar','lj-aire-marca','lj-aire-codigo','lj-aire-ubicacion'].forEach(id=>document.getElementById(id).value='');
+  document.getElementById('lj-aire-tipo').value='';
+  document.getElementById('lj-aire-btu').value='';
+  document.getElementById('lj-overlay-aire').classList.add('active');
+}
+function ljCerrarModalAire(){
+  document.getElementById('lj-overlay-aire').classList.remove('active');
+}
+
+function ljGuardarAireEnLista(){
+  const lugar=document.getElementById('lj-aire-lugar').value.trim();
+  if(!lugar){ showToast('⚠️ Escribe el nombre del lugar'); return; }
+  ljInstAiresTemp.push({
+    lugar,
+    tipo: document.getElementById('lj-aire-tipo').value,
+    marca: document.getElementById('lj-aire-marca').value.trim(),
+    btu: document.getElementById('lj-aire-btu').value,
+    codigoAire: document.getElementById('lj-aire-codigo').value.trim(),
+    ubicacion: document.getElementById('lj-aire-ubicacion').value.trim()
+  });
+  ljCerrarModalAire();
+  ljRenderAiresTempList();
+}
+
+function ljQuitarAireDeLista(idx){
+  ljInstAiresTemp.splice(idx,1);
+  ljRenderAiresTempList();
+}
+
+function ljRenderAiresTempList(){
+  const wrap=document.getElementById('lj-inst-aires-list');
+  if(!ljInstAiresTemp.length){ wrap.innerHTML=`<p style="font-size:13px;color:#aaa;">Sin aires agregados todavía</p>`; return; }
+  wrap.innerHTML = ljInstAiresTemp.map((a,idx)=>`
+    <div class="lj-aire-row">
+      <div>
+        <div class="lj-aire-row-name">${a.lugar}</div>
+        <div class="lj-aire-row-meta">${[a.tipo,a.marca,a.btu].filter(Boolean).join(' · ')||'—'}</div>
+      </div>
+      <button class="lj-aire-row-del" onclick="ljQuitarAireDeLista(${idx})"><i class="ti ti-x"></i></button>
+    </div>`).join('');
+}
+
+function ljGuardarInstitucion(){
+  const institucionNombre=document.getElementById('lj-inst-nombre').value.trim();
+  if(!institucionNombre){ showToast('⚠️ Escribe el nombre de la institución'); return; }
+  if(!ljInstAiresTemp.length){ showToast('⚠️ Agrega al menos un aire'); return; }
+
+  const encargado=document.getElementById('lj-inst-encargado').value.trim();
+  const numero=document.getElementById('lj-inst-numero').value.trim();
+  const direccion=document.getElementById('lj-inst-direccion').value.trim();
+  const institucionId='inst_'+Date.now();
+
+  ljInstAiresTemp.forEach((aire,idx)=>{
+    const newId='c_'+Date.now()+'_'+idx;
+    const data={
+      nombre: institucionNombre+' - '+aire.lugar,
+      telefono: numero,
+      direccion: direccion,
+      tipo: aire.tipo,
+      marca: aire.marca,
+      btu: aire.btu,
+      tipoCliente: 'especial',
+      institucionId: institucionId,
+      institucionNombre: institucionNombre,
+      encargado: encargado,
+      lugar: aire.lugar,
+      codigoAire: aire.codigoAire,
+      ubicacion: aire.ubicacion
+    };
+    ljDb.clients.push({id:newId,...data});
+    ljSyncToSheets({type:'client',id:newId,...data});
+  });
+
+  ljSaveDb();
+  showToast('✅ Institución guardada con '+ljInstAiresTemp.length+' aire(s)');
+  ljCurrentInstitucionId = institucionId;
+  ljGoScreen('lj-screen-institucion-aires');
+}
+
+function ljRenderInstitucionAires(){
+  const aires = ljDb.clients.filter(c=>c.tipoCliente==='especial' && c.institucionId===ljCurrentInstitucionId);
+  const nombreInst = aires.length ? aires[0].institucionNombre : 'Institución';
+  document.getElementById('lj-institucion-aires-title').textContent = nombreInst;
+  const wrap = document.getElementById('lj-institucion-aires-list');
+  if(!aires.length){ wrap.innerHTML=`<div class="empty-state"><p>Sin aires registrados</p></div>`; return; }
+  wrap.innerHTML = aires.map(a=>{
+    const visits=ljDb.visits.filter(v=>String(v.clientId)===String(a.id));
+    return `<div class="client-card" onclick="ljOpenClient('${a.id}')">
+      <div class="client-name">${a.lugar||a.nombre}</div>
+      <div class="client-meta"><i class="ti ti-map-pin"></i> ${a.ubicacion||'Sin ubicación'}</div>
+      <span class="badge">${a.tipo||'Sin tipo'}</span>
+      <span class="badge">${visits.length} visitas</span>
+    </div>`;
+  }).join('');
 }
 
 // Fecha local segura: toISOString() usa UTC y desfasa el día en la noche.
