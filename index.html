@@ -75,13 +75,40 @@ textarea{min-height:85px;resize:vertical;}
 .btn-secondary{width:100%;padding:13px;background:#fff;color:#1a1a1a;border:1px solid #DCF2E5;border-radius:10px;font-size:15px;cursor:pointer;margin-top:8px;font-family:inherit;}
 .btn-danger{width:100%;padding:13px;background:#fff;color:#e53e3e;border:1px solid #e53e3e;border-radius:10px;font-size:15px;cursor:pointer;margin-top:8px;font-family:inherit;}
 .client-card{background:#fff;border:none;border-left:3px solid #34C38F;border-radius:10px;padding:14px 16px;margin-bottom:10px;cursor:pointer;box-shadow:0 1px 4px rgba(10,110,74,0.06);}
-.client-card-top{display:flex;justify-content:space-between;align-items:flex-start;gap:8px;}
-.mini-stamps{display:flex;gap:4px;align-items:center;flex-shrink:0;}
-.mini-stamp{width:13px;height:13px;border-radius:50%;background:#E2E2E2;border:1.5px solid #cfcfcf;}
-.mini-stamp.filled{background:#0a6e4a;border-color:#0a6e4a;}
-.mini-stamps-label{font-size:10px;color:#8a8a8a;margin-left:4px;white-space:nowrap;}
-.btn-tarjeta-mini{display:inline-flex;align-items:center;gap:4px;font-size:11px;font-weight:600;color:#0a6e4a;background:#E7F8EE;border-radius:20px;padding:3px 10px;margin-top:8px;text-decoration:none;}
-.btn-tarjeta-mini:active{opacity:0.7;}
+/* ── PANEL ESTILO NAKORY (Llama a Jhon) ── */
+.lj-header-banner{background:linear-gradient(135deg,#EAFBF3 0%,#D3F3E3 45%,#B9ECD3 100%);padding:18px 16px 34px;border-radius:0 0 26px 26px;}
+.lj-header-top{display:flex;align-items:center;gap:12px;}
+.lj-header-logo{width:50px;height:50px;border-radius:50%;background:#fff;border:2px solid #0a6e4a;display:flex;align-items:center;justify-content:center;font-size:22px;color:#0a6e4a;flex-shrink:0;}
+.lj-header-titles{flex:1;min-width:0;}
+.lj-header-titles h1{font-size:18px;font-weight:800;color:#0a2f22;margin:0;line-height:1.2;}
+.lj-header-titles .sub{font-size:11.5px;color:#4f6459;margin-top:2px;}
+.lj-header-agenda-btn{background:rgba(255,255,255,0.9);color:#0a2f22;font-weight:700;font-size:12.5px;padding:9px 16px;border-radius:20px;border:none;cursor:pointer;white-space:nowrap;flex-shrink:0;}
+.lj-header-actions-row{display:flex;gap:10px;align-items:center;justify-content:flex-end;margin-top:14px;}
+.lj-header-action-btn{width:38px;height:38px;border-radius:12px;background:rgba(255,255,255,0.75);display:flex;align-items:center;justify-content:center;color:#0a6e4a;font-size:18px;cursor:pointer;position:relative;}
+.lj-header-switch{font-size:11px;font-weight:700;color:#0a6e4a;background:rgba(255,255,255,0.75);border:none;border-radius:12px;padding:0 10px;height:38px;display:flex;align-items:center;gap:6px;cursor:pointer;}
+
+.lj-panel-card{background:#fff;border-radius:20px;margin:-22px 14px 90px;box-shadow:0 6px 24px rgba(10,110,74,0.10);padding:18px 16px 8px;position:relative;z-index:2;}
+.lj-panel-card h2{font-size:16px;font-weight:800;color:#1a1a1a;margin-bottom:12px;}
+.lj-stats-row{display:flex;gap:10px;margin-bottom:14px;}
+.lj-stats-row .stat-card{flex:1;}
+.lj-hint{font-size:11px;color:#9a9a9a;margin:2px 0 14px;}
+
+.lj-table-head{display:grid;grid-template-columns:1.5fr 1.3fr 1.1fr 0.9fr;gap:6px;padding:0 4px 8px;border-bottom:1px solid #eee;font-size:9.5px;font-weight:800;color:#9a9a9a;letter-spacing:0.3px;text-transform:uppercase;}
+.lj-table-row{display:grid;grid-template-columns:1.5fr 1.3fr 1.1fr 0.9fr;gap:6px;align-items:center;padding:12px 4px;border-bottom:1px solid #f3f3f3;cursor:pointer;}
+.lj-table-row:active{background:#f7fdf9;}
+.lj-cell-cliente .nombre{font-weight:700;font-size:12.5px;color:#1a1a1a;line-height:1.25;}
+.lj-cell-cliente .tel{font-size:10.5px;color:#9a9a9a;margin-top:1px;}
+.lj-cell-servicio{font-size:11.5px;color:#444;line-height:1.3;}
+.lj-cell-servicio .fecha{font-size:10px;color:#aaa;}
+.lj-cell-progreso{display:flex;flex-direction:column;gap:4px;}
+.lj-dots{display:flex;gap:3px;}
+.lj-dot{width:9px;height:9px;border-radius:50%;background:#e5e5e5;flex-shrink:0;}
+.lj-dot.filled{background:#0a6e4a;}
+.lj-dots-frac{font-size:9.5px;color:#9a9a9a;}
+.lj-estado-badge{font-size:9.5px;font-weight:700;padding:4px 8px;border-radius:12px;background:#E7F8EE;color:#0a6e4a;white-space:nowrap;display:inline-block;}
+.lj-estado-badge.completa{background:#FFF3D6;color:#a97a00;}
+.lj-tarjeta-link{display:block;margin-top:4px;font-size:9.5px;color:#0a6e4a;text-decoration:none;font-weight:600;}
+.lj-inst-badge{background:#E7F0FF;color:#3457C6;}
 .client-name{font-size:16px;font-weight:600;color:#1a1a1a;}
 .client-meta{font-size:13px;color:#888;margin-top:3px;}
 .badge{display:inline-block;font-size:11px;font-weight:600;padding:3px 10px;border-radius:20px;background:#E7F8EE;color:#0a6e4a;margin-top:6px;margin-right:4px;}
@@ -386,16 +413,21 @@ canvas.sigCanvas{display:block;touch-action:none;cursor:crosshair;width:100%;hei
 
   <!-- INICIO -->
   <div id="lj-screen-home" class="screen active">
-    <div class="header" style="flex-wrap:wrap;">
-      <div class="app-logo" style="background:#34C38F;color:#04342C;"><i class="ti ti-tool"></i></div>
-      <h1 style="flex:1;">Llama a Jhon</h1>
-      <button class="btn-switch-user" onclick="switchUser()"><i class="ti ti-user-circle"></i> Cambiar usuario</button>
-
-      <div style="width:100%;display:flex;justify-content:flex-end;align-items:center;gap:14px;margin-top:2px;">
+    <div class="lj-header-banner">
+      <div class="lj-header-top">
+        <div class="lj-header-logo"><i class="ti ti-air-conditioning"></i></div>
+        <div class="lj-header-titles">
+          <h1>Llama a Jhon</h1>
+          <div class="sub" id="lj-header-subtitle">Panel de clientes</div>
+        </div>
+        <button class="lj-header-agenda-btn" id="lj-agenda-toggle-btn" onclick="ljToggleAgendaView()">Agenda</button>
+      </div>
+      <div class="lj-header-actions-row">
+        <button class="lj-header-switch" onclick="switchUser()"><i class="ti ti-user-circle"></i> Cambiar usuario</button>
         <div style="position:relative;display:inline-block;">
-          <i class="ti ti-bell" id="lj-bell-btn" style="font-size:20px;color:#0a6e4a;cursor:pointer;" onclick="ljToggleAlertPanel()"></i>
-          <span id="lj-bell-badge" style="display:none;position:absolute;top:-6px;right:-8px;background:#e53e3e;color:#fff;font-size:10px;font-weight:700;border-radius:50%;width:16px;height:16px;align-items:center;justify-content:center;"></span>
-          <div id="lj-alert-panel" style="display:none;position:absolute;top:28px;right:-10px;background:#fff;border-radius:12px;box-shadow:0 4px 20px rgba(0,0,0,0.15);width:260px;max-height:320px;overflow-y:auto;z-index:500;">
+          <div class="lj-header-action-btn" id="lj-bell-btn" onclick="ljToggleAlertPanel()"><i class="ti ti-bell"></i></div>
+          <span id="lj-bell-badge" style="display:none;position:absolute;top:-4px;right:-4px;background:#e53e3e;color:#fff;font-size:10px;font-weight:700;border-radius:50%;width:16px;height:16px;align-items:center;justify-content:center;"></span>
+          <div id="lj-alert-panel" style="display:none;position:absolute;top:44px;right:-10px;background:#fff;border-radius:12px;box-shadow:0 4px 20px rgba(0,0,0,0.15);width:260px;max-height:320px;overflow-y:auto;z-index:500;">
             <div style="padding:10px 14px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid #eee;">
               <span style="font-weight:700;font-size:13px;color:#1a1a1a;">Alertas de mantenimiento</span>
               <button onclick="ljLimpiarAlertas()" style="border:none;background:none;color:#0a6e4a;font-size:12px;font-weight:600;cursor:pointer;padding:0;font-family:inherit;">Limpiar</button>
@@ -403,25 +435,32 @@ canvas.sigCanvas{display:block;touch-action:none;cursor:crosshair;width:100%;hei
             <div id="lj-alert-list"></div>
           </div>
         </div>
-        <i class="ti ti-settings" id="lj-config-btn" style="font-size:20px;color:#0a6e4a;cursor:pointer;" onclick="ljGoScreen('lj-screen-config')"></i>
-        <i class="ti ti-refresh" id="lj-manual-sync-btn" style="font-size:20px;color:#0a6e4a;cursor:pointer;" onclick="ljFetchData()"></i>
+        <div class="lj-header-action-btn" id="lj-config-btn" onclick="ljGoScreen('lj-screen-config')"><i class="ti ti-settings"></i></div>
+        <div class="lj-header-action-btn" id="lj-manual-sync-btn" onclick="ljFetchData()"><i class="ti ti-refresh"></i></div>
       </div>
     </div>
-    <div class="tabs">
+    <div class="tabs" style="display:none;">
       <button class="tab-btn active-jhon" id="lj-tab-clientes" onclick="ljSetTab('clientes')"><i class="ti ti-users"></i> Clientes</button>
       <button class="tab-btn" id="lj-tab-agenda" onclick="ljSetTab('agenda')"><i class="ti ti-calendar"></i> Agenda</button>
     </div>
     <div id="lj-sync-status" class="sync-indicator"><i class="ti ti-cloud-check"></i> Conectando...</div>
     <div id="lj-tab-clientes-content">
-      <div class="stats">
-        <div class="stat-card"><div class="stat-num" id="lj-total-clients">0</div><div class="stat-label">Clientes</div></div>
-        <div class="stat-card"><div class="stat-num" id="lj-total-visits">0</div><div class="stat-label">Visitas</div></div>
+      <div class="lj-panel-card">
+        <h2>Clientes registrados</h2>
+        <div class="lj-stats-row">
+          <div class="stat-card"><div class="stat-num" id="lj-total-clients">0</div><div class="stat-label">Clientes</div></div>
+          <div class="stat-card"><div class="stat-num" id="lj-total-visits">0</div><div class="stat-label">Visitas</div></div>
+        </div>
+        <div class="search-wrap">
+          <i class="ti ti-search"></i>
+          <input type="text" id="lj-search-input" placeholder="Buscar por nombre o dirección..." oninput="ljRenderClients()">
+        </div>
+        <div class="lj-hint">Cada servicio realizado suma un sello a la tarjeta (4 sellos = 50% en el 2do mantenimiento).</div>
+        <div class="lj-table-head">
+          <span>Cliente</span><span>Último servicio</span><span>Progreso tarjeta</span><span>Estado</span>
+        </div>
+        <div id="lj-client-list"></div>
       </div>
-      <div class="search-wrap">
-        <i class="ti ti-search"></i>
-        <input type="text" id="lj-search-input" placeholder="Buscar cliente..." oninput="ljRenderClients()">
-      </div>
-      <div id="lj-client-list"></div>
     </div>
     <div id="lj-tab-agenda-content" style="display:none;">
       <div class="cal-wrap">
@@ -607,6 +646,7 @@ canvas.sigCanvas{display:block;touch-action:none;cursor:crosshair;width:100%;hei
     <button class="btn-primary" id="lj-btn-guardar-visita" onclick="ljSaveVisit()" style="margin-top:1rem">Guardar visita</button>
     <div id="lj-post-save-btns" style="display:none;">
       <button class="btn-pdf-jhon" onclick="ljGenerarPDF()"><i class="ti ti-file-type-pdf"></i> Compartir PDF</button>
+      <button class="btn-primary" style="background:#25D366;margin-top:8px;" onclick="ljCompartirTarjetaWhatsapp()"><i class="ti ti-brand-whatsapp"></i> Enviar tarjeta por WhatsApp</button>
       <button class="btn-home-shared" onclick="ljGoScreen('lj-screen-home')"><i class="ti ti-home"></i> Inicio</button>
     </div>
     <button class="btn-secondary" id="lj-btn-cancelar" onclick="ljGoScreen('lj-screen-client-detail')" style="margin-top:8px;">Cancelar</button>
@@ -1526,7 +1566,7 @@ function ljRenderClients(){
 
   // Clientes normales: se muestran igual que siempre.
   const normales=ljDb.clients.filter(c=>c.tipoCliente!=='especial');
-  // Clientes especiales: se agrupan por institución (una tarjeta por institución, no por aire).
+  // Clientes especiales: se agrupan por institución (una fila por institución, no por aire).
   const especiales=ljDb.clients.filter(c=>c.tipoCliente==='especial');
   const institucionesMap={};
   especiales.forEach(a=>{
@@ -1542,29 +1582,41 @@ function ljRenderClients(){
 
   const LJ_META_SELLOS = 4;
   const htmlNormales=filteredNormales.map(c=>{
-    const visits=ljDb.visits.filter(v=>String(v.clientId)===String(c.id));
-    const sellosLlenos = visits.length % LJ_META_SELLOS === 0 && visits.length>0 ? LJ_META_SELLOS : visits.length % LJ_META_SELLOS;
+    const visits=ljDb.visits.filter(v=>String(v.clientId)===String(c.id)).sort((a,b)=>new Date(a.fecha)-new Date(b.fecha));
+    const sellosLlenos = visits.length>0 && visits.length % LJ_META_SELLOS === 0 ? LJ_META_SELLOS : visits.length % LJ_META_SELLOS;
+    const completa = visits.length>0 && sellosLlenos===LJ_META_SELLOS;
     let dots='';
-    for(let i=0;i<LJ_META_SELLOS;i++){ dots+=`<span class="mini-stamp${i<sellosLlenos?' filled':''}"></span>`; }
-    return `<div class="client-card" onclick="ljOpenClient('${c.id}')">
-      <div class="client-card-top">
-        <div class="client-name">${c.nombre}</div>
-        <div class="mini-stamps">${dots}<span class="mini-stamps-label">${sellosLlenos}/${LJ_META_SELLOS}</span></div>
+    for(let i=0;i<LJ_META_SELLOS;i++){ dots+=`<span class="lj-dot${i<sellosLlenos?' filled':''}"></span>`; }
+    const ultima = visits[visits.length-1];
+    const servicioHtml = ultima
+      ? `${ultima.tipo||'Servicio'}${ultima.costoServicio?' - $'+parseFloat(ultima.costoServicio).toFixed(0):''}<div class="fecha">${ljFormatFecha(ultima.fecha)}</div>`
+      : `<span style="color:#bbb;">Sin servicios</span>`;
+    return `<div class="lj-table-row" onclick="ljOpenClient('${c.id}')">
+      <div class="lj-cell-cliente">
+        <div class="nombre">${c.nombre}</div>
+        <div class="tel">${c.telefono||'—'}</div>
       </div>
-      <div class="client-meta"><i class="ti ti-map-pin"></i> ${c.direccion||'Sin dirección'}</div>
-      <span class="badge" style="background:#E7F8EE;color:#0a6e4a;">${c.tipo||'Sin tipo'}</span>
-      <span class="badge">${visits.length} visitas</span>
-      <br>
-      <a class="btn-tarjeta-mini" href="tarjeta_cliente_llama_a_jhon.html?id=${c.id}" target="_blank" onclick="event.stopPropagation()"><i class="ti ti-id-badge-2"></i> Ver tarjeta</a>
+      <div class="lj-cell-servicio">${servicioHtml}</div>
+      <div class="lj-cell-progreso">
+        <div class="lj-dots">${dots}</div>
+        <span class="lj-dots-frac">${sellosLlenos}/${LJ_META_SELLOS}</span>
+      </div>
+      <div>
+        <span class="lj-estado-badge${completa?' completa':''}">${completa?'Completa':'En progreso'}</span>
+        <a class="lj-tarjeta-link" href="tarjeta_cliente_llama_a_jhon.html?id=${c.id}" target="_blank" onclick="event.stopPropagation()">Ver tarjeta</a>
+      </div>
     </div>`;
   }).join('');
 
   const htmlInstituciones=filteredInstituciones.map(i=>{
-    return `<div class="client-card" onclick="ljAbrirInstitucion('${i.institucionId}')">
-      <div class="client-name">${i.institucionNombre}</div>
-      <div class="client-meta"><i class="ti ti-map-pin"></i> ${i.direccion||'Sin dirección'}</div>
-      <span class="badge" style="background:#E7F8EE;color:#0a6e4a;">Institución</span>
-      <span class="badge">Ver aires (${i.aires.length})</span>
+    return `<div class="lj-table-row" onclick="ljAbrirInstitucion('${i.institucionId}')">
+      <div class="lj-cell-cliente">
+        <div class="nombre">${i.institucionNombre}</div>
+        <div class="tel">${i.direccion||'Sin dirección'}</div>
+      </div>
+      <div class="lj-cell-servicio">${i.aires.length} aire${i.aires.length===1?'':'s'} registrado${i.aires.length===1?'':'s'}</div>
+      <div class="lj-cell-progreso">—</div>
+      <div><span class="lj-estado-badge lj-inst-badge">Institución</span></div>
     </div>`;
   }).join('');
 
@@ -2200,6 +2252,28 @@ async function ljAutoGenerarYSubirPDF(visitId){
   }
 }
 
+// Normaliza un teléfono de Ecuador (09xxxxxxxx) al formato internacional que espera wa.me (593xxxxxxxxx)
+function ljPhoneToWhatsapp(tel){
+  let digits = (tel||'').replace(/\D/g,'');
+  if(!digits) return '';
+  if(digits.startsWith('0')) digits = '593'+digits.slice(1);
+  else if(!digits.startsWith('593')) digits = '593'+digits;
+  return digits;
+}
+
+// Igual que Nakory: después de guardar el servicio, arma el link directo
+// de WhatsApp con la tarjeta de fidelidad del cliente para compartir al toque.
+function ljCompartirTarjetaWhatsapp(){
+  const c=ljDb.clients.find(x=>String(x.id)===String(ljCurrentClientId));
+  if(!c){ showToast('No se encontró el cliente'); return; }
+  const base = window.location.href.replace(/[^/]*$/, '');
+  const linkTarjeta = base + 'tarjeta_cliente_llama_a_jhon.html?id=' + encodeURIComponent(c.id);
+  const mensaje = `Hola ${c.nombre}! Gracias por confiar en *Llama a Jhon* 🙌\nAquí puedes ver tu tarjeta de fidelidad y el reporte de tu servicio:\n${linkTarjeta}`;
+  const numero = ljPhoneToWhatsapp(c.telefono);
+  const url = (numero ? `https://wa.me/${numero}` : `https://wa.me/`) + `?text=${encodeURIComponent(mensaje)}`;
+  window.open(url, '_blank');
+}
+
 async function ljGenerarPDF(){
   const v=ljDb.visits.find(x=>String(x.id)===String(ljCurrentVisitId));
   const c=ljDb.clients.find(x=>String(x.id)===String(ljCurrentClientId));
@@ -2326,7 +2400,16 @@ function ljSetTab(tab){
   document.getElementById('lj-tab-agenda-content').style.display = isClientes?'none':'block';
   document.getElementById('lj-tab-clientes').className = 'tab-btn'+(isClientes?' active-jhon':'');
   document.getElementById('lj-tab-agenda').className = 'tab-btn'+(!isClientes?' active-jhon':'');
+  const agendaBtn = document.getElementById('lj-agenda-toggle-btn');
+  const subtitle = document.getElementById('lj-header-subtitle');
+  if(agendaBtn) agendaBtn.textContent = isClientes ? 'Agenda' : 'Clientes';
+  if(subtitle) subtitle.textContent = isClientes ? 'Panel de clientes' : 'Agenda de servicios';
   if(!isClientes) ljRenderCal();
+}
+
+function ljToggleAgendaView(){
+  const enClientes = document.getElementById('lj-tab-clientes-content').style.display !== 'none';
+  ljSetTab(enClientes ? 'agenda' : 'clientes');
 }
 
 function ljInitCal(){
