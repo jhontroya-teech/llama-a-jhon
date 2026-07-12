@@ -597,10 +597,12 @@ canvas.sigCanvas{display:block;touch-action:none;cursor:crosshair;width:100%;hei
       <button class="btn-switch-user" onclick="switchUser()"><i class="ti ti-user-circle"></i> Cambiar usuario</button>
     </div>
     <div class="info-card" id="lj-client-detail-info"></div>
+    <div id="lj-client-detail-stamps" style="margin:12px 0;"></div>
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
       <button class="btn-secondary" style="margin-top:0" onclick="ljEditClient()"><i class="ti ti-edit"></i> Editar</button>
       <button class="btn-primary" style="margin-top:0" onclick="ljGoNewVisit()"><i class="ti ti-plus"></i> Visita</button>
     </div>
+    <button class="btn-primary" id="lj-btn-compartir-tarjeta-detalle" style="background:#25D366;margin-top:8px;" onclick="ljCompartirTarjetaWhatsapp()"><i class="ti ti-brand-whatsapp"></i> Compartir tarjeta por WhatsApp</button>
     <div class="section-title" style="margin-top:1.5rem">Historial de visitas</div>
     <div id="lj-visit-list"></div>
   </div>
@@ -1647,6 +1649,13 @@ function ljRenderClientDetail(){
     <div class="detail-row"><span class="detail-label">BTU</span><span class="detail-value">${c.btu||'—'}</span></div>
     <div class="detail-row"><span class="detail-label">Próximo mantenimiento</span><span class="detail-value">${c.proximoMantenimiento?ljFormatFecha(c.proximoMantenimiento):'—'}</span></div>`;
   const visits=ljDb.visits.filter(v=>String(v.clientId)===String(ljCurrentClientId));
+
+  const LJ_META_SELLOS = 4;
+  const sellosLlenos = visits.length>0 && visits.length % LJ_META_SELLOS === 0 ? LJ_META_SELLOS : visits.length % LJ_META_SELLOS;
+  let dots='';
+  for(let i=0;i<LJ_META_SELLOS;i++){ dots+=`<span class="lj-dot${i<sellosLlenos?' filled':''}" style="width:16px;height:16px;"></span>`; }
+  document.getElementById('lj-client-detail-stamps').innerHTML = `<div class="lj-dots" style="gap:6px;margin-bottom:4px;">${dots}</div><span class="lj-dots-frac">${sellosLlenos}/${LJ_META_SELLOS} sellos${sellosLlenos>=LJ_META_SELLOS?' · ¡Tarjeta completa! 50% en el 2do mantenimiento':''}</span>`;
+
   const vlist=document.getElementById('lj-visit-list');
   if(!visits.length){ vlist.innerHTML=`<div class="empty-state"><p>Sin visitas registradas</p></div>`; return; }
   vlist.innerHTML=visits.map(v=>`<div class="visit-card" onclick="ljOpenVisit('${v.id}')">
