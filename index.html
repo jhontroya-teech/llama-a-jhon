@@ -1514,7 +1514,7 @@ function ljSyncToSheets(data){
     params.append('responsabilidad', data.responsabilidad?'Si':'No');
     params.append('tiene_firma', data.firma?'Si':'No');
     params.append('fotos_count', data.fotos?data.fotos.length:0);
-    params.append('link_reporte', '');
+    params.append('link_reporte', data.link_reporte||'');
     params.append('modoPago', data.modoPago||'');
     params.append('costoServicio', data.costoServicio||'');
   }
