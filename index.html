@@ -455,7 +455,7 @@ canvas.sigCanvas{display:block;touch-action:none;cursor:crosshair;width:100%;hei
           <i class="ti ti-search"></i>
           <input type="text" id="lj-search-input" placeholder="Buscar por nombre o dirección..." oninput="ljRenderClients()">
         </div>
-        <div class="lj-hint">Cada servicio realizado suma un sello a la tarjeta (4 sellos = 50% en el 2do mantenimiento).</div>
+        <div class="lj-hint">Cada servicio realizado suma un sello a la tarjeta (2 sellos = descuento especial).</div>
         <div class="lj-table-head">
           <span>Cliente</span><span>Último servicio</span><span>Progreso tarjeta</span><span>Estado</span>
         </div>
@@ -1589,7 +1589,7 @@ function ljRenderClients(){
 
   if(!filteredNormales.length && !filteredInstituciones.length){ list.innerHTML=`<div class="empty-state"><i class="ti ti-users"></i><p>Sin resultados</p></div>`; return; }
 
-  const LJ_META_SELLOS = 4;
+  const LJ_META_SELLOS = 2;
   const htmlNormales=filteredNormales.map(c=>{
     const visits=ljDb.visits.filter(v=>String(v.clientId)===String(c.id)).sort((a,b)=>new Date(a.fecha)-new Date(b.fecha));
     const sellosLlenos = visits.length>0 && visits.length % LJ_META_SELLOS === 0 ? LJ_META_SELLOS : visits.length % LJ_META_SELLOS;
@@ -1668,11 +1668,11 @@ function ljRenderClientDetail(){
   if(btnAgregarAire) btnAgregarAire.style.display = (c.tipoCliente==='especial') ? '' : 'none';
   const visits=ljDb.visits.filter(v=>String(v.clientId)===String(ljCurrentClientId));
 
-  const LJ_META_SELLOS = 4;
+  const LJ_META_SELLOS = 2;
   const sellosLlenos = visits.length>0 && visits.length % LJ_META_SELLOS === 0 ? LJ_META_SELLOS : visits.length % LJ_META_SELLOS;
   let dots='';
   for(let i=0;i<LJ_META_SELLOS;i++){ dots+=`<span class="lj-dot${i<sellosLlenos?' filled':''}" style="width:16px;height:16px;"></span>`; }
-  document.getElementById('lj-client-detail-stamps').innerHTML = `<div class="lj-dots" style="gap:6px;margin-bottom:4px;">${dots}</div><span class="lj-dots-frac">${sellosLlenos}/${LJ_META_SELLOS} sellos${sellosLlenos>=LJ_META_SELLOS?' · ¡Tarjeta completa! 50% en el 2do mantenimiento':''}</span>`;
+  document.getElementById('lj-client-detail-stamps').innerHTML = `<div class="lj-dots" style="gap:6px;margin-bottom:4px;">${dots}</div><span class="lj-dots-frac">${sellosLlenos}/${LJ_META_SELLOS} sellos${sellosLlenos>=LJ_META_SELLOS?' · ¡Tarjeta completa! Descuento especial disponible':''}</span>`;
 
   const vlist=document.getElementById('lj-visit-list');
   if(!visits.length){ vlist.innerHTML=`<div class="empty-state"><p>Sin visitas registradas</p></div>`; return; }
