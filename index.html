@@ -710,6 +710,7 @@ canvas.sigCanvas{display:block;touch-action:none;cursor:crosshair;width:100%;hei
     </div>
     <input type="text" id="lj-cfg-telegram-token" placeholder="Token del bot (de @BotFather)">
     <input type="text" id="lj-cfg-telegram-chatid" placeholder="Tu Chat ID (de @userinfobot)">
+    <button type="button" class="btn-secondary" id="lj-btn-probar-telegram" style="margin-top:0;margin-bottom:8px;" onclick="ljProbarTelegram(this)"><i class="ti ti-send"></i> Probar (enviar mensaje de prueba)</button>
 
     <button class="btn-primary" onclick="ljGuardarConfig()">Guardar configuración</button>
 
@@ -2862,6 +2863,38 @@ function ljProbarEmail(btn){
       btn.innerHTML = textoOriginal;
       btn.disabled = false;
       if(resp.ok) showToast('📧 Correo de prueba enviado, revisa tu bandeja');
+      else showToast('⚠️ ' + (resp.msg || 'No se pudo enviar'));
+    })
+    .catch(()=>{
+      btn.innerHTML = textoOriginal;
+      btn.disabled = false;
+      showToast('⚠️ Sin conexión, no se pudo enviar');
+    });
+}
+
+function ljProbarTelegram(btn){
+  const chatId = document.getElementById('lj-cfg-telegram-chatid').value.trim();
+  const botToken = document.getElementById('lj-cfg-telegram-token').value.trim();
+  if(!chatId){ showToast('⚠️ Escribe primero tu Chat ID'); return; }
+
+  const textoOriginal = btn.innerHTML;
+  btn.innerHTML = 'Enviando...';
+  btn.disabled = true;
+
+  const params = new URLSearchParams();
+  params.append('type', 'probarTelegram');
+  params.append('chatId', chatId);
+  // El token solo se manda si lo acabas de escribir; si lo dejas vacío,
+  // el backend usa el que ya tenías guardado (por seguridad no se te
+  // vuelve a mostrar en este campo una vez guardado).
+  if(botToken) params.append('botToken', botToken);
+
+  fetch(LJ_SHEET_URL, { method:'POST', headers:{'Content-Type':'application/x-www-form-urlencoded'}, body: params.toString() })
+    .then(r=>r.json())
+    .then(resp=>{
+      btn.innerHTML = textoOriginal;
+      btn.disabled = false;
+      if(resp.ok) showToast('✈️ Mensaje de prueba enviado, revisa tu Telegram');
       else showToast('⚠️ ' + (resp.msg || 'No se pudo enviar'));
     })
     .catch(()=>{
