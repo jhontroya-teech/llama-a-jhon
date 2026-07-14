@@ -429,7 +429,7 @@ canvas.sigCanvas{display:block;touch-action:none;cursor:crosshair;width:100%;hei
           <span id="lj-bell-badge" style="display:none;position:absolute;top:-4px;right:-4px;background:#e53e3e;color:#fff;font-size:10px;font-weight:700;border-radius:50%;width:16px;height:16px;align-items:center;justify-content:center;"></span>
           <div id="lj-alert-panel" style="display:none;position:absolute;top:44px;right:-10px;background:#fff;border-radius:12px;box-shadow:0 4px 20px rgba(0,0,0,0.15);width:260px;max-height:320px;overflow-y:auto;z-index:500;">
             <div style="padding:10px 14px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid #eee;">
-              <span style="font-weight:700;font-size:13px;color:#1a1a1a;">Alertas de mantenimiento</span>
+              <span style="font-weight:700;font-size:13px;color:#1a1a1a;">Alertas</span>
               <button onclick="ljLimpiarAlertas()" style="border:none;background:none;color:#0a6e4a;font-size:12px;font-weight:600;cursor:pointer;padding:0;font-family:inherit;">Limpiar</button>
             </div>
             <div id="lj-alert-list"></div>
@@ -603,6 +603,7 @@ canvas.sigCanvas{display:block;touch-action:none;cursor:crosshair;width:100%;hei
       <button class="btn-primary" style="margin-top:0" onclick="ljGoNewVisit()"><i class="ti ti-plus"></i> Visita</button>
     </div>
     <button class="btn-primary" id="lj-btn-compartir-tarjeta-detalle" style="background:#25D366;margin-top:8px;" onclick="ljCompartirTarjetaWhatsapp()"><i class="ti ti-brand-whatsapp"></i> Compartir tarjeta por WhatsApp</button>
+    <button class="lj-add-aire-btn" id="lj-btn-agregar-aire-detalle" style="display:none;margin-top:8px;" onclick="ljAgregarAireDesdeDetalle()"><i class="ti ti-plus"></i> Agregar aire a esta institución</button>
     <div class="section-title" style="margin-top:1.5rem">Historial de visitas</div>
     <div id="lj-visit-list"></div>
   </div>
@@ -616,12 +617,15 @@ canvas.sigCanvas{display:block;touch-action:none;cursor:crosshair;width:100%;hei
     </div>
     <div class="section-title">Información</div>
     <input type="date" id="lj-v-fecha">
-    <select id="lj-v-tipo">
+    <select id="lj-v-tipo" onchange="ljToggleCampoMesesProximo()">
       <option value="">Tipo de servicio</option>
       <option>Instalación</option><option>Limpieza</option><option>Revisión técnica</option>
       <option>Fuga de gas</option><option>Mantenimiento preventivo</option>
       <option>Reparación</option><option>Otro</option>
     </select>
+    <div class="section-title" id="lj-v-meses-proximo-title" style="display:none;">Próximo mantenimiento</div>
+    <input type="number" id="lj-v-meses-proximo" style="display:none;" placeholder="Cada cuántos meses (opcional)" min="1" step="1">
+    <p id="lj-v-meses-proximo-hint" style="display:none;font-size:11.5px;color:#999;margin:-8px 0 10px;">Déjalo vacío para usar el valor configurado en Ajustes. Ej: escribe 1 si este aire se limpia mensualmente por uso.</p>
     <div class="section-title">Detalle del equipo</div>
     <textarea id="lj-v-detalle" placeholder="¿Qué tenía el aire? Estado del equipo..."></textarea>
     <div class="section-title">Observación</div>
@@ -812,7 +816,7 @@ function launchApp(app){
   document.getElementById('app-jhon').classList.remove('active');
   document.getElementById('app-' + app).classList.add('active');
   if(app === 'thermo') teFetchData();
-  else ljFetchData();
+  else { ljFetchData(); ljCargarConfig(); }
   ljActualizarBotonAtras();
 }
 
@@ -1416,6 +1420,7 @@ function ljSlimVisit(v, aggressive){
 }
 
 function ljSaveDb(){
+  ljRecalcularProximosMantenimientos();
   try{
     localStorage.setItem('lj_db', JSON.stringify(ljDb));
   }catch(err){
@@ -1517,6 +1522,7 @@ function ljSyncToSheets(data){
     params.append('link_reporte', data.link_reporte||'');
     params.append('modoPago', data.modoPago||'');
     params.append('costoServicio', data.costoServicio||'');
+    params.append('mesesProximo', data.mesesProximo||'');
   }
 
   fetch(LJ_SHEET_URL, {
@@ -1630,6 +1636,15 @@ function ljAbrirInstitucion(institucionId){
   ljGoScreen('lj-screen-institucion-aires');
 }
 
+// Permite agregar un aire nuevo a la institución desde la ficha de CUALQUIER
+// aire ya existente de esa misma institución (no solo desde la lista agrupada).
+function ljAgregarAireDesdeDetalle(){
+  const c = ljDb.clients.find(x=>String(x.id)===String(ljCurrentClientId));
+  if(!c || c.tipoCliente!=='especial'){ return; }
+  ljCurrentInstitucionId = c.institucionId;
+  ljAbrirModalAireExistente();
+}
+
 function ljOpenClient(id){ ljCurrentClientId=id; ljGoScreen('lj-screen-client-detail'); }
 
 function ljRenderClientDetail(){
@@ -1648,6 +1663,8 @@ function ljRenderClientDetail(){
     <div class="detail-row"><span class="detail-label">Marca</span><span class="detail-value">${c.marca||'—'}</span></div>
     <div class="detail-row"><span class="detail-label">BTU</span><span class="detail-value">${c.btu||'—'}</span></div>
     <div class="detail-row"><span class="detail-label">Próximo mantenimiento</span><span class="detail-value">${c.proximoMantenimiento?ljFormatFecha(c.proximoMantenimiento):'—'}</span></div>`;
+  const btnAgregarAire = document.getElementById('lj-btn-agregar-aire-detalle');
+  if(btnAgregarAire) btnAgregarAire.style.display = (c.tipoCliente==='especial') ? '' : 'none';
   const visits=ljDb.visits.filter(v=>String(v.clientId)===String(ljCurrentClientId));
 
   const LJ_META_SELLOS = 4;
@@ -1955,6 +1972,8 @@ function ljGoNewVisit(){
   document.getElementById('lj-new-visit-title').textContent="Nueva visita";
   document.getElementById('lj-v-fecha').value=ljFechaLocalHoy();
   document.getElementById('lj-v-tipo').value='';
+  document.getElementById('lj-v-meses-proximo').value='';
+  ljToggleCampoMesesProximo();
   document.getElementById('lj-v-detalle').value='';
   document.getElementById('lj-v-observacion').value='';
   document.getElementById('lj-v-responsabilidad').checked=false;
@@ -1973,6 +1992,8 @@ function ljEditVisit(){
   document.getElementById('lj-new-visit-title').textContent="Editar visita";
   document.getElementById('lj-v-fecha').value=v.fecha;
   document.getElementById('lj-v-tipo').value=v.tipo;
+  document.getElementById('lj-v-meses-proximo').value=v.mesesProximo||'';
+  ljToggleCampoMesesProximo();
   document.getElementById('lj-v-detalle').value=v.detalle;
   document.getElementById('lj-v-observacion').value=v.observacion;
   document.getElementById('lj-v-responsabilidad').checked=v.responsabilidad||false;
@@ -2104,10 +2125,11 @@ function ljSaveVisit(){
     const fotosLinksArr = ljVisitPhotos.filter(p=>p.link).map(p=>p.link);
     const fotosBase64Arr = ljVisitPhotos.map(p=>p.preview).filter(Boolean);
 
+    const tipoVisitaActual = document.getElementById('lj-v-tipo').value;
     const dataLocal = {
       clientId: ljCurrentClientId,
       fecha: document.getElementById('lj-v-fecha').value,
-      tipo: document.getElementById('lj-v-tipo').value,
+      tipo: tipoVisitaActual,
       detalle: document.getElementById('lj-v-detalle').value,
       observacion: document.getElementById('lj-v-observacion').value,
       responsabilidad: document.getElementById('lj-v-responsabilidad').checked,
@@ -2117,7 +2139,8 @@ function ljSaveVisit(){
       tiene_firma: firmaData ? 'Si' : 'No',
       fotosLinks: fotosLinksArr,
       fotos: fotosBase64Arr,
-      firma: firmaData
+      firma: firmaData,
+      mesesProximo: ljTipoUsaMantenimiento(tipoVisitaActual) ? (document.getElementById('lj-v-meses-proximo').value||'') : ''
     };
 
     const dataSync = { ...dataLocal, fotosLinks: fotosLinksArr.join(','), firma: firmaData };
@@ -2298,6 +2321,7 @@ async function ljGenerarPDF(){
   showToast(ok?'✅ PDF guardado en Drive':'⚠️ PDF descargado, pero no se pudo subir a Drive');
 }
 
+ljRecalcularProximosMantenimientos();
 ljUpdateStats(); ljRenderClients();
 
 // ══════════════════════════════════════════════════════════
@@ -2452,6 +2476,51 @@ function ljVisitDaysInMonth(y,m){
   return days;
 }
 
+// Tipos de visita que disparan el cálculo de "próximo mantenimiento".
+function ljTipoUsaMantenimiento(tipo){
+  return tipo === 'Limpieza' || tipo === 'Mantenimiento preventivo';
+}
+
+// Muestra/oculta el campo "Próximo mantenimiento (meses)" en el formulario
+// de visita según el tipo de servicio seleccionado.
+function ljToggleCampoMesesProximo(){
+  const tipo = document.getElementById('lj-v-tipo').value;
+  const mostrar = ljTipoUsaMantenimiento(tipo);
+  const disp = mostrar ? '' : 'none';
+  const titulo = document.getElementById('lj-v-meses-proximo-title');
+  const input = document.getElementById('lj-v-meses-proximo');
+  const hint = document.getElementById('lj-v-meses-proximo-hint');
+  if(titulo) titulo.style.display = disp;
+  if(input) input.style.display = disp;
+  if(hint) hint.style.display = disp;
+}
+
+// Suma "meses" a una fecha (yyyy-MM-dd) y devuelve el resultado en el mismo formato.
+function ljSumarMeses(fechaStr, meses){
+  const d = ljParseFechaSegura(fechaStr);
+  d.setMonth(d.getMonth() + meses);
+  const y = d.getFullYear(), m = String(d.getMonth()+1).padStart(2,'0'), day = String(d.getDate()).padStart(2,'0');
+  return `${y}-${m}-${day}`;
+}
+
+// Recalcula c.proximoMantenimiento para cada cliente, a partir de su última
+// visita de Limpieza/Mantenimiento preventivo. Usa los meses personalizados
+// de ESA visita (v.mesesProximo) si se indicaron; si no, usa el valor global
+// de Configuración (mesesMantenimiento), cacheado en localStorage.
+function ljRecalcularProximosMantenimientos(){
+  const mesesGlobal = parseInt(localStorage.getItem('lj_meses_mantenimiento') || '4', 10) || 4;
+  (ljDb.clients||[]).forEach(c=>{
+    const visitasMant = (ljDb.visits||[])
+      .filter(v=>String(v.clientId)===String(c.id) && ljTipoUsaMantenimiento(v.tipo) && v.fecha)
+      .sort((a,b)=>ljParseFechaSegura(b.fecha) - ljParseFechaSegura(a.fecha));
+    const ultima = visitasMant[0];
+    if(!ultima){ delete c.proximoMantenimiento; return; }
+    const mesesVisita = parseInt(ultima.mesesProximo, 10);
+    const mesesUsar = (mesesVisita && mesesVisita > 0) ? mesesVisita : mesesGlobal;
+    c.proximoMantenimiento = ljSumarMeses(ultima.fecha, mesesUsar);
+  });
+}
+
 // Nuevo: días del mes que tienen un "próximo mantenimiento" programado
 // (calculado automáticamente al guardar una visita de Limpieza / Mantenimiento
 // preventivo). Se marca en la Agenda con un punto de otro color.
@@ -2575,7 +2644,8 @@ function ljMarcarAlertaLeida(key){
   }
 }
 function ljLimpiarAlertas(){
-  const actuales = ljCalcularAlertasLocal().map(a=>a.key);
+  const actuales = ljCalcularAlertasLocal().map(a=>a.key)
+    .concat(ljCalcularAlertasActividadHoy().map(a=>a.key));
   if(!actuales.length) return;
   const limpiadas = ljGetAlertasLimpiadas();
   actuales.forEach(k=>{ if(!limpiadas.includes(k)) limpiadas.push(k); });
@@ -2606,14 +2676,60 @@ function ljCalcularAlertasLocal(){
   return alertas;
 }
 
+// Los ids se generan como "c_<timestamp>", "v_<timestamp>" (o con un sufijo
+// extra para aires de institución, ej "c_<timestamp>_0"). De ahí se puede
+// sacar cuándo se creó ese cliente/visita sin necesitar una columna nueva.
+function ljTimestampDeId(id){
+  if(!id) return null;
+  const partes = String(id).split('_');
+  const n = parseInt(partes[1], 10);
+  return isNaN(n) ? null : n;
+}
+function ljEsHoy(timestampMs){
+  if(!timestampMs) return false;
+  const hoy = new Date(); hoy.setHours(0,0,0,0);
+  const manana = new Date(hoy); manana.setDate(manana.getDate()+1);
+  const fecha = new Date(timestampMs);
+  return fecha >= hoy && fecha < manana;
+}
+
+// Alertas verdes de actividad de HOY: clientes nuevos y visitas nuevas
+// registradas hoy (con mensaje especial para Limpieza).
+function ljCalcularAlertasActividadHoy(){
+  const limpiadas = ljGetAlertasLimpiadas();
+  const alertas = [];
+  (ljDb.clients||[]).forEach(c=>{
+    const ts = ljTimestampDeId(c.id);
+    if(!ljEsHoy(ts)) return;
+    const key = 'act_cliente_' + c.id;
+    if(limpiadas.includes(key)) return;
+    alertas.push({ clienteId: c.id, nombre: c.nombre, mensaje: 'Se registró nuevo cliente: ' + c.nombre, ts: ts, key: key });
+  });
+  (ljDb.visits||[]).forEach(v=>{
+    const ts = ljTimestampDeId(v.id);
+    if(!ljEsHoy(ts)) return;
+    const key = 'act_visita_' + v.id;
+    if(limpiadas.includes(key)) return;
+    const cli = (ljDb.clients||[]).find(c=>String(c.id)===String(v.clientId));
+    const nombreCliente = cli ? cli.nombre : 'Cliente';
+    const mensaje = v.tipo === 'Limpieza'
+      ? 'Se hizo nueva limpieza: ' + nombreCliente
+      : 'Se registró visita' + (v.tipo ? ' de ' + v.tipo : '') + ': ' + nombreCliente;
+    alertas.push({ clienteId: v.clientId, nombre: nombreCliente, mensaje: mensaje, ts: ts, key: key });
+  });
+  alertas.sort((a,b)=>b.ts-a.ts);
+  return alertas;
+}
+
 function ljRenderAlertBell(){
   const alertas = ljCalcularAlertasLocal();
+  const alertasHoy = ljCalcularAlertasActividadHoy();
   const badge = document.getElementById('lj-bell-badge');
   const lista = document.getElementById('lj-alert-list');
   if(!badge || !lista) return;
 
   const leidas = ljGetAlertasLeidas();
-  const noLeidas = alertas.filter(a=>!leidas.includes(a.key)).length;
+  const noLeidas = alertas.filter(a=>!leidas.includes(a.key)).length + alertasHoy.filter(a=>!leidas.includes(a.key)).length;
 
   if(noLeidas){
     badge.style.display = 'flex';
@@ -2622,13 +2738,13 @@ function ljRenderAlertBell(){
     badge.style.display = 'none';
   }
 
-  if(!alertas.length){
-    lista.innerHTML = `<div style="padding:16px;text-align:center;color:#aaa;font-size:13px;">Sin alertas pendientes</div>`;
+  if(!alertas.length && !alertasHoy.length){
+    lista.innerHTML = `<div style="padding:16px;text-align:center;color:#aaa;font-size:13px;">Sin alertas que mostrar</div>`;
     return;
   }
   // Nuevas (no leídas): negrita y con fondo de color según urgencia.
   // Vistas (ya leídas por clic): sin negrita, sin fondo, se quedan en la lista igual.
-  lista.innerHTML = alertas.map(a=>{
+  const htmlMantenimiento = alertas.map(a=>{
     const leida = leidas.includes(a.key);
     const urgente = a.dias <= 0;
     const bg = leida ? 'transparent' : (urgente ? '#fdecea' : '#fff8e6');
@@ -2643,6 +2759,23 @@ function ljRenderAlertBell(){
     </div>
   `;
   }).join('');
+
+  // Verdes: actividad de hoy (fondo/color de éxito, igual al resto del sistema).
+  const htmlHoy = alertasHoy.map(a=>{
+    const leida = leidas.includes(a.key);
+    const bg = leida ? 'transparent' : '#E7F8EE';
+    const colorTexto = leida ? '#aaa' : '#0a6e4a';
+    const pesoNombre = leida ? 400 : 700;
+    const hora = a.ts ? new Date(a.ts).toLocaleTimeString('es-EC', {hour:'2-digit', minute:'2-digit'}) : '';
+    return `
+    <div onclick="ljAbrirAlerta('${a.clienteId}','${a.key}')" style="padding:10px 14px;border-bottom:1px solid #f2f2f2;cursor:pointer;background:${bg};">
+      <div style="font-size:13.5px;font-weight:${pesoNombre};color:${leida?'#888':'#1a1a1a'};">${a.mensaje}</div>
+      <div style="font-size:12px;color:${colorTexto};">Hoy${hora ? ' · '+hora : ''}</div>
+    </div>
+  `;
+  }).join('');
+
+  lista.innerHTML = htmlMantenimiento + htmlHoy;
 }
 
 function ljToggleAlertPanel(){
@@ -2681,6 +2814,15 @@ function ljCargarConfig(){
       localStorage.setItem('lj_dias_aviso', cfg.diasAvisoPrevio || '5');
 
       const meses = String(cfg.mesesMantenimiento || '4');
+      localStorage.setItem('lj_meses_mantenimiento', meses);
+      // El valor global recién llegó (puede ser distinto al default usado antes
+      // de que cargara), así que se recalculan las fechas de mantenimiento y se
+      // refresca todo lo que dependa de ellas (ficha de cliente, agenda, campana).
+      ljRecalcularProximosMantenimientos();
+      ljSaveDb();
+      ljRenderClients();
+      ljRenderAlertBell();
+      if(ljCalYear!==undefined) ljRenderCal();
       const selectMeses = document.getElementById('lj-cfg-meses');
       const opciones = Array.from(selectMeses.options).map(o=>o.value);
       if(opciones.includes(meses)){
