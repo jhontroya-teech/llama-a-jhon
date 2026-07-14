@@ -18,28 +18,30 @@
   .wrap { width: 380px; max-width: 100%; }
   .card {
     border-radius: 24px;
-    padding: 24px 20px 18px;
+    padding: 26px 22px 20px;
     background: linear-gradient(135deg, #0a6e4a 0%, #0d8a5f 55%, #34C38F 100%);
     box-shadow: 0 10px 30px rgba(10,110,74,0.25);
     color: #fff;
   }
+  .header-row { display: flex; align-items: center; gap: 14px; margin-bottom: 20px; }
   .logo-wrap {
-    width: 64px; height: 64px; border-radius: 50%; background: #fff; border: 3px solid rgba(255,255,255,0.85);
-    display: flex; align-items: center; justify-content: center; margin-bottom: 12px; overflow: hidden;
-    font-size: 26px; color: #0a6e4a;
+    width: 56px; height: 56px; border-radius: 50%; background: #fff; border: 3px solid rgba(255,255,255,0.85);
+    display: flex; align-items: center; justify-content: center; overflow: hidden;
+    font-size: 24px; color: #0a6e4a; flex-shrink: 0;
   }
-  .bienvenida { font-size: 13px; opacity: 0.9; margin: 0 0 2px; font-weight: 500; }
-  .bienvenida b { font-weight: 800; }
-  h1 { font-size: 17px; line-height: 1.4; margin: 4px 0 4px; font-weight: 700; }
-  .beneficio-sub { font-size: 13px; line-height: 1.4; margin: 0 0 8px; opacity: 0.95; }
-  .beneficio-precios { font-size: 12px; font-weight: 700; letter-spacing: 0.3px; margin: 10px 0 4px; text-transform: uppercase; }
-  .lista-precios { list-style: none; margin: 0 0 10px; padding: 0; font-size: 13px; line-height: 1.6; }
-  .lista-precios li { display: flex; justify-content: space-between; gap: 8px; border-bottom: 1px dashed rgba(255,255,255,0.3); padding: 3px 0; }
+  .bienvenida { font-size: 21px; font-weight: 700; line-height: 1.3; }
+  h1 { font-size: 16px; line-height: 1.4; margin: 0 0 18px; font-weight: 700; display: flex; align-items: center; gap: 8px; }
+  h1 i { font-size: 18px; }
+  .beneficio-sub { font-size: 13px; line-height: 1.5; margin: 0 0 14px; opacity: 0.95; }
+  .beneficio-precios { font-size: 12px; font-weight: 700; letter-spacing: 0.3px; margin: 0 0 8px; text-transform: uppercase; opacity: 0.9; }
+  .lista-precios { list-style: none; margin: 0 0 14px; padding: 0; font-size: 13px; line-height: 2; }
+  .lista-precios li { display: flex; justify-content: space-between; gap: 8px; border-bottom: 1px dashed rgba(255,255,255,0.3); padding: 5px 0; }
   .lista-precios b { font-weight: 700; }
   .beneficio-ahorro { opacity: 0.85; font-size: 12px; }
-  .beneficio-condicion { font-size: 11px; line-height: 1.4; opacity: 0.85; margin: 6px 0 4px; }
-  .cliente-nombre { font-size: 13px; opacity: 0.85; margin-bottom: 16px; }
-  .stamps { display: flex; gap: 10px; margin-bottom: 18px; flex-wrap: wrap; }
+  .divisor { border-top: 1px solid rgba(255,255,255,0.35); margin: 0 0 14px; }
+  .beneficio-condicion { font-size: 11px; line-height: 1.5; opacity: 0.9; margin: 0 0 22px; display: flex; align-items: flex-start; gap: 6px; }
+  .beneficio-condicion i { font-size: 14px; color: #FAC775; flex-shrink: 0; margin-top: 1px; }
+  .stamps { display: flex; gap: 14px; margin-bottom: 20px; flex-wrap: wrap; }
   .stamp {
     width: 52px; height: 52px; border-radius: 50%; background: rgba(255,255,255,0.18);
     display: flex; align-items: center; justify-content: center; overflow: hidden;
@@ -48,11 +50,11 @@
   .stamp.filled { background: #fff; border-color: #fff; }
   .stamp img { width: 100%; height: 100%; object-fit: cover; object-position: center top; }
   .stamp i { font-size: 20px; color: rgba(255,255,255,0.6); }
-  .progreso-texto { font-size: 12px; opacity: 0.9; margin-bottom: 14px; }
+  .progreso-texto { font-size: 12px; opacity: 0.9; margin-bottom: 18px; }
   .footer { display: flex; gap: 10px; flex-wrap: wrap; }
   .pill {
     background: rgba(255,255,255,0.2); color: #fff; font-size: 13px; font-weight: 600;
-    padding: 7px 14px; border-radius: 20px; text-decoration: none; display: flex; align-items: center; gap: 6px;
+    padding: 8px 14px; border-radius: 20px; text-decoration: none; display: flex; align-items: center; gap: 6px;
   }
   .pill:active { opacity: 0.75; }
   .reward-banner {
@@ -153,9 +155,8 @@ function renderTarjeta(data) {
 
   document.getElementById('app').innerHTML =
     '<div class="card">' +
-      '<div class="logo-wrap"><i class="ti ti-air-conditioning"></i></div>' +
-      '<div class="bienvenida">Bienvenida/o <b>' + (data.nombre || '') + '</b></div>' +
-      '<h1>¡Gracias por tu confianza! ❄️</h1>' +
+      '<div class="header-row"><div class="logo-wrap"><i class="ti ti-air-conditioning"></i></div><div class="bienvenida">Bienvenido/a<br>' + (data.nombre || '') + '</div></div>' +
+      '<h1>¡Gracias por tu confianza! <i class="ti ti-snowflake"></i></h1>' +
       '<div class="beneficio-sub">Al completar tus 2 sellos, accede a tu beneficio de <b>CLIENTE FIEL</b>:</div>' +
       '<div class="beneficio-precios">Precios exclusivos en una sola visita</div>' +
       '<ul class="lista-precios">' +
@@ -163,7 +164,8 @@ function renderTarjeta(data) {
         '<li><span>3 Aires</span> <b>$55</b> <span class="beneficio-ahorro">(Ahorras $10)</span></li>' +
         '<li><span>5 Aires</span> <b>$85</b> <span class="beneficio-ahorro">(Ahorras $15)</span></li>' +
       '</ul>' +
-      '<div class="beneficio-condicion">⚠️ Condición: precios válidos únicamente para servicios realizados el mismo día y en el mismo domicilio.</div>' +
+      '<div class="divisor"></div>' +
+      '<div class="beneficio-condicion"><i class="ti ti-alert-triangle"></i><span>Condición: precios válidos únicamente para servicios realizados el mismo día y en el mismo domicilio.</span></div>' +
       '<div class="stamps">' + stampsHtml + '</div>' +
       '<div class="progreso-texto">' + selloEnCiclo + ' de ' + META + ' sellos en tu tarjeta actual</div>' +
       '<div class="footer">' +
