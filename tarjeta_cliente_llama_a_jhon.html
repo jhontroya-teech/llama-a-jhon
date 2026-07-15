@@ -24,6 +24,11 @@
     color: #fff;
   }
   .header-row { display: flex; align-items: center; gap: 14px; margin-bottom: 20px; }
+  .ciclos-badge {
+    width: 30px; height: 30px; border-radius: 50%; background: #FAC775; color: #6e4c00;
+    display: flex; align-items: center; justify-content: center; font-size: 14px; font-weight: 800;
+    flex-shrink: 0; box-shadow: 0 2px 6px rgba(0,0,0,0.15);
+  }
   .logo-wrap {
     width: 56px; height: 56px; border-radius: 50%; background: #fff; border: 3px solid rgba(255,255,255,0.85);
     display: flex; align-items: center; justify-content: center; overflow: hidden;
@@ -83,6 +88,10 @@
   .servicio .info { flex: 1; min-width: 0; }
   .servicio .detalle { font-weight: 600; color: #2c2c2c; }
   .servicio .fecha { font-size: 11px; color: #918a9e; margin-top: 2px; }
+  .promo-tag {
+    font-size: 11px; font-weight: 700; color: #0a6e4a; background: #E7F8EE;
+    display: inline-block; padding: 3px 8px; border-radius: 8px; margin-top: 4px;
+  }
   .btn-pdf {
     flex-shrink: 0; width: 34px; height: 34px; border-radius: 50%; background: #E7F8EE; color: #0a6e4a;
     display: flex; align-items: center; justify-content: center; text-decoration: none; font-size: 16px;
@@ -129,8 +138,13 @@ async function cargarTarjeta() {
 
 function renderTarjeta(data) {
   const totalServicios = Number(data.totalSellos) || 0;
-  // Sellos dentro del ciclo actual (cada 4 servicios se completa una tarjeta)
-  const selloEnCiclo = totalServicios > 0 && totalServicios % META === 0 ? META : totalServicios % META;
+  // Ciclo completo = META sellos (mantenimientos normales) + 1 mantenimiento de promoción
+  // (el que usa el descuento ganado). Tras ese mantenimiento de promoción, los sellos vuelven a 0.
+  const CICLO = META + 1;
+  const posEnCiclo = totalServicios % CICLO; // 0 = justo se usó la promo y se reinició
+  const selloEnCiclo = posEnCiclo === 0 ? 0 : Math.min(posEnCiclo, META);
+  const esperandoPromocion = posEnCiclo === 0 && totalServicios > 0 ? false : posEnCiclo >= META;
+  const ciclosCompletados = Math.floor(totalServicios / CICLO);
 
   let stampsHtml = '';
   for (let i = 0; i < META; i++) {
@@ -144,10 +158,15 @@ function renderTarjeta(data) {
   let historialHtml = '';
   if (data.historial && data.historial.length) {
     data.historial.slice().reverse().forEach((s, idx) => {
+      const numVisita = data.historial.length - idx; // orden cronologico real (1, 2, 3...)
+      const esPromocion = numVisita % CICLO === 0; // el ultimo mantenimiento de cada ciclo
       const pdfBtn = s.link_reporte
         ? '<a class="btn-pdf" href="' + s.link_reporte + '" target="_blank" rel="noopener" title="Descargar PDF"><i class="ti ti-file-type-pdf"></i></a>'
         : '<span class="btn-pdf disabled" title="Reporte no disponible"><i class="ti ti-file-type-pdf"></i></span>';
-      historialHtml += '<div class="servicio"><div class="row-left"><div class="num">' + (data.historial.length - idx) + '</div><div class="info"><div class="detalle">' + (s.tipo || 'Servicio') + '</div><div class="fecha">' + (s.fecha || '') + '</div></div></div>' + pdfBtn + '</div>';
+      const etiquetaPromo = esPromocion
+        ? '<div class="promo-tag">🎁 Limpieza Promoción</div>'
+        : '';
+      historialHtml += '<div class="servicio"><div class="row-left"><div class="num">' + numVisita + '</div><div class="info"><div class="detalle">' + (s.tipo || 'Servicio') + '</div><div class="fecha">' + (s.fecha || '') + '</div>' + etiquetaPromo + '</div></div>' + pdfBtn + '</div>';
     });
   } else {
     historialHtml = '<div class="servicio">Aún no hay servicios registrados.</div>';
@@ -155,7 +174,11 @@ function renderTarjeta(data) {
 
   document.getElementById('app').innerHTML =
     '<div class="card">' +
-      '<div class="header-row"><div class="logo-wrap"><i class="ti ti-air-conditioning"></i></div><div class="bienvenida">Bienvenido/a<br>' + (data.nombre || '') + '</div></div>' +
+      '<div class="header-row">'+
+        '<div class="logo-wrap"><i class="ti ti-air-conditioning"></i></div>'+
+        '<div class="bienvenida" style="flex:1;">Bienvenido/a<br>' + (data.nombre || '') + '</div>'+
+        (ciclosCompletados > 0 ? '<div class="ciclos-badge" title="Veces que ha completado su tarjeta">' + ciclosCompletados + '</div>' : '') +
+      '</div>' +
       '<h1>¡Gracias por tu confianza! <i class="ti ti-snowflake"></i></h1>' +
       '<div class="beneficio-sub">Al completar tus 2 sellos, accede a tu beneficio de <b>CLIENTE FIEL</b>:</div>' +
       '<div class="beneficio-precios">Precios exclusivos en una sola visita</div>' +
@@ -167,12 +190,14 @@ function renderTarjeta(data) {
       '<div class="divisor"></div>' +
       '<div class="beneficio-condicion"><i class="ti ti-alert-triangle"></i><span>Condición: precios válidos únicamente para servicios realizados el mismo día y en el mismo domicilio.</span></div>' +
       '<div class="stamps">' + stampsHtml + '</div>' +
-      '<div class="progreso-texto">' + selloEnCiclo + ' de ' + META + ' sellos en tu tarjeta actual</div>' +
+      '<div class="progreso-texto">' + (esperandoPromocion
+        ? '¡Tarjeta completa! Tu próximo mantenimiento es tu Limpieza Promoción 🎁'
+        : selloEnCiclo + ' de ' + META + ' sellos en tu tarjeta actual') + '</div>' +
       '<div class="footer">' +
         '<a class="pill" href="' + INSTAGRAM_URL + '" target="_blank" rel="noopener"><i class="ti ti-brand-instagram"></i> @llama.a.jhon</a>' +
         '<a class="pill" href="' + WHATSAPP_URL + '" target="_blank" rel="noopener"><i class="ti ti-brand-whatsapp"></i> 0987738569</a>' +
       '</div>' +
-      '<div class="reward-banner ' + (selloEnCiclo >= META ? 'show' : '') + '">' +
+      '<div class="reward-banner ' + (esperandoPromocion ? 'show' : '') + '">' +
         '<p>¡Completaste tu tarjeta! Ya tienes acceso a tus precios exclusivos de Cliente Fiel.</p>' +
       '</div>' +
     '</div>' +
