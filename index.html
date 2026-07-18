@@ -1592,8 +1592,9 @@ function ljRenderClients(){
   const LJ_META_SELLOS = 2;
   const htmlNormales=filteredNormales.map(c=>{
     const visits=ljDb.visits.filter(v=>String(v.clientId)===String(c.id)).sort((a,b)=>new Date(a.fecha)-new Date(b.fecha));
-    const sellosLlenos = visits.length>0 && visits.length % LJ_META_SELLOS === 0 ? LJ_META_SELLOS : visits.length % LJ_META_SELLOS;
-    const completa = visits.length>0 && sellosLlenos===LJ_META_SELLOS;
+    const visitsSello=visits.filter(v=>ljTipoUsaMantenimiento(v.tipo));
+    const sellosLlenos = visitsSello.length>0 && visitsSello.length % LJ_META_SELLOS === 0 ? LJ_META_SELLOS : visitsSello.length % LJ_META_SELLOS;
+    const completa = visitsSello.length>0 && sellosLlenos===LJ_META_SELLOS;
     let dots='';
     for(let i=0;i<LJ_META_SELLOS;i++){ dots+=`<span class="lj-dot${i<sellosLlenos?' filled':''}"></span>`; }
     const ultima = visits[visits.length-1];
@@ -1667,9 +1668,10 @@ function ljRenderClientDetail(){
   const btnAgregarAire = document.getElementById('lj-btn-agregar-aire-detalle');
   if(btnAgregarAire) btnAgregarAire.style.display = (c.tipoCliente==='especial') ? '' : 'none';
   const visits=ljDb.visits.filter(v=>String(v.clientId)===String(ljCurrentClientId));
+  const visitsSello=visits.filter(v=>ljTipoUsaMantenimiento(v.tipo));
 
   const LJ_META_SELLOS = 2;
-  const sellosLlenos = visits.length>0 && visits.length % LJ_META_SELLOS === 0 ? LJ_META_SELLOS : visits.length % LJ_META_SELLOS;
+  const sellosLlenos = visitsSello.length>0 && visitsSello.length % LJ_META_SELLOS === 0 ? LJ_META_SELLOS : visitsSello.length % LJ_META_SELLOS;
   let dots='';
   for(let i=0;i<LJ_META_SELLOS;i++){ dots+=`<span class="lj-dot${i<sellosLlenos?' filled':''}" style="width:16px;height:16px;"></span>`; }
   document.getElementById('lj-client-detail-stamps').innerHTML = `<div class="lj-dots" style="gap:6px;margin-bottom:4px;">${dots}</div><span class="lj-dots-frac">${sellosLlenos}/${LJ_META_SELLOS} sellos${sellosLlenos>=LJ_META_SELLOS?' · ¡Tarjeta completa! Descuento especial disponible':''}</span>`;
