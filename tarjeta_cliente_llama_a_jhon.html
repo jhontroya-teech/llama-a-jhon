@@ -157,13 +157,25 @@ function renderTarjeta(data) {
 
   let historialHtml = '';
   if (data.historial && data.historial.length) {
-    data.historial.slice().reverse().forEach((s, idx) => {
-      const numVisita = data.historial.length - idx; // orden cronologico real (1, 2, 3...)
-      const esPromocion = numVisita % CICLO === 0; // el ultimo mantenimiento de cada ciclo
+    // Recorremos en orden cronológico (mas antiguo primero) para llevar la cuenta
+    // real de sellos: solo suma cuando la visita SI cuenta como sello (s.cuentaSello),
+    // no por su posición en la lista (así "Reparación", "Instalación", etc. no rompen el ciclo)
+    let selloCounter = 0;
+    const historialConPromo = data.historial.map(s => {
+      let esPromocion = false;
+      if (s.cuentaSello) {
+        selloCounter++;
+        esPromocion = selloCounter % CICLO === 0;
+      }
+      return Object.assign({}, s, { esPromocion: esPromocion });
+    });
+
+    historialConPromo.slice().reverse().forEach((s, idx) => {
+      const numVisita = historialConPromo.length - idx; // posición general en el listado (solo para mostrar el #)
       const pdfBtn = s.link_reporte
         ? '<a class="btn-pdf" href="' + s.link_reporte + '" target="_blank" rel="noopener" title="Descargar PDF"><i class="ti ti-file-type-pdf"></i></a>'
         : '<span class="btn-pdf disabled" title="Reporte no disponible"><i class="ti ti-file-type-pdf"></i></span>';
-      const etiquetaPromo = esPromocion
+      const etiquetaPromo = s.esPromocion
         ? '<div class="promo-tag">🎁 Limpieza Promoción</div>'
         : '';
       historialHtml += '<div class="servicio"><div class="row-left"><div class="num">' + numVisita + '</div><div class="info"><div class="detalle">' + (s.tipo || 'Servicio') + '</div><div class="fecha">' + (s.fecha || '') + '</div>' + etiquetaPromo + '</div></div>' + pdfBtn + '</div>';
