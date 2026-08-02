@@ -1055,17 +1055,14 @@ function ljActualizarBotonAtras(){
   btn.style.display = backBtn ? 'flex' : 'none';
 }
 
-// Auto-login si ya hay sesión; si no, entra directo al login de Llama a Jhon
+// Entra directo al panel de Llama a Jhon, sin pantalla de login
 document.addEventListener('DOMContentLoaded', function(){
   ljActualizarIconoTema();
-  const saved = sessionStorage.getItem('app_logged');
-  if(saved === 'thermo' || saved === 'jhon'){
-    document.getElementById('select-screen').style.display = 'none';
-    currentApp = saved;
-    launchApp(saved);
-  } else {
-    showLogin('jhon');
-  }
+  document.getElementById('select-screen').style.display = 'none';
+  document.getElementById('login-screen').style.display = 'none';
+  currentApp = 'jhon';
+  sessionStorage.setItem('app_logged', 'jhon');
+  launchApp('jhon');
 });
 
 // ══════════════════════════════════════════════════════════
