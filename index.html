@@ -3055,11 +3055,19 @@ function ljCalcularAlertasActividadHoy(){
 }
 
 function ljRenderAlertBell(){
-  const alertas = ljCalcularAlertasLocal();
-  const alertasHoy = ljCalcularAlertasActividadHoy();
   const badge = document.getElementById('lj-bell-badge');
   const lista = document.getElementById('lj-alert-list');
   if(!badge || !lista) return;
+
+  let alertas = [], alertasHoy = [];
+  try {
+    alertas = ljCalcularAlertasLocal();
+    alertasHoy = ljCalcularAlertasActividadHoy();
+  } catch(e){
+    console.error('Error al calcular alertas:', e);
+    lista.innerHTML = `<div style="padding:16px;text-align:center;color:#e53e3e;font-size:13px;">Ocurrió un error al calcular las alertas.</div>`;
+    return;
+  }
 
   const leidas = ljGetAlertasLeidas();
   const noLeidas = alertas.filter(a=>!leidas.includes(a.key)).length + alertasHoy.filter(a=>!leidas.includes(a.key)).length;
@@ -3113,7 +3121,11 @@ function ljRenderAlertBell(){
 
 function ljToggleAlertPanel(){
   const panel = document.getElementById('lj-alert-panel');
-  panel.style.display = panel.style.display === 'block' ? 'none' : 'block';
+  const abriendo = panel.style.display !== 'block';
+  if(abriendo){
+    try { ljRenderAlertBell(); } catch(e){ console.error('Error al calcular alertas:', e); }
+  }
+  panel.style.display = abriendo ? 'block' : 'none';
 }
 
 function ljAbrirAlerta(clienteId, key){
@@ -3127,7 +3139,7 @@ function ljAbrirAlerta(clienteId, key){
 document.addEventListener('click', function(e){
   const panel = document.getElementById('lj-alert-panel');
   const bell = document.getElementById('lj-bell-btn');
-  if(panel && panel.style.display === 'block' && !panel.contains(e.target) && e.target !== bell){
+  if(panel && panel.style.display === 'block' && !panel.contains(e.target) && !bell.contains(e.target)){
     panel.style.display = 'none';
   }
 });
