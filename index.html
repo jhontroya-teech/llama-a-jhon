@@ -218,6 +218,33 @@ canvas.sigCanvas{display:block;touch-action:none;cursor:crosshair;width:100%;hei
 .lj-add-aire-btn{width:100%;padding:11px;background:#fff;color:#0a6e4a;border:1.5px dashed #34C38F;border-radius:10px;font-size:14px;font-weight:600;cursor:pointer;margin-top:6px;font-family:inherit;display:flex;align-items:center;justify-content:center;gap:6px;}
 .lj-aire-modal-box{background:#fff;border-radius:16px;padding:20px;width:100%;max-width:400px;max-height:85vh;overflow-y:auto;}
 
+/* ── Pantalla de Ingresos y gastos ── */
+.fin-mes-nav{display:flex;align-items:center;justify-content:space-between;background:#f4f4f4;border-radius:10px;padding:8px 12px;margin:0 0 14px;}
+.fin-mes-nav button{background:none;border:none;color:#666;padding:4px;width:auto;height:auto;cursor:pointer;}
+.fin-mes-nav span{font-size:14px;font-weight:700;color:#222;}
+.fin-stats{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:16px;}
+.fin-card{border-radius:10px;padding:10px;text-align:center;}
+.fin-card.ingreso{background:#E7F8EE;}
+.fin-card.gasto{background:#FCE9E9;}
+.fin-card.balance{background:#f4f4f4;}
+.fin-card .fin-label{font-size:11px;margin:0 0 4px;}
+.fin-card.ingreso .fin-label{color:#0a6e4a;}
+.fin-card.gasto .fin-label{color:#c0392b;}
+.fin-card.balance .fin-label{color:#888;}
+.fin-card .fin-num{font-size:16px;font-weight:700;color:#222;}
+.fin-mov{display:flex;justify-content:space-between;align-items:center;padding:10px 4px;border-bottom:1px solid #f0f0f0;}
+.fin-mov:last-child{border-bottom:none;}
+.fin-mov .fin-mov-desc{font-size:13px;color:#222;font-weight:600;}
+.fin-mov .fin-mov-meta{font-size:11px;color:#918a9e;margin-top:2px;}
+.fin-mov .fin-mov-monto{font-size:14px;font-weight:700;}
+.fin-mov .fin-mov-monto.ingreso{color:#0a6e4a;}
+.fin-mov .fin-mov-monto.gasto{color:#c0392b;}
+.fin-mov-del{background:none;border:none;color:#c0392b;opacity:0.6;padding:0 0 0 10px;width:auto;height:auto;cursor:pointer;}
+.fin-tipo-opciones{display:flex;gap:8px;margin-bottom:12px;}
+.fin-tipo-btn{flex:1;padding:10px;border-radius:10px;border:1px solid #ddd;background:#fff;color:#888;font-size:13px;font-weight:700;cursor:pointer;text-align:center;}
+.fin-tipo-btn.activo-ingreso{background:#E7F8EE;border-color:#0a6e4a;color:#0a6e4a;}
+.fin-tipo-btn.activo-gasto{background:#FCE9E9;border-color:#c0392b;color:#c0392b;}
+
 /* ── MODO OSCURO (solo aplica a la parte de Llama a Jhon) ── */
 body.dark{background:#0d1712;}
 body.dark #app-jhon .header{background:#0d1712;border-bottom-color:#20302a;}
@@ -308,6 +335,19 @@ body.dark #app-jhon .lj-overlay{background:rgba(0,0,0,0.7);}
 body.dark #app-jhon .detail-row{border-bottom-color:#1c2b25;}
 body.dark #app-jhon #lj-alert-panel > div:first-child{border-bottom-color:#2a3b33;}
 body.dark #app-jhon .toast{background:#eef5f1;color:#0d1712;}
+body.dark #app-jhon .fin-mes-nav{background:#16211c;}
+body.dark #app-jhon .fin-mes-nav span{color:#eef5f1;}
+body.dark #app-jhon .fin-mes-nav button{color:#8fa89c;}
+body.dark #app-jhon .fin-card.ingreso{background:#123527;}
+body.dark #app-jhon .fin-card.gasto{background:#2a1414;}
+body.dark #app-jhon .fin-card.balance{background:#16211c;border:1px solid #2a3b33;}
+body.dark #app-jhon .fin-card .fin-num{color:#eef5f1;}
+body.dark #app-jhon .fin-mov{border-bottom-color:#20302a;}
+body.dark #app-jhon .fin-mov .fin-mov-desc{color:#eef5f1;}
+body.dark #app-jhon .fin-mov .fin-mov-meta{color:#8fa89c;}
+body.dark #app-jhon .fin-tipo-btn{background:#16211c;border-color:#2a3b33;color:#8fa89c;}
+body.dark #app-jhon .fin-tipo-btn.activo-ingreso{background:#123527;border-color:#0a6e4a;color:#5fd9a6;}
+body.dark #app-jhon .fin-tipo-btn.activo-gasto{background:#2a1414;border-color:#c0392b;color:#f09595;}
 </style>
 </head>
 <body>
@@ -519,6 +559,7 @@ body.dark #app-jhon .toast{background:#eef5f1;color:#0d1712;}
           <div class="sub" id="lj-header-subtitle">Panel de clientes</div>
         </div>
         <button class="lj-header-agenda-btn" id="lj-agenda-toggle-btn" onclick="ljToggleAgendaView()">Agenda</button>
+        <button class="lj-header-agenda-btn" onclick="ljGoScreen('lj-screen-finanzas')" style="display:inline-flex;align-items:center;gap:4px;"><i class="ti ti-wallet"></i> Ingresos y gastos</button>
       </div>
       <div class="lj-header-actions-row">
         <button class="lj-header-switch" onclick="switchUser()"><i class="ti ti-user-circle"></i> Cambiar usuario</button>
@@ -823,7 +864,53 @@ body.dark #app-jhon .toast{background:#eef5f1;color:#0d1712;}
     <button class="btn-secondary" onclick="ljCambiarPassword()"><i class="ti ti-lock"></i> Cambiar contraseña</button>
   </div>
 
+  <!-- INGRESOS Y GASTOS -->
+  <div id="lj-screen-finanzas" class="screen">
+    <div class="header">
+      <button class="back-btn" onclick="ljGoScreen('lj-screen-home')"><i class="ti ti-arrow-left"></i></button>
+      <h1>Ingresos y gastos</h1>
+      <button class="btn-switch-user" onclick="switchUser()"><i class="ti ti-user-circle"></i> Cambiar usuario</button>
+    </div>
+
+    <button class="btn-primary" style="margin-bottom:16px;" onclick="ljAbrirModalMovimiento()"><i class="ti ti-plus"></i> Agregar</button>
+
+    <div class="fin-mes-nav">
+      <button onclick="ljCambiarMesFinanzas(-1)"><i class="ti ti-chevron-left"></i></button>
+      <span id="lj-fin-mes-label">-</span>
+      <button onclick="ljCambiarMesFinanzas(1)"><i class="ti ti-chevron-right"></i></button>
+    </div>
+
+    <div class="fin-stats">
+      <div class="fin-card ingreso"><p class="fin-label">Ingresos</p><p class="fin-num" id="lj-fin-ingresos">$0</p></div>
+      <div class="fin-card gasto"><p class="fin-label">Gastos</p><p class="fin-num" id="lj-fin-gastos">$0</p></div>
+      <div class="fin-card balance"><p class="fin-label">Balance</p><p class="fin-num" id="lj-fin-balance">$0</p></div>
+    </div>
+
+    <div class="section-title">Movimientos del mes</div>
+    <div id="lj-fin-lista"></div>
+  </div>
+
 </div><!-- /app-jhon -->
+
+<!-- MODAL: AGREGAR MOVIMIENTO (ingreso o gasto manual) -->
+<div id="lj-overlay-movimiento" class="lj-overlay">
+  <div class="lj-overlay-box">
+    <div class="lj-overlay-title" style="text-align:left;margin-bottom:14px;">Agregar movimiento</div>
+
+    <div class="fin-tipo-opciones">
+      <button type="button" class="fin-tipo-btn activo-ingreso" id="lj-fin-tipo-ingreso-btn" onclick="ljElegirTipoMovimiento('Ingreso')">Ingreso</button>
+      <button type="button" class="fin-tipo-btn" id="lj-fin-tipo-gasto-btn" onclick="ljElegirTipoMovimiento('Gasto')">Gasto</button>
+    </div>
+
+    <input type="number" id="lj-fin-monto" placeholder="Monto ($)" min="0" step="0.01">
+    <input type="text" id="lj-fin-descripcion" placeholder="Descripción (ej. Venta de sistema)">
+    <input type="date" id="lj-fin-fecha">
+
+    <button class="btn-primary" onclick="ljGuardarMovimiento()">Guardar</button>
+    <button class="btn-secondary" onclick="ljCerrarModalMovimiento()">Cancelar</button>
+  </div>
+</div>
+
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
@@ -1523,9 +1610,11 @@ teUpdateStats(); teRenderClients();
 //  LLAMA A JHON
 // ══════════════════════════════════════════════════════════
 const LJ_SHEET_URL = "https://script.google.com/macros/s/AKfycbxXfHV1R6EnHSgSjAUEXsiUlBDS2waT1gEVOdaiYK-fumkNxGmXoM-oicUqiuhBL_pMcw/exec";
-let ljDb = JSON.parse(localStorage.getItem('lj_db') || '{"clients":[],"visits":[]}');
+let ljDb = JSON.parse(localStorage.getItem('lj_db') || '{"clients":[],"visits":[],"movements":[]}');
 let ljCurrentClientId=null, ljCurrentVisitId=null, ljEditingClientId=null, ljEditingVisitId=null;
 let ljVisitPhotos=[], ljSigCtx, ljSigDrawing=false, ljSigHasContent=false;
+let ljFinTipoActual='Ingreso';
+let ljFinFecha=new Date(); // mes que se está viendo en Ingresos y gastos
 
 function ljSlimVisit(v, aggressive){
   if(!aggressive && !v.link_reporte) return v;
@@ -1592,10 +1681,11 @@ function ljFetchData(){
 
         const mergedVisits = Object.values(mergedById);
 
-        ljDb = { clients: serverClients, visits: mergedVisits };
+        ljDb = { clients: serverClients, visits: mergedVisits, movements: data.movements || [] };
         ljSaveDb();
         ljRenderClients();
         ljRenderAlertBell();
+        if(document.getElementById('lj-screen-finanzas').classList.contains('active')) ljRenderFinanzas();
         if(ind) ind.innerHTML=`<i class="ti ti-cloud-check" style="color:#0a6e4a"></i> Sincronizado con Excel`;
       }
     })
@@ -1640,6 +1730,12 @@ function ljSyncToSheets(data){
     params.append('costoServicio', data.costoServicio||'');
     params.append('mesesProximo', data.mesesProximo||'');
   }
+  if(data.type==='movimiento'){
+    params.append('fecha', data.fecha||'');
+    params.append('tipo', data.tipo||'');
+    params.append('monto', data.monto||'');
+    params.append('descripcion', data.descripcion||'');
+  }
 
   fetch(LJ_SHEET_URL, {
     method: 'POST',
@@ -1676,12 +1772,131 @@ function ljGoScreen(id){
   if(id==='lj-screen-new-visit') ljInitSig();
   if(id==='lj-screen-config') ljCargarConfig();
   if(id==='lj-screen-institucion-aires') ljRenderInstitucionAires();
+  if(id==='lj-screen-finanzas'){ ljFinFecha=new Date(); ljRenderFinanzas(); }
   ljActualizarBotonAtras();
 }
 
 function ljUpdateStats(){
   document.getElementById('lj-total-clients').textContent=ljDb.clients.length;
   document.getElementById('lj-total-visits').textContent=ljDb.visits.length;
+}
+
+// ══════════════ INGRESOS Y GASTOS ══════════════
+const LJ_MESES = ['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
+
+function ljCambiarMesFinanzas(delta){
+  ljFinFecha.setMonth(ljFinFecha.getMonth()+delta);
+  ljRenderFinanzas();
+}
+
+function ljRenderFinanzas(){
+  const anio=ljFinFecha.getFullYear(), mes=ljFinFecha.getMonth();
+  document.getElementById('lj-fin-mes-label').textContent = LJ_MESES[mes]+' '+anio;
+
+  // Ingresos automáticos: suma de costoServicio de todas las visitas del mes elegido
+  const visitasDelMes = (ljDb.visits||[]).filter(v=>{
+    if(!v.fecha) return false;
+    const f = v.fecha instanceof Date ? v.fecha : new Date(v.fecha);
+    return f.getFullYear()===anio && f.getMonth()===mes;
+  });
+  const ingresosVisitas = visitasDelMes.reduce((sum,v)=> sum + (parseFloat(v.costoServicio)||0), 0);
+
+  // Movimientos manuales del mes elegido (ingresos extra y gastos)
+  const movsDelMes = (ljDb.movements||[]).filter(m=>{
+    if(!m.fecha) return false;
+    const f = m.fecha instanceof Date ? m.fecha : new Date(m.fecha);
+    return f.getFullYear()===anio && f.getMonth()===mes;
+  });
+  const ingresosManuales = movsDelMes.filter(m=>m.tipo==='Ingreso').reduce((sum,m)=> sum + (parseFloat(m.monto)||0), 0);
+  const gastos = movsDelMes.filter(m=>m.tipo==='Gasto').reduce((sum,m)=> sum + (parseFloat(m.monto)||0), 0);
+
+  const totalIngresos = ingresosVisitas + ingresosManuales;
+  const balance = totalIngresos - gastos;
+
+  document.getElementById('lj-fin-ingresos').textContent = '$'+totalIngresos.toFixed(2).replace(/\.00$/,'');
+  document.getElementById('lj-fin-gastos').textContent = '$'+gastos.toFixed(2).replace(/\.00$/,'');
+  document.getElementById('lj-fin-balance').textContent = '$'+balance.toFixed(2).replace(/\.00$/,'');
+
+  // Lista combinada: visitas (automático) + movimientos manuales, más reciente primero
+  const filaVisita = v => {
+    const cliente = (ljDb.clients||[]).find(c=>String(c.id)===String(v.clientId));
+    return `<div class="fin-mov">
+      <div><div class="fin-mov-desc">${v.tipos||v.tipo||'Servicio'}${cliente?' - '+cliente.nombre:''}</div><div class="fin-mov-meta">${Utilities_formatDateJS(v.fecha)} · Automático (visita)</div></div>
+      <div class="fin-mov-monto ingreso">+$${(parseFloat(v.costoServicio)||0).toFixed(2).replace(/\.00$/,'')}</div>
+    </div>`;
+  };
+  const filaMov = m => {
+    const esIngreso = m.tipo==='Ingreso';
+    return `<div class="fin-mov">
+      <div><div class="fin-mov-desc">${m.descripcion}</div><div class="fin-mov-meta">${Utilities_formatDateJS(m.fecha)} · Manual</div></div>
+      <div style="display:flex;align-items:center;">
+        <span class="fin-mov-monto ${esIngreso?'ingreso':'gasto'}">${esIngreso?'+':'-'}$${(parseFloat(m.monto)||0).toFixed(2).replace(/\.00$/,'')}</span>
+        <button class="fin-mov-del" onclick="ljEliminarMovimiento('${m.id}')"><i class="ti ti-trash"></i></button>
+      </div>
+    </div>`;
+  };
+
+  const filasVisitas = visitasDelMes.filter(v=>parseFloat(v.costoServicio)>0).map(v=>({fecha:v.fecha, html:filaVisita(v)}));
+  const filasMovs = movsDelMes.map(m=>({fecha:m.fecha, html:filaMov(m)}));
+  const todas = filasVisitas.concat(filasMovs).sort((a,b)=> new Date(b.fecha) - new Date(a.fecha));
+
+  document.getElementById('lj-fin-lista').innerHTML = todas.length
+    ? todas.map(f=>f.html).join('')
+    : '<p class="empty-state">Sin movimientos este mes.</p>';
+}
+
+// Pequeño helper porque en el navegador no existe Utilities.formatDate (eso es de Apps Script)
+function Utilities_formatDateJS(fecha){
+  const f = fecha instanceof Date ? fecha : new Date(fecha);
+  const dd = String(f.getDate()).padStart(2,'0');
+  const mm = String(f.getMonth()+1).padStart(2,'0');
+  return dd+'/'+mm+'/'+f.getFullYear();
+}
+
+function ljAbrirModalMovimiento(){
+  document.getElementById('lj-fin-monto').value='';
+  document.getElementById('lj-fin-descripcion').value='';
+  document.getElementById('lj-fin-fecha').value = new Date().toISOString().slice(0,10);
+  ljElegirTipoMovimiento('Ingreso');
+  document.getElementById('lj-overlay-movimiento').classList.add('active');
+}
+function ljCerrarModalMovimiento(){
+  document.getElementById('lj-overlay-movimiento').classList.remove('active');
+}
+function ljElegirTipoMovimiento(tipo){
+  ljFinTipoActual = tipo;
+  document.getElementById('lj-fin-tipo-ingreso-btn').classList.toggle('activo-ingreso', tipo==='Ingreso');
+  document.getElementById('lj-fin-tipo-gasto-btn').classList.toggle('activo-gasto', tipo==='Gasto');
+}
+function ljGuardarMovimiento(){
+  const monto = parseFloat(document.getElementById('lj-fin-monto').value);
+  const descripcion = document.getElementById('lj-fin-descripcion').value.trim();
+  const fecha = document.getElementById('lj-fin-fecha').value;
+  if(!monto || monto<=0){ showToast('Escribe un monto válido'); return; }
+  if(!descripcion){ showToast('Escribe una descripción'); return; }
+  if(!fecha){ showToast('Elige una fecha'); return; }
+
+  const id = 'mov_'+Date.now();
+  const mov = { id, fecha, tipo: ljFinTipoActual, monto, descripcion };
+  ljDb.movements = ljDb.movements || [];
+  ljDb.movements.push(mov);
+  ljSaveDb();
+  ljSyncToSheets({ type:'movimiento', id, fecha, tipo: ljFinTipoActual, monto, descripcion });
+  ljCerrarModalMovimiento();
+  ljRenderFinanzas();
+  showToast('Movimiento agregado');
+}
+function ljEliminarMovimiento(id){
+  if(!confirm('¿Eliminar este movimiento?')) return;
+  ljDb.movements = (ljDb.movements||[]).filter(m=>m.id!==id);
+  ljSaveDb();
+  fetch(LJ_SHEET_URL, {
+    method:'POST',
+    headers:{'Content-Type':'application/x-www-form-urlencoded'},
+    body:new URLSearchParams({type:'eliminarMovimiento', id}).toString()
+  }).catch(()=>{});
+  ljRenderFinanzas();
+  showToast('Movimiento eliminado');
 }
 
 function ljRenderClients(){
