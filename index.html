@@ -392,13 +392,12 @@ body.dark #app-jhon .fin-tipo-btn.activo-gasto{background:#2a1414;border-color:#
 ══════════════════════════════════════ -->
 <div id="login-screen">
   <div class="login-box">
-    <h2 id="login-title" class="thermo">Thermoelectric</h2>
+    <h2 id="login-title" class="jhon">Llama a Jhon</h2>
     <p>Control de Clientes</p>
     <input type="text" id="login-user" placeholder="Usuario">
     <input type="password" id="login-pass" placeholder="Contraseña">
-    <button id="login-btn" class="login-btn thermo" onclick="doLogin()">Ingresar</button>
+    <button id="login-btn" class="login-btn jhon" onclick="doLogin()">Ingresar</button>
     <div id="login-alert"></div>
-    <button class="login-back" onclick="backToSelect()">← Volver a selección</button>
   </div>
 </div>
 
@@ -1056,7 +1055,7 @@ function ljActualizarBotonAtras(){
   btn.style.display = backBtn ? 'flex' : 'none';
 }
 
-// Auto-login si ya hay sesión
+// Auto-login si ya hay sesión; si no, entra directo al login de Llama a Jhon
 document.addEventListener('DOMContentLoaded', function(){
   ljActualizarIconoTema();
   const saved = sessionStorage.getItem('app_logged');
@@ -1064,6 +1063,8 @@ document.addEventListener('DOMContentLoaded', function(){
     document.getElementById('select-screen').style.display = 'none';
     currentApp = saved;
     launchApp(saved);
+  } else {
+    showLogin('jhon');
   }
 });
 
