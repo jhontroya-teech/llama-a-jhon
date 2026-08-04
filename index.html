@@ -921,8 +921,8 @@ body.dark #app-jhon .fin-tipo-btn.activo-gasto{background:#2a1414;border-color:#
 //  SISTEMA DE AUTENTICACIÓN Y NAVEGACIÓN GLOBAL
 // ══════════════════════════════════════════════════════════
 const USERS = {
-  thermo: { usuario: 'Thermo Electric', pass: 'thermo2026' },
-  jhon:   { usuario: 'Llama a Jhon',   pass: 'jhon2026'   }
+  thermo: { usuario: 'Thermo Electric' },
+  jhon:   { usuario: 'Llama a Jhon' }
 };
 
 let currentApp = null; // 'thermo' | 'jhon'
@@ -945,14 +945,14 @@ function showLogin(app){
   document.getElementById('login-alert').style.display = 'none';
 }
 
-function mostrarErrorLogin(){
+function mostrarErrorLogin(msg){
   const alert = document.getElementById('login-alert');
   alert.style.display = 'block';
   alert.style.backgroundColor = '#ffebeb';
   alert.style.color = '#e53e3e';
-  alert.textContent = '❌ Usuario o contraseña incorrectos';
+  alert.textContent = msg ? ('⚠️ ' + msg) : '❌ Usuario o contraseña incorrectos';
   document.getElementById('login-user').value = '';
-  document.getElementById('login-pass').value = '';
+  if(!msg){ document.getElementById('login-pass').value = ''; }
 }
 
 function entrarSesion(){
@@ -968,26 +968,23 @@ async function doLogin(){
   const cred = USERS[currentApp];
   if(u !== cred.usuario){ mostrarErrorLogin(); return; }
 
-  // La app de Jhon valida la contraseña contra el Apps Script (así el botón
-  // "Cambiar contraseña" de Configuración funciona de verdad). Thermo se
-  // deja igual que antes, sin tocarlo.
+  // La contraseña de Llama a Jhon SIEMPRE se valida contra el Apps Script.
+  // No queda ninguna clave real escrita en este archivo.
   if(currentApp === 'jhon'){
     const btn = document.getElementById('login-btn');
     btn.disabled = true;
     try{
-      const resp = await fetch(`${LJ_SHEET_URL}?action=validarPassword&pass=${encodeURIComponent(p)}`).then(r=>r.json());
+      const resp = await fetch(`${LJ_SHEET_URL}?action=validarPassword&pass=${encodeURIComponent(p)}&key=${LJ_API_KEY}`).then(r=>r.json());
       btn.disabled = false;
       if(resp.ok){ entrarSesion(); } else { mostrarErrorLogin(); }
     }catch(err){
       btn.disabled = false;
-      // Si no hay internet en el momento del login, se permite entrar con la
-      // clave por defecto para no dejar al usuario totalmente bloqueado.
-      if(p === cred.pass){ entrarSesion(); } else { mostrarErrorLogin(); }
+      mostrarErrorLogin('Sin conexión. Intenta de nuevo.');
     }
     return;
   }
 
-  if(p === cred.pass){ entrarSesion(); } else { mostrarErrorLogin(); }
+  mostrarErrorLogin();
 }
 
 // Enter key en login
@@ -1055,14 +1052,18 @@ function ljActualizarBotonAtras(){
   btn.style.display = backBtn ? 'flex' : 'none';
 }
 
-// Entra directo al panel de Llama a Jhon, sin pantalla de login
+// Entra directo al login de Llama a Jhon (o auto-login si ya hay sesión)
 document.addEventListener('DOMContentLoaded', function(){
   ljActualizarIconoTema();
-  document.getElementById('select-screen').style.display = 'none';
-  document.getElementById('login-screen').style.display = 'none';
-  currentApp = 'jhon';
-  sessionStorage.setItem('app_logged', 'jhon');
-  launchApp('jhon');
+  const saved = sessionStorage.getItem('app_logged');
+  if(saved === 'jhon'){
+    document.getElementById('select-screen').style.display = 'none';
+    currentApp = saved;
+    launchApp(saved);
+  } else {
+    document.getElementById('select-screen').style.display = 'none';
+    showLogin('jhon');
+  }
 });
 
 // ══════════════════════════════════════════════════════════
@@ -1611,6 +1612,8 @@ teUpdateStats(); teRenderClients();
 //  LLAMA A JHON
 // ══════════════════════════════════════════════════════════
 const LJ_SHEET_URL = "https://script.google.com/macros/s/AKfycbxXfHV1R6EnHSgSjAUEXsiUlBDS2waT1gEVOdaiYK-fumkNxGmXoM-oicUqiuhBL_pMcw/exec";
+// Debe ser IDÉNTICA a la que pusiste en API_KEY dentro de Code.gs
+const LJ_API_KEY = "bB3dxMCQ6paGhG1nHB1LGGkf8DFLVS_r";
 let ljDb = JSON.parse(localStorage.getItem('lj_db') || '{"clients":[],"visits":[],"movements":[]}');
 let ljCurrentClientId=null, ljCurrentVisitId=null, ljEditingClientId=null, ljEditingVisitId=null;
 let ljVisitPhotos=[], ljSigCtx, ljSigDrawing=false, ljSigHasContent=false;
@@ -1655,7 +1658,7 @@ function ljFetchData(){
   const icon=document.getElementById('lj-manual-sync-btn');
   if(ind) ind.innerHTML=`<i class="ti ti-refresh sync-spin"></i> Descargando datos...`;
   if(icon) icon.classList.add('sync-spin');
-  fetch(`${LJ_SHEET_URL}?action=readAll`)
+  fetch(`${LJ_SHEET_URL}?action=readAll&key=${LJ_API_KEY}`)
     .then(r=>r.json())
     .then(data=>{
       if(data && data.clients){
@@ -1699,6 +1702,7 @@ function ljSyncToSheets(data){
   if(ind) ind.innerHTML=`<i class="ti ti-cloud-upload sync-spin"></i> Subiendo al Excel...`;
 
   const params=new URLSearchParams();
+  params.append('key', LJ_API_KEY);
   params.append('type', data.type||'');
   params.append('id', data.id||'');
   if(data.type==='client'){
@@ -1894,7 +1898,7 @@ function ljEliminarMovimiento(id){
   fetch(LJ_SHEET_URL, {
     method:'POST',
     headers:{'Content-Type':'application/x-www-form-urlencoded'},
-    body:new URLSearchParams({type:'eliminarMovimiento', id}).toString()
+    body:new URLSearchParams({type:'eliminarMovimiento', id, key:LJ_API_KEY}).toString()
   }).catch(()=>{});
   ljRenderFinanzas();
   showToast('Movimiento eliminado');
@@ -2578,6 +2582,7 @@ async function ljUploadPDF(pdf, v, c){
   try{
     const pdfDataUri = pdf.output('datauristring');
     const params = new URLSearchParams();
+    params.append('key', LJ_API_KEY);
     params.append('action','uploadPDF');
     params.append('pdf', pdfDataUri);
     params.append('cliente', c.nombre.replace(/[^a-zA-Z0-9]/g,'_'));
@@ -3152,7 +3157,7 @@ document.getElementById('lj-cfg-meses') && document.getElementById('lj-cfg-meses
 });
 
 function ljCargarConfig(){
-  fetch(`${LJ_SHEET_URL}?action=getConfig`)
+  fetch(`${LJ_SHEET_URL}?action=getConfig&key=${LJ_API_KEY}`)
     .then(r=>r.json())
     .then(resp=>{
       if(!resp.ok) return;
@@ -3199,6 +3204,7 @@ function ljProbarEmail(btn){
   btn.disabled = true;
 
   const params = new URLSearchParams();
+  params.append('key', LJ_API_KEY);
   params.append('type', 'probarEmail');
   params.append('email', email);
 
@@ -3227,6 +3233,7 @@ function ljProbarTelegram(btn){
   btn.disabled = true;
 
   const params = new URLSearchParams();
+  params.append('key', LJ_API_KEY);
   params.append('type', 'probarTelegram');
   params.append('chatId', chatId);
   // El token solo se manda si lo acabas de escribir; si lo dejas vacío,
@@ -3255,6 +3262,7 @@ function ljGuardarConfig(){
   if(!meses || parseInt(meses,10) < 1){ showToast('⚠️ Escribe un número de meses válido'); return; }
 
   const params = new URLSearchParams();
+  params.append('key', LJ_API_KEY);
   params.append('type', 'config');
   params.append('mesesMantenimiento', meses);
   params.append('alertaEmailActiva', document.getElementById('lj-cfg-email').checked ? 'true' : 'false');
@@ -3314,6 +3322,7 @@ function ljCambiarPassword(){
   if(nueva.length < 4){ showToast('⚠️ La nueva contraseña debe tener al menos 4 caracteres'); return; }
 
   const params = new URLSearchParams();
+  params.append('key', LJ_API_KEY);
   params.append('type', 'cambiarPassword');
   params.append('actual', actual);
   params.append('nueva', nueva);
