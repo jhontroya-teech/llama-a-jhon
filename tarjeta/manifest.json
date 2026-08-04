@@ -1,0 +1,16 @@
+{
+  "name": "Tarjeta Llama a Jhon",
+  "short_name": "Mi tarjeta",
+  "description": "Tu tarjeta de fidelidad de Llama a Jhon: sellos, historial y promociones",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#0a6e4a",
+  "theme_color": "#0a6e4a",
+  "icons": [
+    { "src": "icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "icon-512-maskable.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ]
+}
