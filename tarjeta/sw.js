@@ -35,6 +35,13 @@ self.addEventListener('activate', (event) => {
 self.addEventListener('fetch', (event) => {
   const url = event.request.url;
 
+  // Solo interceptamos peticiones de LECTURA (GET). Las de escritura
+  // (POST, PATCH, etc. — como las que usa OneSignal para registrar tu
+  // suscripción) deben pasar directo a la red, nunca por el caché.
+  if (event.request.method !== 'GET') {
+    return;
+  }
+
   // Nunca cachear Google Apps Script / Google APIs / OneSignal — deben ir
   // siempre en vivo a la red.
   if (
