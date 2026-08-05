@@ -132,6 +132,9 @@
 </head>
 <body>
 <button class="theme-toggle" id="theme-btn" onclick="toggleTheme()"><i class="ti ti-sun" id="theme-icon"></i></button>
+<button class="theme-toggle" id="notif-btn" style="right: 66px;" onclick="activarNotificaciones()" title="Activar notificaciones">
+  <i class="ti ti-bell" id="notif-icon"></i>
+</button>
 <script>
   // Aplica el tema guardado antes de pintar, para evitar parpadeo
   if (localStorage.getItem('lj_theme') === 'dark') document.body.classList.add('dark');
@@ -278,6 +281,8 @@ actualizarIconoTema();
   // Conecta esta tarjeta con OneSignal para poder mandarle avisos push
   // (recordatorios de mantenimiento y promociones) aunque tenga la app cerrada.
   window.OneSignalDeferred = window.OneSignalDeferred || [];
+  let oneSignalListo = null;
+
   OneSignalDeferred.push(async function (OneSignal) {
     await OneSignal.init({
       appId: "8e1254c6-a1e6-438f-87d9-8d6a7479e72f",
@@ -297,14 +302,38 @@ actualizarIconoTema();
       }
     }
 
-    // Pide permiso de notificaciones. Si el cliente ya respondió antes
-    // (aceptó o rechazó), OneSignal no vuelve a preguntar solo.
-    try {
-      await OneSignal.Notifications.requestPermission();
-    } catch (err) {
-      console.error('No se pudo pedir permiso de notificaciones:', err);
+    oneSignalListo = OneSignal;
+
+    // Si el cliente ya había dado permiso antes, refleja eso en el ícono
+    // de la campana (así no le pedimos de nuevo algo que ya aceptó).
+    if (OneSignal.Notifications.permission) {
+      document.getElementById('notif-icon').className = 'ti ti-bell-ringing-2';
     }
   });
+
+  // Se llama cuando el cliente TOCA el botón de la campana. Pedir el
+  // permiso como reacción directa a un toque (en vez de automático al
+  // cargar la página) evita que Chrome lo bloquee en silencio.
+  async function activarNotificaciones() {
+    if (!oneSignalListo) {
+      alert('Dale un segundo a la página para cargar e inténtalo de nuevo.');
+      return;
+    }
+    try {
+      const permiso = await oneSignalListo.Notifications.requestPermission();
+      const icon = document.getElementById('notif-icon');
+      if (oneSignalListo.Notifications.permission) {
+        icon.className = 'ti ti-bell-ringing-2';
+        alert('¡Listo! Ya vas a recibir avisos de Llama a Jhon.');
+      } else {
+        icon.className = 'ti ti-bell-off';
+        alert('No se activaron las notificaciones. Si tocaste "Bloquear" por error, entra a la configuración de notificaciones del sitio en Chrome para permitirlo.');
+      }
+    } catch (err) {
+      console.error('No se pudo pedir permiso de notificaciones:', err);
+      alert('Hubo un problema activando las notificaciones. Intenta de nuevo.');
+    }
+  }
 </script>
 </body>
 </html>
