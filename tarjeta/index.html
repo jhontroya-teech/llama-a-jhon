@@ -146,7 +146,14 @@ const INSTAGRAM_URL = "https://instagram.com/llama.a.jhon";
 const WHATSAPP_URL = "https://wa.me/593987738569";
 
 const params = new URLSearchParams(window.location.search);
-const clienteId = params.get('id');
+// Si el link trae "?id=...", lo guardamos para recordarlo. Así, cuando el
+// cliente abra la app desde el ícono de su pantalla de inicio (sin el "?id="
+// en la URL), la tarjeta igual sabe quién es.
+const idDeLaUrl = params.get('id');
+if (idDeLaUrl) {
+  localStorage.setItem('lj_clienteId', idDeLaUrl);
+}
+const clienteId = idDeLaUrl || localStorage.getItem('lj_clienteId');
 
 // Mismo Apps Script que usa el panel de Llama a Jhon (LJ_SHEET_URL en index.html)
 const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxXfHV1R6EnHSgSjAUEXsiUlBDS2waT1gEVOdaiYK-fumkNxGmXoM-oicUqiuhBL_pMcw/exec';
