@@ -286,7 +286,7 @@ actualizarIconoTema();
   OneSignalDeferred.push(async function (OneSignal) {
     await OneSignal.init({
       appId: "8e1254c6-a1e6-438f-87d9-8d6a7479e72f",
-      serviceWorkerPath: "sw.js",
+      serviceWorkerPath: "/llama-a-jhon/tarjeta/sw.js",
       serviceWorkerParam: { scope: "/llama-a-jhon/tarjeta/" }
     });
 
@@ -303,6 +303,12 @@ actualizarIconoTema();
     }
 
     oneSignalListo = OneSignal;
+
+    // Diagnóstico: muestra en la consola si el "trabajador" quedó
+    // realmente registrado, y con qué scope.
+    navigator.serviceWorker.getRegistrations().then((regs) => {
+      console.log('Service workers registrados:', regs.map(r => ({ scope: r.scope, script: r.active && r.active.scriptURL })));
+    });
 
     // Si el cliente ya había dado permiso antes, refleja eso en el ícono
     // de la campana (así no le pedimos de nuevo algo que ya aceptó).
