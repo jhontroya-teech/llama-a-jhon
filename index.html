@@ -565,6 +565,7 @@ body.dark #app-jhon .fin-tipo-btn.activo-gasto{background:#2a1414;border-color:#
         <button class="lj-header-agenda-icon" onclick="ljGoScreen('lj-screen-finanzas')" title="Ingresos y gastos" aria-label="Ingresos y gastos"><i class="ti ti-wallet"></i></button>
       </div>
       <div class="lj-header-actions-row">
+        <div class="lj-header-action-btn" id="lj-promo-btn" onclick="ljGoScreen('lj-screen-promocion')" title="Promoción"><i class="ti ti-speakerphone"></i></div>
         <div class="lj-header-action-btn" id="lj-theme-btn" onclick="ljToggleTheme()"><i class="ti ti-sun" id="lj-theme-icon"></i></div>
         <div class="lj-header-action-btn" id="lj-config-btn" onclick="ljGoScreen('lj-screen-config')"><i class="ti ti-settings"></i></div>
         <div class="lj-header-action-btn" id="lj-manual-sync-btn" onclick="ljFetchData()"><i class="ti ti-refresh"></i></div>
@@ -974,7 +975,7 @@ async function doLogin(){
     const btn = document.getElementById('login-btn');
     btn.disabled = true;
     try{
-      const resp = await fetch(`${LJ_SHEET_URL}?action=validarPassword&pass=${encodeURIComponent(p)}&key=${LJ_API_KEY}`).then(r=>r.json());
+      const resp = await fetch(`${LJ_SHEET_URL}?action=validarPassword&pass=${encodeURIComponent(p)}`).then(r=>r.json());
       btn.disabled = false;
       if(resp.ok){ entrarSesion(); } else { mostrarErrorLogin(); }
     }catch(err){
@@ -1612,8 +1613,6 @@ teUpdateStats(); teRenderClients();
 //  LLAMA A JHON
 // ══════════════════════════════════════════════════════════
 const LJ_SHEET_URL = "https://script.google.com/macros/s/AKfycbxXfHV1R6EnHSgSjAUEXsiUlBDS2waT1gEVOdaiYK-fumkNxGmXoM-oicUqiuhBL_pMcw/exec";
-// Debe ser IDÉNTICA a la que pusiste en API_KEY dentro de Code.gs
-const LJ_API_KEY = "bB3dxMCQ6paGhG1nHB1LGGkf8DFLVS_r";
 let ljDb = JSON.parse(localStorage.getItem('lj_db') || '{"clients":[],"visits":[],"movements":[]}');
 let ljCurrentClientId=null, ljCurrentVisitId=null, ljEditingClientId=null, ljEditingVisitId=null;
 let ljVisitPhotos=[], ljSigCtx, ljSigDrawing=false, ljSigHasContent=false;
@@ -1658,7 +1657,7 @@ function ljFetchData(){
   const icon=document.getElementById('lj-manual-sync-btn');
   if(ind) ind.innerHTML=`<i class="ti ti-refresh sync-spin"></i> Descargando datos...`;
   if(icon) icon.classList.add('sync-spin');
-  fetch(`${LJ_SHEET_URL}?action=readAll&key=${LJ_API_KEY}`)
+  fetch(`${LJ_SHEET_URL}?action=readAll`)
     .then(r=>r.json())
     .then(data=>{
       if(data && data.clients){
@@ -1702,7 +1701,6 @@ function ljSyncToSheets(data){
   if(ind) ind.innerHTML=`<i class="ti ti-cloud-upload sync-spin"></i> Subiendo al Excel...`;
 
   const params=new URLSearchParams();
-  params.append('key', LJ_API_KEY);
   params.append('type', data.type||'');
   params.append('id', data.id||'');
   if(data.type==='client'){
@@ -1898,7 +1896,7 @@ function ljEliminarMovimiento(id){
   fetch(LJ_SHEET_URL, {
     method:'POST',
     headers:{'Content-Type':'application/x-www-form-urlencoded'},
-    body:new URLSearchParams({type:'eliminarMovimiento', id, key:LJ_API_KEY}).toString()
+    body:new URLSearchParams({type:'eliminarMovimiento', id}).toString()
   }).catch(()=>{});
   ljRenderFinanzas();
   showToast('Movimiento eliminado');
@@ -2582,7 +2580,6 @@ async function ljUploadPDF(pdf, v, c){
   try{
     const pdfDataUri = pdf.output('datauristring');
     const params = new URLSearchParams();
-    params.append('key', LJ_API_KEY);
     params.append('action','uploadPDF');
     params.append('pdf', pdfDataUri);
     params.append('cliente', c.nombre.replace(/[^a-zA-Z0-9]/g,'_'));
@@ -3157,7 +3154,7 @@ document.getElementById('lj-cfg-meses') && document.getElementById('lj-cfg-meses
 });
 
 function ljCargarConfig(){
-  fetch(`${LJ_SHEET_URL}?action=getConfig&key=${LJ_API_KEY}`)
+  fetch(`${LJ_SHEET_URL}?action=getConfig`)
     .then(r=>r.json())
     .then(resp=>{
       if(!resp.ok) return;
@@ -3204,7 +3201,6 @@ function ljProbarEmail(btn){
   btn.disabled = true;
 
   const params = new URLSearchParams();
-  params.append('key', LJ_API_KEY);
   params.append('type', 'probarEmail');
   params.append('email', email);
 
@@ -3233,7 +3229,6 @@ function ljProbarTelegram(btn){
   btn.disabled = true;
 
   const params = new URLSearchParams();
-  params.append('key', LJ_API_KEY);
   params.append('type', 'probarTelegram');
   params.append('chatId', chatId);
   // El token solo se manda si lo acabas de escribir; si lo dejas vacío,
@@ -3262,7 +3257,6 @@ function ljGuardarConfig(){
   if(!meses || parseInt(meses,10) < 1){ showToast('⚠️ Escribe un número de meses válido'); return; }
 
   const params = new URLSearchParams();
-  params.append('key', LJ_API_KEY);
   params.append('type', 'config');
   params.append('mesesMantenimiento', meses);
   params.append('alertaEmailActiva', document.getElementById('lj-cfg-email').checked ? 'true' : 'false');
@@ -3322,7 +3316,6 @@ function ljCambiarPassword(){
   if(nueva.length < 4){ showToast('⚠️ La nueva contraseña debe tener al menos 4 caracteres'); return; }
 
   const params = new URLSearchParams();
-  params.append('key', LJ_API_KEY);
   params.append('type', 'cambiarPassword');
   params.append('actual', actual);
   params.append('nueva', nueva);
