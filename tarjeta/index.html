@@ -286,15 +286,20 @@ function actualizarIconoTema(){
       alert('Primero toca la campanita 🔔 y da Permitir.');
       return;
     }
-    try {
-      new Notification('Prueba directa', {
-        body: 'Si ves esto, tu navegador SÍ puede mostrar notificaciones'
+    navigator.serviceWorker.ready
+      .then((registro) => {
+        return registro.showNotification('Prueba directa', {
+          body: 'Si ves esto, tu navegador SÍ puede mostrar notificaciones',
+          icon: 'icon-192.png'
+        });
+      })
+      .then(() => {
+        alert('Se mandó la orden de mostrar la notificación. Revisa si apareció.');
+      })
+      .catch((err) => {
+        alert('Error al crear la notificación: ' + err.message);
+        console.error(err);
       });
-      alert('Se mandó la orden de mostrar la notificación. Revisa si apareció (puede aparecer arriba de la pantalla o en la barra de notificaciones).');
-    } catch (err) {
-      alert('Error al crear la notificación: ' + err.message);
-      console.error(err);
-    }
   }
 </script>
 
