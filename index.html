@@ -923,7 +923,7 @@ body.dark #app-jhon .fin-tipo-btn.activo-gasto{background:#2a1414;border-color:#
 // ══════════════════════════════════════════════════════════
 const USERS = {
   thermo: { usuario: 'Thermo Electric' },
-  jhon:   { usuario: 'Llama a Jhon' }
+  jhon:   { usuario: 'LlamaaJhon' }
 };
 
 let currentApp = null; // 'thermo' | 'jhon'
@@ -967,7 +967,7 @@ async function doLogin(){
   const u = document.getElementById('login-user').value.trim();
   const p = document.getElementById('login-pass').value.trim();
   const cred = USERS[currentApp];
-  if(u !== cred.usuario){ mostrarErrorLogin(); return; }
+  if(u.toLowerCase() !== cred.usuario.toLowerCase()){ mostrarErrorLogin(); return; }
 
   // La contraseña de Llama a Jhon SIEMPRE se valida contra el Apps Script.
   // No queda ninguna clave real escrita en este archivo.
