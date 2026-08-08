@@ -128,6 +128,55 @@
   body.dark .btn-pdf { background: #123527; color: #5fd9a6; }
   body.dark .estado { color: #8fa89c; }
   body.dark .theme-toggle { background: #16211c; color: #bfe8d6; }
+
+  /* ── Botón "Ver mensajes" ── */
+  .msgs-btn {
+    width: 100%; background: #fff; border: none; border-radius: 16px; padding: 14px 16px;
+    display: flex; align-items: center; gap: 10px; font-size: 14px; font-weight: 700; color: #2c2c2c;
+    box-shadow: 0 4px 14px rgba(10,110,74,0.08); margin-bottom: 14px; cursor: pointer; position: relative;
+  }
+  .msgs-btn i { font-size: 20px; color: #0a6e4a; }
+  .msgs-badge {
+    position: absolute; top: -6px; right: -6px; background: #e53e3e; color: #fff; font-size: 11px;
+    font-weight: 800; min-width: 20px; height: 20px; border-radius: 10px; display: flex; align-items: center;
+    justify-content: center; padding: 0 5px; box-shadow: 0 2px 6px rgba(0,0,0,0.25);
+  }
+  body.dark .msgs-btn { background: #16211c; color: #eef5f1; box-shadow: none; }
+
+  /* ── Banner de promoción (carrusel) ── */
+  .promo-banner {
+    border-radius: 18px; overflow: hidden; margin-bottom: 14px; background: #fff;
+    box-shadow: 0 6px 18px rgba(10,110,74,0.12);
+  }
+  .promo-banner-media { width: 100%; display: block; }
+  .promo-banner-media img, .promo-banner-media video { width: 100%; display: block; max-height: 220px; object-fit: cover; }
+  .promo-banner-texto { padding: 12px 14px; font-size: 13px; line-height: 1.5; color: #2c2c2c; }
+  body.dark .promo-banner { background: #16211c; }
+  body.dark .promo-banner-texto { color: #eef5f1; }
+  .promo-dots { display: flex; justify-content: center; gap: 6px; padding: 8px 0 2px; }
+  .promo-dot { width: 6px; height: 6px; border-radius: 50%; background: #d5e6dd; }
+  .promo-dot.active { background: #0a6e4a; }
+  body.dark .promo-dot { background: #2a3b32; }
+  body.dark .promo-dot.active { background: #5fd9a6; }
+
+  /* ── Modal historial de mensajes ── */
+  .msgs-overlay {
+    display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 100;
+    align-items: flex-end; justify-content: center;
+  }
+  .msgs-overlay.show { display: flex; }
+  .msgs-box {
+    background: #fff; width: 100%; max-width: 420px; border-radius: 20px 20px 0 0;
+    max-height: 80vh; overflow-y: auto; padding: 18px 18px 24px;
+  }
+  body.dark .msgs-box { background: #16211c; color: #eef5f1; }
+  .msgs-box h3 { margin: 0 0 14px; font-size: 15px; display: flex; justify-content: space-between; align-items: center; }
+  .msgs-box .cerrar { cursor: pointer; font-size: 20px; color: #918a9e; }
+  .msg-item { border-bottom: 1px solid #f0f4f2; padding: 12px 0; font-size: 13px; }
+  .msg-item:last-child { border-bottom: none; }
+  .msg-item .msg-fecha { font-size: 11px; color: #918a9e; margin-bottom: 4px; }
+  .msg-item .msg-media { width: 100%; max-height: 160px; object-fit: cover; border-radius: 10px; margin-top: 6px; }
+  body.dark .msg-item { border-bottom-color: #20302a; }
 </style>
 </head>
 <body>
@@ -144,6 +193,13 @@
 </script>
 <div class="wrap" id="app">
   <div class="estado" id="cargando">Cargando tu tarjeta...</div>
+</div>
+
+<div class="msgs-overlay" id="msgs-overlay" onclick="if(event.target===this) cerrarMensajes()">
+  <div class="msgs-box">
+    <h3>Mensajes y promociones <span class="cerrar" onclick="cerrarMensajes()"><i class="ti ti-x"></i></span></h3>
+    <div id="msgs-lista"></div>
+  </div>
 </div>
 
 <script>
@@ -164,6 +220,8 @@ const clienteId = idDeLaUrl || localStorage.getItem('lj_clienteId');
 // Mismo Apps Script que usa el panel de Llama a Jhon (LJ_SHEET_URL en index.html)
 const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwkcc37gOiRP0R0F3wJiehCNVzBRpT76q9CA6kJ-LXq2chr0gck6HqMrMR62xr3UhK3zw/exec';
 
+let promoData = null; // { activa, historial } — cargado junto con la tarjeta
+
 async function cargarTarjeta() {
   const app = document.getElementById('app');
   if (!clienteId) {
@@ -171,13 +229,18 @@ async function cargarTarjeta() {
     return;
   }
   try {
-    const resp = await fetch(SCRIPT_URL + '?action=tarjeta&id=' + encodeURIComponent(clienteId));
+    const [resp, respPromo] = await Promise.all([
+      fetch(SCRIPT_URL + '?action=tarjeta&id=' + encodeURIComponent(clienteId)),
+      fetch(SCRIPT_URL + '?action=promocionActiva&clienteId=' + encodeURIComponent(clienteId)).catch(() => null)
+    ]);
     const data = await resp.json();
+    if (respPromo) { try { promoData = await respPromo.json(); } catch (e) { promoData = null; } }
     if (!data.success) {
       app.innerHTML = '<div class="estado">No se encontró tu tarjeta. Contacta a @llama.a.jhon.</div>';
       return;
     }
     renderTarjeta(data);
+    actualizarBadgeMensajes();
   } catch (err) {
     app.innerHTML = '<div class="estado">No se pudo cargar tu tarjeta. Intenta de nuevo.</div>';
   }
@@ -232,6 +295,8 @@ function renderTarjeta(data) {
   }
 
   document.getElementById('app').innerHTML =
+    renderMsgsBtn() +
+    renderPromoBanner() +
     '<div class="card">' +
       '<div class="header-row">'+
         '<div class="logo-wrap"><i class="ti ti-air-conditioning"></i></div>'+
@@ -267,6 +332,106 @@ function renderTarjeta(data) {
 }
 
 cargarTarjeta();
+
+// ══════════════ MENSAJES Y PROMOCIÓN ══════════════
+const LJ_VISTOS_KEY = 'lj_promos_vistas';
+
+function getVistos() {
+  try { return JSON.parse(localStorage.getItem(LJ_VISTOS_KEY) || '[]'); } catch (e) { return []; }
+}
+
+function contarNoVistos() {
+  if (!promoData || !promoData.historial) return 0;
+  const vistos = getVistos();
+  return promoData.historial.filter(p => vistos.indexOf(String(p.id)) === -1).length;
+}
+
+function renderMsgsBtn() {
+  const noVistos = contarNoVistos();
+  return '<button class="msgs-btn" onclick="abrirMensajes()"><i class="ti ti-message-circle"></i> Ver mensajes' +
+    (noVistos > 0 ? '<span class="msgs-badge">' + noVistos + '</span>' : '') +
+    '</button>';
+}
+
+function actualizarBadgeMensajes() {
+  // Badge numérico sobre el ícono de la app (solo funciona en Android/Chrome, no en iPhone)
+  const n = contarNoVistos();
+  if ('setAppBadge' in navigator) {
+    if (n > 0) navigator.setAppBadge(n).catch(() => {});
+    else navigator.clearAppBadge().catch(() => {});
+  }
+}
+
+let promoDotIndex = 0;
+let promoDotTimer = null;
+
+function renderPromoBanner() {
+  if (!promoData || !promoData.activa) return '';
+  const promo = promoData.activa;
+  const urls = (promo.mediaUrls || '').split(',').filter(Boolean);
+  let mediaHtml = '';
+  let dotsHtml = '';
+  if (urls.length) {
+    mediaHtml = urls.map((u, i) =>
+      '<div class="promo-banner-media" style="display:' + (i === 0 ? 'block' : 'none') + '" data-slide="' + i + '">' +
+        (u.match(/\.mp4|video/) ? '<video src="' + u + '" muted autoplay loop playsinline></video>' : '<img src="' + u + '">') +
+      '</div>'
+    ).join('');
+    if (urls.length > 1) {
+      dotsHtml = '<div class="promo-dots">' + urls.map((_, i) => '<div class="promo-dot' + (i === 0 ? ' active' : '') + '"></div>').join('') + '</div>';
+    }
+  }
+  return '<div class="promo-banner" id="promo-banner">' + mediaHtml +
+    '<div class="promo-banner-texto">' + (promo.mensaje || '') + '</div>' +
+    dotsHtml +
+    '</div>';
+}
+
+// Carrusel automático: cambia de foto cada 4 segundos si la promo tiene más de una
+(function iniciarCarruselPromo() {
+  setInterval(() => {
+    const banner = document.getElementById('promo-banner');
+    if (!banner) return;
+    const slides = banner.querySelectorAll('[data-slide]');
+    const dots = banner.querySelectorAll('.promo-dot');
+    if (slides.length < 2) return;
+    slides[promoDotIndex].style.display = 'none';
+    if (dots[promoDotIndex]) dots[promoDotIndex].classList.remove('active');
+    promoDotIndex = (promoDotIndex + 1) % slides.length;
+    slides[promoDotIndex].style.display = 'block';
+    if (dots[promoDotIndex]) dots[promoDotIndex].classList.add('active');
+  }, 4000);
+})();
+
+function abrirMensajes() {
+  const lista = document.getElementById('msgs-lista');
+  const historial = (promoData && promoData.historial) || [];
+  if (!historial.length) {
+    lista.innerHTML = '<div class="estado">Aún no hay mensajes.</div>';
+  } else {
+    lista.innerHTML = historial.map(p => {
+      const urls = (p.mediaUrls || '').split(',').filter(Boolean);
+      const mediaHtml = urls.map(u => u.match(/\.mp4|video/)
+        ? '<video src="' + u + '" class="msg-media" controls muted></video>'
+        : '<img src="' + u + '" class="msg-media">'
+      ).join('');
+      return '<div class="msg-item"><div class="msg-fecha">' + (p.fechaCreacion ? new Date(p.fechaCreacion).toLocaleDateString('es-EC') : '') + '</div>' +
+        '<div>' + (p.mensaje || '') + '</div>' + mediaHtml + '</div>';
+    }).join('');
+  }
+  // Marca todos como vistos, y actualiza el contador rojo y el badge del ícono
+  const vistos = getVistos();
+  historial.forEach(p => { if (vistos.indexOf(String(p.id)) === -1) vistos.push(String(p.id)); });
+  localStorage.setItem(LJ_VISTOS_KEY, JSON.stringify(vistos));
+  document.getElementById('msgs-overlay').classList.add('show');
+  const btn = document.querySelector('.msgs-btn');
+  if (btn) btn.outerHTML = renderMsgsBtn();
+  actualizarBadgeMensajes();
+}
+
+function cerrarMensajes() {
+  document.getElementById('msgs-overlay').classList.remove('show');
+}
 
 function toggleTheme(){
   const dark = document.body.classList.toggle('dark');
