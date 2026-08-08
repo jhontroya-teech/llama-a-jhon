@@ -923,7 +923,7 @@ body.dark #app-jhon .fin-tipo-btn.activo-gasto{background:#2a1414;border-color:#
 // ══════════════════════════════════════════════════════════
 const USERS = {
   thermo: { usuario: 'Thermo Electric' },
-  jhon:   { usuario: 'Llama a Jhon' }
+  jhon:   { usuario: 'LlamaaJhon' }
 };
 
 let currentApp = null; // 'thermo' | 'jhon'
@@ -965,16 +965,27 @@ function entrarSesion(){
 
 async function doLogin(){
   const u = document.getElementById('login-user').value.trim();
+  const p = document.getElementById('login-pass').value.trim();
   const cred = USERS[currentApp];
   if(u.toLowerCase() !== cred.usuario.toLowerCase()){ mostrarErrorLogin(); return; }
 
-  // ⚠️ TEMPORAL: se saltó la validación de contraseña contra Apps Script
-  // porque el despliegue está devolviendo "No autorizado" (problema de
-  // autorización de Google, sin resolver todavía). Solo se pide el usuario
-  // correcto para entrar. Restaurar la validación real de contraseña en
-  // cuanto se arregle el Apps Script — buscar este mismo comentario.
-  entrarSesion();
-  return;
+  // La contraseña de Llama a Jhon SIEMPRE se valida contra el Apps Script.
+  // No queda ninguna clave real escrita en este archivo.
+  if(currentApp === 'jhon'){
+    const btn = document.getElementById('login-btn');
+    btn.disabled = true;
+    try{
+      const resp = await fetch(`${LJ_SHEET_URL}?action=validarPassword&pass=${encodeURIComponent(p)}`).then(r=>r.json());
+      btn.disabled = false;
+      if(resp.ok){ entrarSesion(); } else { mostrarErrorLogin(); }
+    }catch(err){
+      btn.disabled = false;
+      mostrarErrorLogin('Sin conexión. Intenta de nuevo.');
+    }
+    return;
+  }
+
+  mostrarErrorLogin();
 }
 
 // Enter key en login
@@ -1045,12 +1056,15 @@ function ljActualizarBotonAtras(){
 // Entra directo al login de Llama a Jhon (o auto-login si ya hay sesión)
 document.addEventListener('DOMContentLoaded', function(){
   ljActualizarIconoTema();
-  // ⚠️ TEMPORAL: se quitó la pantalla de login por completo (entra directo
-  // a la app, sin pedir usuario ni contraseña). Restaurar cuando se
-  // resuelva el "No autorizado" de Apps Script — buscar este comentario.
-  document.getElementById('select-screen').style.display = 'none';
-  currentApp = 'jhon';
-  launchApp('jhon');
+  const saved = sessionStorage.getItem('app_logged');
+  if(saved === 'jhon'){
+    document.getElementById('select-screen').style.display = 'none';
+    currentApp = saved;
+    launchApp(saved);
+  } else {
+    document.getElementById('select-screen').style.display = 'none';
+    showLogin('jhon');
+  }
 });
 
 // ══════════════════════════════════════════════════════════
@@ -1598,7 +1612,7 @@ teUpdateStats(); teRenderClients();
 // ══════════════════════════════════════════════════════════
 //  LLAMA A JHON
 // ══════════════════════════════════════════════════════════
-const LJ_SHEET_URL = "https://script.google.com/macros/s/AKfycbwkcc37gOiRP0R0F3wJiehCNVzBRpT76q9CA6kJ-LXq2chr0gck6HqMrMR62xr3UhK3zw/exec";
+const LJ_SHEET_URL = "https://script.google.com/macros/s/AKfycbxXfHV1R6EnHSgSjAUEXsiUlBDS2waT1gEVOdaiYK-fumkNxGmXoM-oicUqiuhBL_pMcw/exec";
 let ljDb = JSON.parse(localStorage.getItem('lj_db') || '{"clients":[],"visits":[],"movements":[]}');
 let ljCurrentClientId=null, ljCurrentVisitId=null, ljEditingClientId=null, ljEditingVisitId=null;
 let ljVisitPhotos=[], ljSigCtx, ljSigDrawing=false, ljSigHasContent=false;
@@ -2622,7 +2636,8 @@ function ljCompartirTarjetaWhatsapp(){
   if(!c){ showToast('No se encontró el cliente'); return; }
   const base = window.location.href.replace(/[^/]*$/, '');
   const linkTarjeta = base + 'tarjeta_cliente_llama_a_jhon.html?id=' + encodeURIComponent(c.id);
-  const mensaje = `Hola ${c.nombre}! Gracias por confiar en *Llama a Jhon* 🙌\nAquí puedes ver tu tarjeta de fidelidad y el reporte de tu servicio:\n${linkTarjeta}`;
+  const linkApk = base + 'descargas/Tarjeta_Llama_a_Jhon.apk';
+  const mensaje = `Hola ${c.nombre}! Gracias por confiar en *Llama a Jhon* 🙌\nAquí puedes ver tu tarjeta de fidelidad y el reporte de tu servicio:\n${linkTarjeta}\n\n📲 Para recibir tus promociones y avisos, descarga tu tarjeta como app:\n${linkApk}\n(Android puede avisar "origen desconocido", solo dale a Instalar, es normal y seguro)`;
   const numero = ljPhoneToWhatsapp(c.telefono);
   const url = (numero ? `https://wa.me/${numero}` : `https://wa.me/`) + `?text=${encodeURIComponent(mensaje)}`;
   window.open(url, '_blank');
