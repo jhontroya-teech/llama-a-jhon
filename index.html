@@ -2635,7 +2635,7 @@ function ljCompartirTarjetaWhatsapp(){
   const base = window.location.href.replace(/[^/]*$/, '');
   const linkTarjeta = base + 'ir/?id=' + encodeURIComponent(c.id);
   const linkApk = base + 'app/';
-  const mensaje = `Hola ${c.nombre}! Gracias por confiar en *Llama a Jhon* 🙌\nAquí puedes ver tu tarjeta de fidelidad y el reporte de tu servicio:\n${linkTarjeta}\n\n📲 Para recibir tus promociones y avisos, descarga tu tarjeta como app:\n${linkApk}\n(Android puede avisar "origen desconocido", solo dale a Instalar, es normal y seguro)`;
+  const mensaje = `Hola ${c.nombre}! Gracias por confiar en *Llama a Jhon* 🙌\n\n🌐 Aquí puedes ver tu tarjeta de fidelidad y el reporte de tu servicio:\n\n${linkTarjeta}\n\n📲 Para recibir tus promociones y avisos, descarga tu tarjeta como app:\n\n${linkApk}\n\n(Android puede avisar "origen desconocido", solo dale a Instalar, es normal y seguro)`;
   const numero = ljPhoneToWhatsapp(c.telefono);
   const url = (numero ? `https://wa.me/${numero}` : `https://wa.me/`) + `?text=${encodeURIComponent(mensaje)}`;
   window.open(url, '_blank');
