@@ -1063,7 +1063,11 @@ document.addEventListener('DOMContentLoaded', function(){
     launchApp(saved);
   } else {
     document.getElementById('select-screen').style.display = 'none';
-    showLogin('jhon');
+    // ⚠️ LOGIN DESACTIVADO TEMPORALMENTE — para reactivarlo, comenta la línea
+    // de abajo (currentApp/launchApp) y descomenta showLogin('jhon').
+    currentApp = 'jhon';
+    launchApp('jhon');
+    // showLogin('jhon');
   }
 });
 
