@@ -2633,8 +2633,8 @@ function ljCompartirTarjetaWhatsapp(){
   const c=ljDb.clients.find(x=>String(x.id)===String(ljCurrentClientId));
   if(!c){ showToast('No se encontró el cliente'); return; }
   const base = window.location.href.replace(/[^/]*$/, '');
-  const linkTarjeta = base + 'tarjeta_cliente_llama_a_jhon.html?id=' + encodeURIComponent(c.id);
-  const linkApk = base + 'descargas/Tarjeta_Llama_a_Jhon.apk';
+  const linkTarjeta = base + 'ir/?id=' + encodeURIComponent(c.id);
+  const linkApk = base + 'app/';
   const mensaje = `Hola ${c.nombre}! Gracias por confiar en *Llama a Jhon* 🙌\nAquí puedes ver tu tarjeta de fidelidad y el reporte de tu servicio:\n${linkTarjeta}\n\n📲 Para recibir tus promociones y avisos, descarga tu tarjeta como app:\n${linkApk}\n(Android puede avisar "origen desconocido", solo dale a Instalar, es normal y seguro)`;
   const numero = ljPhoneToWhatsapp(c.telefono);
   const url = (numero ? `https://wa.me/${numero}` : `https://wa.me/`) + `?text=${encodeURIComponent(mensaje)}`;
