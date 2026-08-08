@@ -893,6 +893,35 @@ body.dark #app-jhon .fin-tipo-btn.activo-gasto{background:#2a1414;border-color:#
     <div id="lj-fin-lista"></div>
   </div>
 
+  <!-- PROMOCIÓN -->
+  <div id="lj-screen-promocion" class="screen">
+    <div class="header">
+      <button class="back-btn" onclick="ljGoScreen('lj-screen-home')"><i class="ti ti-arrow-left"></i></button>
+      <h1>Promoción</h1>
+    </div>
+
+    <div class="section-title">Mensaje</div>
+    <textarea id="lj-promo-mensaje" rows="4" placeholder="Escribe el mensaje de la promoción o alerta..." maxlength="300"></textarea>
+
+    <div class="section-title">Fotos o video (hasta 3)</div>
+    <input type="file" id="lj-promo-media-input" accept="image/*,video/*" multiple style="display:none" onchange="ljAddPromoMedia(this)">
+    <button type="button" class="btn-secondary" onclick="document.getElementById('lj-promo-media-input').click()"><i class="ti ti-photo-plus"></i> Agregar fotos/video</button>
+    <div id="lj-promo-media-grid" class="photo-grid"></div>
+
+    <div class="section-title">¿A quién se le manda?</div>
+    <div class="checkbox-resp" style="align-items:center;">
+      <input type="radio" name="lj-promo-dest" id="lj-promo-dest-todos" value="todos" checked onchange="ljTogglePromoClientesList()">
+      <label for="lj-promo-dest-todos">Todos los clientes</label>
+    </div>
+    <div class="checkbox-resp" style="align-items:center;">
+      <input type="radio" name="lj-promo-dest" id="lj-promo-dest-elegir" value="elegir" onchange="ljTogglePromoClientesList()">
+      <label for="lj-promo-dest-elegir">Elegir clientes</label>
+    </div>
+    <div id="lj-promo-clientes-list" style="display:none;max-height:260px;overflow-y:auto;border:1px solid var(--border);border-radius:10px;padding:8px;margin-top:8px;"></div>
+
+    <button class="btn-primary" style="margin-top:16px;" id="lj-promo-enviar-btn" onclick="ljEnviarPromocion()"><i class="ti ti-send"></i> Enviar promoción</button>
+  </div>
+
 </div><!-- /app-jhon -->
 
 <!-- MODAL: AGREGAR MOVIMIENTO (ingreso o gasto manual) -->
@@ -1774,6 +1803,7 @@ function ljGoScreen(id){
   if(id==='lj-screen-config') ljCargarConfig();
   if(id==='lj-screen-institucion-aires') ljRenderInstitucionAires();
   if(id==='lj-screen-finanzas'){ ljFinFecha=new Date(); ljRenderFinanzas(); }
+  if(id==='lj-screen-promocion') ljInitPromoScreen();
   ljActualizarBotonAtras();
 }
 
@@ -3272,6 +3302,112 @@ function ljGuardarConfig(){
       else showToast('⚠️ No se pudo guardar');
     })
     .catch(()=> showToast('⚠️ Sin conexión, no se pudo guardar'));
+}
+
+// ══════════════ PROMOCIÓN ══════════════
+let ljPromoMedia = []; // hasta 3: {dataUrl, isVideo}
+
+function ljInitPromoScreen(){
+  document.getElementById('lj-promo-mensaje').value = '';
+  ljPromoMedia = [];
+  ljRenderPromoMediaGrid();
+  document.getElementById('lj-promo-dest-todos').checked = true;
+  ljTogglePromoClientesList();
+}
+
+function ljAddPromoMedia(input){
+  const espacioLibre = 3 - ljPromoMedia.length;
+  if(espacioLibre <= 0){ showToast('⚠️ Máximo 3 fotos/video por promoción'); input.value=''; return; }
+  Array.from(input.files).slice(0, espacioLibre).forEach(f=>{
+    const esVideo = f.type.startsWith('video');
+    const r = new FileReader();
+    r.onload = async e=>{
+      if(esVideo){
+        ljPromoMedia.push({ dataUrl: e.target.result, isVideo: true });
+        ljRenderPromoMediaGrid();
+      } else {
+        try{
+          const comprimida = await ljResizeImage(e.target.result, 1280, 0.7);
+          ljPromoMedia.push({ dataUrl: comprimida, isVideo: false });
+        }catch(err){
+          showToast('⚠️ Una imagen no se pudo procesar');
+        }
+        ljRenderPromoMediaGrid();
+      }
+    };
+    r.readAsDataURL(f);
+  });
+  input.value = '';
+}
+
+function ljQuitarPromoMedia(idx){
+  ljPromoMedia.splice(idx, 1);
+  ljRenderPromoMediaGrid();
+}
+
+function ljRenderPromoMediaGrid(){
+  const grid = document.getElementById('lj-promo-media-grid');
+  grid.innerHTML = ljPromoMedia.map((m, idx) => `
+    <div style="position:relative;">
+      ${m.isVideo ? `<video src="${m.dataUrl}" class="photo-thumb" muted></video>` : `<img src="${m.dataUrl}" class="photo-thumb">`}
+      <div onclick="ljQuitarPromoMedia(${idx})" style="position:absolute;top:4px;right:4px;width:24px;height:24px;border-radius:50%;background:rgba(0,0,0,0.6);color:#fff;display:flex;align-items:center;justify-content:center;cursor:pointer;"><i class="ti ti-x" style="font-size:14px;"></i></div>
+    </div>
+  `).join('');
+}
+
+function ljTogglePromoClientesList(){
+  const elegir = document.getElementById('lj-promo-dest-elegir').checked;
+  const cont = document.getElementById('lj-promo-clientes-list');
+  cont.style.display = elegir ? 'block' : 'none';
+  if(elegir && !cont.dataset.rendered){
+    cont.innerHTML = (ljDb.clients||[]).map(c => `
+      <div class="checkbox-resp" style="align-items:center;">
+        <input type="checkbox" class="lj-promo-cliente-check" value="${c.id}" id="lj-promo-c-${c.id}">
+        <label for="lj-promo-c-${c.id}">${c.nombre}</label>
+      </div>
+    `).join('') || '<p style="color:#888;font-size:13px;">No hay clientes registrados</p>';
+    cont.dataset.rendered = '1';
+  }
+}
+
+function ljEnviarPromocion(){
+  const mensaje = document.getElementById('lj-promo-mensaje').value.trim();
+  if(!mensaje){ showToast('⚠️ Escribe un mensaje'); return; }
+
+  let destinatarios = 'todos';
+  if(document.getElementById('lj-promo-dest-elegir').checked){
+    const ids = Array.from(document.querySelectorAll('.lj-promo-cliente-check:checked')).map(chk=>chk.value);
+    if(ids.length === 0){ showToast('⚠️ Elige al menos un cliente'); return; }
+    destinatarios = ids.join(',');
+  }
+
+  const btn = document.getElementById('lj-promo-enviar-btn');
+  btn.disabled = true;
+  btn.textContent = 'Enviando...';
+
+  const params = new URLSearchParams();
+  params.append('type', 'promocion');
+  params.append('mensaje', mensaje);
+  params.append('destinatarios', destinatarios);
+  ljPromoMedia.forEach((m, idx) => params.append('media' + idx, m.dataUrl));
+
+  fetch(LJ_SHEET_URL, { method:'POST', headers:{'Content-Type':'application/x-www-form-urlencoded'}, body: params.toString() })
+    .then(r=>r.json())
+    .then(resp=>{
+      btn.disabled = false;
+      btn.innerHTML = '<i class="ti ti-send"></i> Enviar promoción';
+      if(resp.success){
+        showToast('✅ Promoción enviada');
+        ljGoScreen('lj-screen-home');
+      } else {
+        showToast('⚠️ No se pudo enviar: ' + (resp.error || 'error desconocido'));
+      }
+    })
+    .catch(()=>{
+      btn.disabled = false;
+      btn.innerHTML = '<i class="ti ti-send"></i> Enviar promoción';
+      showToast('⚠️ Sin conexión, no se pudo enviar');
+    });
 }
 
 // ---- Exportar Excel ----
