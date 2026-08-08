@@ -2,6 +2,7 @@
   "name": "Tarjeta Llama a Jhon",
   "short_name": "Mi tarjeta",
   "description": "Tu tarjeta de fidelidad de Llama a Jhon: sellos, historial y promociones",
+  "id": "/llama-a-jhon/tarjeta/index.html",
   "start_url": "./index.html",
   "scope": "./",
   "display": "standalone",
