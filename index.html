@@ -966,7 +966,7 @@ function entrarSesion(){
 async function doLogin(){
   const u = document.getElementById('login-user').value.trim();
   const cred = USERS[currentApp];
-  if(u !== cred.usuario){ mostrarErrorLogin(); return; }
+  if(u.toLowerCase() !== cred.usuario.toLowerCase()){ mostrarErrorLogin(); return; }
 
   // ⚠️ TEMPORAL: se saltó la validación de contraseña contra Apps Script
   // porque el despliegue está devolviendo "No autorizado" (problema de
@@ -1045,15 +1045,12 @@ function ljActualizarBotonAtras(){
 // Entra directo al login de Llama a Jhon (o auto-login si ya hay sesión)
 document.addEventListener('DOMContentLoaded', function(){
   ljActualizarIconoTema();
-  const saved = sessionStorage.getItem('app_logged');
-  if(saved === 'jhon'){
-    document.getElementById('select-screen').style.display = 'none';
-    currentApp = saved;
-    launchApp(saved);
-  } else {
-    document.getElementById('select-screen').style.display = 'none';
-    showLogin('jhon');
-  }
+  // ⚠️ TEMPORAL: se quitó la pantalla de login por completo (entra directo
+  // a la app, sin pedir usuario ni contraseña). Restaurar cuando se
+  // resuelva el "No autorizado" de Apps Script — buscar este comentario.
+  document.getElementById('select-screen').style.display = 'none';
+  currentApp = 'jhon';
+  launchApp('jhon');
 });
 
 // ══════════════════════════════════════════════════════════
