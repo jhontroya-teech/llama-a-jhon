@@ -3372,7 +3372,7 @@ function ljTogglePromoClientesList(){
 
 function ljEnviarPromocion(){
   const mensaje = document.getElementById('lj-promo-mensaje').value.trim();
-  if(!mensaje){ showToast('⚠️ Escribe un mensaje'); return; }
+  if(!mensaje && ljPromoMedia.length === 0){ showToast('⚠️ Escribe un mensaje o agrega al menos una foto'); return; }
 
   let destinatarios = 'todos';
   if(document.getElementById('lj-promo-dest-elegir').checked){
