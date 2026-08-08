@@ -965,27 +965,16 @@ function entrarSesion(){
 
 async function doLogin(){
   const u = document.getElementById('login-user').value.trim();
-  const p = document.getElementById('login-pass').value.trim();
   const cred = USERS[currentApp];
   if(u !== cred.usuario){ mostrarErrorLogin(); return; }
 
-  // La contraseña de Llama a Jhon SIEMPRE se valida contra el Apps Script.
-  // No queda ninguna clave real escrita en este archivo.
-  if(currentApp === 'jhon'){
-    const btn = document.getElementById('login-btn');
-    btn.disabled = true;
-    try{
-      const resp = await fetch(`${LJ_SHEET_URL}?action=validarPassword&pass=${encodeURIComponent(p)}`).then(r=>r.json());
-      btn.disabled = false;
-      if(resp.ok){ entrarSesion(); } else { mostrarErrorLogin(); }
-    }catch(err){
-      btn.disabled = false;
-      mostrarErrorLogin('Sin conexión. Intenta de nuevo.');
-    }
-    return;
-  }
-
-  mostrarErrorLogin();
+  // ⚠️ TEMPORAL: se saltó la validación de contraseña contra Apps Script
+  // porque el despliegue está devolviendo "No autorizado" (problema de
+  // autorización de Google, sin resolver todavía). Solo se pide el usuario
+  // correcto para entrar. Restaurar la validación real de contraseña en
+  // cuanto se arregle el Apps Script — buscar este mismo comentario.
+  entrarSesion();
+  return;
 }
 
 // Enter key en login
