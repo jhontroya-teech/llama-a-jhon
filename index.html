@@ -917,6 +917,10 @@ body.dark #app-jhon .fin-tipo-btn.activo-gasto{background:#2a1414;border-color:#
       <input type="radio" name="lj-promo-dest" id="lj-promo-dest-elegir" value="elegir" onchange="ljTogglePromoClientesList()">
       <label for="lj-promo-dest-elegir">Elegir clientes</label>
     </div>
+    <div id="lj-promo-buscar-wrap" style="display:none;position:relative;margin-top:8px;">
+      <i class="ti ti-search" style="position:absolute;left:10px;top:50%;transform:translateY(-50%);color:#918a9e;"></i>
+      <input type="text" id="lj-promo-buscar-cliente" placeholder="Buscar cliente..." oninput="ljFiltrarPromoClientes(this.value)" style="width:100%;padding:10px 10px 10px 34px;border:1px solid var(--border);border-radius:10px;box-sizing:border-box;">
+    </div>
     <div id="lj-promo-clientes-list" style="display:none;max-height:260px;overflow-y:auto;border:1px solid var(--border);border-radius:10px;padding:8px;margin-top:8px;"></div>
 
     <button class="btn-primary" style="margin-top:16px;" id="lj-promo-enviar-btn" onclick="ljEnviarPromocion()"><i class="ti ti-send"></i> Enviar promoción</button>
@@ -3358,16 +3362,25 @@ function ljRenderPromoMediaGrid(){
 function ljTogglePromoClientesList(){
   const elegir = document.getElementById('lj-promo-dest-elegir').checked;
   const cont = document.getElementById('lj-promo-clientes-list');
+  const buscarWrap = document.getElementById('lj-promo-buscar-wrap');
   cont.style.display = elegir ? 'block' : 'none';
+  buscarWrap.style.display = elegir ? 'block' : 'none';
   if(elegir && !cont.dataset.rendered){
     cont.innerHTML = (ljDb.clients||[]).map(c => `
-      <div class="checkbox-resp" style="align-items:center;">
+      <div class="checkbox-resp lj-promo-cliente-row" data-nombre="${(c.nombre||'').toLowerCase()}" style="align-items:center;">
         <input type="checkbox" class="lj-promo-cliente-check" value="${c.id}" id="lj-promo-c-${c.id}">
         <label for="lj-promo-c-${c.id}">${c.nombre}</label>
       </div>
     `).join('') || '<p style="color:#888;font-size:13px;">No hay clientes registrados</p>';
     cont.dataset.rendered = '1';
   }
+}
+
+function ljFiltrarPromoClientes(texto){
+  const q = texto.trim().toLowerCase();
+  document.querySelectorAll('.lj-promo-cliente-row').forEach(fila => {
+    fila.style.display = fila.dataset.nombre.includes(q) ? 'flex' : 'none';
+  });
 }
 
 function ljEnviarPromocion(){
