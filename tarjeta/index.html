@@ -198,6 +198,19 @@
   </div>
 </div>
 
+<!-- ⚠️ TEMPORAL: consola de depuración visible en pantalla, solo se activa
+     agregando ?debug=1 al final del link. Sirve para ver errores reales
+     directo en el celular mientras se investiga el problema de suscripción
+     push. Quitar este bloque cuando se resuelva. -->
+<script>
+  if (new URLSearchParams(location.search).get('debug') === '1') {
+    const s = document.createElement('script');
+    s.src = 'https://cdn.jsdelivr.net/npm/eruda';
+    s.onload = () => eruda.init();
+    document.body.appendChild(s);
+  }
+</script>
+
 <script>
 const META = 2;
 const INSTAGRAM_URL = "https://instagram.com/llama.a.jhon";
