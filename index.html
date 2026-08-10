@@ -925,7 +925,10 @@ body.dark #app-jhon .fin-tipo-btn.activo-gasto{background:#2a1414;border-color:#
 
     <button class="btn-primary" style="margin-top:16px;" id="lj-promo-enviar-btn" onclick="ljEnviarPromocion()"><i class="ti ti-send"></i> Enviar promoción</button>
 
-    <div class="section-title" style="margin-top:24px;">Promociones enviadas</div>
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-top:24px;">
+      <div class="section-title" style="margin:0;">Promociones enviadas</div>
+      <div onclick="ljBorrarTodasPromos()" style="font-size:12px;color:#e53e3e;cursor:pointer;display:flex;align-items:center;gap:4px;"><i class="ti ti-trash" style="font-size:14px;"></i> Borrar todas</div>
+    </div>
     <div id="lj-promo-historial-list"></div>
   </div>
 
@@ -3350,6 +3353,23 @@ function ljBorrarPromo(id){
         ljDb.promociones = (ljDb.promociones || []).filter(p => String(p.id) !== String(id));
         ljRenderHistorialPromos();
         showToast('🗑️ Promoción borrada');
+      } else {
+        showToast('⚠️ No se pudo borrar');
+      }
+    })
+    .catch(()=> showToast('⚠️ Sin conexión, no se pudo borrar'));
+}
+
+function ljBorrarTodasPromos(){
+  if(!(ljDb.promociones || []).length){ showToast('No hay promociones para borrar'); return; }
+  if(!confirm('¿Borrar TODAS las promociones enviadas? Esto limpia todo el historial de mensajes de tus clientes, no se puede deshacer.')) return;
+  fetch(LJ_SHEET_URL, { method:'POST', headers:{'Content-Type':'application/x-www-form-urlencoded'}, body: 'type=eliminarTodasPromociones' })
+    .then(r=>r.json())
+    .then(resp=>{
+      if(resp.success){
+        ljDb.promociones = [];
+        ljRenderHistorialPromos();
+        showToast('🗑️ Todas las promociones fueron borradas');
       } else {
         showToast('⚠️ No se pudo borrar');
       }
