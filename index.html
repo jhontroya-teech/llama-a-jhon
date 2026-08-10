@@ -3475,6 +3475,7 @@ function ljEnviarPromocion(){
       btn.innerHTML = '<i class="ti ti-send"></i> Enviar promoción';
       if(resp.success){
         showToast('✅ Promoción enviada');
+        alert('Respuesta de OneSignal:\n\n' + JSON.stringify(resp.push, null, 2));
         ljGoScreen('lj-screen-home');
       } else {
         showToast('⚠️ No se pudo enviar: ' + (resp.error || 'error desconocido'));
