@@ -380,6 +380,11 @@ function getDescartadas() {
   try { return JSON.parse(localStorage.getItem(LJ_DESCARTADAS_KEY) || '[]'); } catch (e) { return []; }
 }
 
+function contactarPorPromo(promoId) {
+  const mensaje = encodeURIComponent('Hola, me interesa esta promoción, la quiero 🙋');
+  window.open(WHATSAPP_URL.split('?')[0] + '?text=' + mensaje, '_blank');
+}
+
 function renderPromoBanner() {
   if (!promoData || !promoData.activa) return '';
   const promo = promoData.activa;
@@ -390,7 +395,7 @@ function renderPromoBanner() {
   let dotsHtml = '';
   if (urls.length) {
     slidesHtml = urls.map((u, i) =>
-      '<div class="promo-banner-slide' + (i === 0 ? ' active' : '') + '" data-slide="' + i + '" onclick="abrirMensajes()">' +
+      '<div class="promo-banner-slide' + (i === 0 ? ' active' : '') + '" data-slide="' + i + '" onclick="contactarPorPromo(\'' + promo.id + '\')">' +
         (u.match(/\.mp4|video/) ? '<video src="' + u + '" muted autoplay loop playsinline></video>' : '<img src="' + u + '">') +
       '</div>'
     ).join('');
